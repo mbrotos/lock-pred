@@ -22,8 +22,8 @@ data["page_table_combined"] = (
     # TODO: uncomment the line below  and comment the next one for char-based tokenization
     # data["PAGEID"].astype(str).apply(lambda x: " ".join(x))
     data["PAGEID"].astype(str)
-    + "_"
-    + data["TABNAME"].astype(str)
+    + " "
+    + data["TABNAME"].astype(str).apply(lambda x: x.replace("_", ""))
 )
 
 
@@ -31,20 +31,23 @@ data["page_table_combined"] = (
 def create_sequences(data, seq_length):
     X, y = [], []
     for i in range(len(data) - seq_length):
-        X.append(
+        x_cur = (
             data.iloc[i : i + seq_length][["page_table_combined"]]
             .apply(" ".join)
             .reset_index()
-            .values[0][1]
+            .values[0][1][:]
         )
-        y.append(
-            data.iloc[i + seq_length]["page_table_combined"]
-        )  # Predicting combined feature
+        X.append(x_cur)
+        y_cur = data.iloc[i + seq_length]["page_table_combined"].split()
+        y.append(y_cur[0])
+        x_next = " ".join(x_cur.split()[1:]) + " " + y_cur[0]
+        X.append(x_next)
+        y.append(y_cur[1])
     return X, y
 
 
-seq_length = 50  # Define sequence length
-out_seq_length = 2  # Define output sequence length I.e., page_id and table_name
+seq_length = 25  # Define sequence length
+out_seq_length = 1  # Define output sequence length I.e., page_id and table_name
 source_texts, target_texts = create_sequences(data, seq_length)
 
 # Parameters
@@ -88,6 +91,7 @@ output_data = to_categorical(padded_target_sequences, num_classes=vocab_size)
 # Partitioning data into train and test sets (70% train, 30% test) randomly but maintaining the order
 # The unshuffled dataset results in a highly skewed dataset split, and the model performs poorly on test
 indices = np.arange(len(input_data))
+indices = list(zip(indices[::2], indices[1::2]))
 np.random.shuffle(indices)
 # Calculate the split index
 split_index = int(len(indices) * 0.7)
@@ -95,6 +99,10 @@ split_index = int(len(indices) * 0.7)
 # Partition the indices into training and testing sets
 train_indices = indices[:split_index]
 test_indices = indices[split_index:]
+
+# flatten the indices
+train_indices = [item for sublist in train_indices for item in sublist]
+test_indices = [item for sublist in test_indices for item in sublist]
 
 # Use the shuffled indices to partition the data
 x_train, x_test = input_data[train_indices], input_data[test_indices]
@@ -134,6 +142,24 @@ history = model.fit(
 # Evaluate the model on the test dataset
 loss, accuracy = model.evaluate(x_test, y_test)
 print(f"Test Accuracy: {accuracy * 100:.2f}%")
+
+
+
+
+# Evaluate the model on a single example from test
+loss, accuracy = model.evaluate(x_test[np.newaxis,0], y_test[np.newaxis,0])
+print(f"Input text:", source_tokenizer.sequences_to_texts([x_test[0]]))
+print(f"Expected output text:", target_tokenizer.sequences_to_texts([[np.argmax(y_test[0], axis=-1)]])
+)
+print(f"Test Accuracy (n=1): {accuracy * 100:.2f}%")
+
+loss, accuracy = model.evaluate(x_test[::2], y_test[::2])
+print(f"Test First Token Accuracy: {accuracy * 100:.2f}%")
+
+loss, accuracy = model.evaluate(x_test[1::2], y_test[1::2])
+print(f"Test Second Token Accuracy: {accuracy * 100:.2f}%")
+
+# Manually predict on a single example and print the outputs
 
 print("Predicting on a five example")
 
