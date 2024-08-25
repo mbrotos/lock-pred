@@ -163,7 +163,7 @@ print(f"Test Second Token Accuracy: {accuracy * 100:.2f}%")
 
 print("Predicting on a five example")
 
-for i in range(5):
+for i in range(15):
     print("Input:", x_test[i])
     print("Input text:", source_tokenizer.sequences_to_texts([x_test[i]]))
     #print("Expected output:", y_test[i])

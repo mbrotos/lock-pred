@@ -104,7 +104,8 @@ y_train, y_test = output_data[train_indices], output_data[test_indices]
 input_layer = Input(shape=(max_length,))
 embedding = Embedding(input_dim=vocab_size, output_dim=embedding_dim)(input_layer)
 x = LSTM(lstm_units)(embedding)
-dense = Dense(256, activation="relu")(x)
+repeat = RepeatVector(out_seq_length)(x)
+dense = Dense(256, activation="relu")(repeat)
 output_layer = Dense(vocab_size, activation="softmax")(dense)
 
 model = Model(inputs=input_layer, outputs=output_layer)
@@ -137,12 +138,12 @@ print(f"Test Accuracy: {accuracy * 100:.2f}%")
 
 print("Predicting on a five example")
 
-for i in range(5):
+for i in range(15):
     print("Input:", x_test[i])
     print("Input text:", source_tokenizer.sequences_to_texts([x_test[i]]))
     #print("Expected output:", y_test[i])
-    print("Expected output text:", target_tokenizer.sequences_to_texts([[np.argmax(y_test[i], axis=-1)]]))
+    print("Expected output text:", target_tokenizer.sequences_to_texts([np.argmax(y_test[i], axis=-1)]))
     output = model.predict(x_test[np.newaxis,i])
     #print("Predicted output softmax:", output)
     print("Predicted output:", np.argmax(output, axis=-1))
-    print("Predicted output text:", target_tokenizer.sequences_to_texts([np.argmax(output, axis=-1)]))
+    print("Predicted output text:", target_tokenizer.sequences_to_texts([np.argmax(output, axis=-1)[0]]))
