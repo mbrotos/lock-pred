@@ -46,7 +46,7 @@ def create_sequences(data, seq_length):
     return X, y
 
 
-seq_length = 25  # Define sequence length
+seq_length = 50  # Define sequence length
 out_seq_length = 1  # Define output sequence length I.e., page_id and table_name
 source_texts, target_texts = create_sequences(data, seq_length)
 

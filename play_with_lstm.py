@@ -23,7 +23,7 @@ data["page_table_combined"] = (
     # data["PAGEID"].astype(str).apply(lambda x: " ".join(x))
     data["PAGEID"].astype(str)
     + "_"
-    + data["TABNAME"].astype(str)
+    + data["TABNAME"].astype(str).apply(lambda x: x.replace("_", ""))
 )
 
 

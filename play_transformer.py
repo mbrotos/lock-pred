@@ -25,7 +25,7 @@ data["page_table_combined"] = (
     # data["PAGEID"].astype(str).apply(lambda x: " ".join(x))
     data["PAGEID"].astype(str)
     + "_"
-    + data["TABNAME"].astype(str)
+    + data["TABNAME"].astype(str).apply(lambda x: x.replace("_", ""))
 )
 
 
@@ -111,9 +111,8 @@ embedding = keras_nlp.layers.TokenAndPositionEmbedding(
 )(input)
 transformer = keras_nlp.layers.TransformerEncoder(
     intermediate_dim=512, num_heads=8, dropout=0.1
-)(embedding)[:, -1, :]
-repeat = RepeatVector(out_seq_length)(transformer)
-dense = Dense(256, activation="relu")(repeat)
+)(embedding)[:, -2:, :]
+dense = Dense(256, activation="relu")(transformer)
 output = Dense(vocab_size, activation="softmax")(dense)
 model = Model(inputs=input, outputs=output)
 

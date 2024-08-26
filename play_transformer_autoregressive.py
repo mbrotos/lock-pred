@@ -48,7 +48,7 @@ def create_sequences(data, seq_length):
     return X, y
 
 
-seq_length = 25  # Define sequence length
+seq_length = 50  # Define sequence length
 out_seq_length = 1  # Define output sequence length I.e., page_id and table_name
 source_texts, target_texts = create_sequences(data, seq_length)
 
@@ -120,7 +120,6 @@ embedding = keras_nlp.layers.TokenAndPositionEmbedding(
 transformer = keras_nlp.layers.TransformerEncoder(
     intermediate_dim=512, num_heads=8, dropout=0.1
 )(embedding)[:, -1, :]
-# repeat = RepeatVector(out_seq_length)(transformer)
 dense = Dense(256, activation="relu")(transformer)
 output = Dense(vocab_size, activation="softmax")(dense)
 model = Model(inputs=input, outputs=output)
