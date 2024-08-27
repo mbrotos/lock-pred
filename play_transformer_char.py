@@ -51,7 +51,7 @@ source_texts, target_texts = create_sequences(data, seq_length)
 
 # Parameters
 num_unqiue_table_names = len(data["TABNAME"].unique())
-vocab_size = num_unqiue_table_names + 10 + 2  # Vocabulary size
+vocab_size = num_unqiue_table_names + 10 + 1  # Vocabulary size
 embedding_dim = 128  # Embedding dimension
 max_length = seq_length  # Maximum length of the input sequences
 lstm_units = 256  # Number of LSTM units
@@ -66,23 +66,23 @@ def check_oov(tokenized_texts):
 
 # Tokenization
 # TODO: create one unified tokenizer for input and output
-source_tokenizer = Tokenizer(num_words=vocab_size, oov_token="<OOV>")
+source_tokenizer = Tokenizer(num_words=vocab_size)
 source_tokenizer.fit_on_texts(source_texts)
 source_sequences = source_tokenizer.texts_to_sequences(source_texts)
 padded_source_sequences = pad_sequences(
-    source_sequences, maxlen=max_length, padding="post", value=-1
+    source_sequences, maxlen=max_length, padding="post", value=0.0
 )
-if check_oov(source_sequences):
-    raise ValueError("OOV tokens found in source sequences")
+# if check_oov(source_sequences):
+#     raise ValueError("OOV tokens found in source sequences")
 
-target_tokenizer = Tokenizer(num_words=vocab_size, oov_token="<OOV>")
+target_tokenizer = Tokenizer(num_words=vocab_size)
 target_tokenizer.fit_on_texts(target_texts)
 target_sequences = target_tokenizer.texts_to_sequences(target_texts)
 padded_target_sequences = pad_sequences(
-    target_sequences, maxlen=out_seq_length, padding="post", value=-1
+    target_sequences, maxlen=out_seq_length, padding="post", value=0.0
 )
-if check_oov(target_sequences):
-    raise ValueError("OOV tokens found in target sequences")
+# if check_oov(target_sequences):
+#     raise ValueError("OOV tokens found in target sequences")
 
 # Shifting target sequences to be the expected output (next token)
 input_data = padded_source_sequences
