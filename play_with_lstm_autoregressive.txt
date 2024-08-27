@@ -1,0 +1,187 @@
+Model: "functional"
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ Layer (type)                         ┃ Output Shape                ┃         Param # ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ input_layer (InputLayer)             │ (None, 50)                  │               0 │
+├──────────────────────────────────────┼─────────────────────────────┼─────────────────┤
+│ embedding (Embedding)                │ (None, 50, 128)             │         115,200 │
+├──────────────────────────────────────┼─────────────────────────────┼─────────────────┤
+│ lstm (LSTM)                          │ (None, 256)                 │         394,240 │
+├──────────────────────────────────────┼─────────────────────────────┼─────────────────┤
+│ dense (Dense)                        │ (None, 256)                 │          65,792 │
+├──────────────────────────────────────┼─────────────────────────────┼─────────────────┤
+│ dense_1 (Dense)                      │ (None, 900)                 │         231,300 │
+└──────────────────────────────────────┴─────────────────────────────┴─────────────────┘
+ Total params: 806,532 (3.08 MB)
+ Trainable params: 806,532 (3.08 MB)
+ Non-trainable params: 0 (0.00 B)
+Epoch 1/100
+2024-08-26 14:40:10.955297: I external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:531] Loaded cuDNN version 8906
+257/257 ━━━━━━━━━━━━━━━━━━━━ 6s 17ms/step - accuracy: 0.4672 - loss: 4.0587 - val_accuracy: 0.5345 - val_loss: 3.2716
+Epoch 2/100
+257/257 ━━━━━━━━━━━━━━━━━━━━ 4s 17ms/step - accuracy: 0.5336 - loss: 3.1973 - val_accuracy: 0.5345 - val_loss: 3.2669
+Epoch 3/100
+257/257 ━━━━━━━━━━━━━━━━━━━━ 5s 18ms/step - accuracy: 0.5416 - loss: 3.0518 - val_accuracy: 0.5345 - val_loss: 3.1503
+Epoch 4/100
+257/257 ━━━━━━━━━━━━━━━━━━━━ 4s 16ms/step - accuracy: 0.5453 - loss: 2.8299 - val_accuracy: 0.5345 - val_loss: 3.0644
+Epoch 5/100
+257/257 ━━━━━━━━━━━━━━━━━━━━ 5s 17ms/step - accuracy: 0.5278 - loss: 2.7719 - val_accuracy: 0.5345 - val_loss: 2.9219
+Epoch 6/100
+257/257 ━━━━━━━━━━━━━━━━━━━━ 5s 19ms/step - accuracy: 0.5543 - loss: 2.4285 - val_accuracy: 0.5340 - val_loss: 2.7726
+Epoch 7/100
+257/257 ━━━━━━━━━━━━━━━━━━━━ 5s 19ms/step - accuracy: 0.5495 - loss: 2.2411 - val_accuracy: 0.5491 - val_loss: 2.5347
+Epoch 8/100
+257/257 ━━━━━━━━━━━━━━━━━━━━ 5s 19ms/step - accuracy: 0.5727 - loss: 1.9657 - val_accuracy: 0.5846 - val_loss: 2.3287
+Epoch 9/100
+257/257 ━━━━━━━━━━━━━━━━━━━━ 5s 18ms/step - accuracy: 0.6413 - loss: 1.5837 - val_accuracy: 0.6542 - val_loss: 2.0575
+Epoch 10/100
+257/257 ━━━━━━━━━━━━━━━━━━━━ 5s 19ms/step - accuracy: 0.7292 - loss: 1.1614 - val_accuracy: 0.7330 - val_loss: 1.8437
+Epoch 11/100
+257/257 ━━━━━━━━━━━━━━━━━━━━ 5s 18ms/step - accuracy: 0.8063 - loss: 0.8671 - val_accuracy: 0.7768 - val_loss: 1.7031
+Epoch 12/100
+257/257 ━━━━━━━━━━━━━━━━━━━━ 4s 16ms/step - accuracy: 0.8568 - loss: 0.6462 - val_accuracy: 0.8293 - val_loss: 1.5597
+Epoch 13/100
+257/257 ━━━━━━━━━━━━━━━━━━━━ 5s 18ms/step - accuracy: 0.8850 - loss: 0.4735 - val_accuracy: 0.8400 - val_loss: 1.5416
+Epoch 14/100
+257/257 ━━━━━━━━━━━━━━━━━━━━ 4s 15ms/step - accuracy: 0.9125 - loss: 0.3704 - val_accuracy: 0.8439 - val_loss: 1.5214
+Epoch 15/100
+257/257 ━━━━━━━━━━━━━━━━━━━━ 4s 15ms/step - accuracy: 0.9175 - loss: 0.3088 - val_accuracy: 0.8390 - val_loss: 1.5831
+Epoch 16/100
+257/257 ━━━━━━━━━━━━━━━━━━━━ 4s 16ms/step - accuracy: 0.9211 - loss: 0.2946 - val_accuracy: 0.8521 - val_loss: 1.5596
+Epoch 17/100
+257/257 ━━━━━━━━━━━━━━━━━━━━ 4s 15ms/step - accuracy: 0.9255 - loss: 0.2544 - val_accuracy: 0.8502 - val_loss: 1.5730
+Epoch 18/100
+257/257 ━━━━━━━━━━━━━━━━━━━━ 3s 14ms/step - accuracy: 0.9370 - loss: 0.2263 - val_accuracy: 0.8512 - val_loss: 1.5566
+Epoch 19/100
+257/257 ━━━━━━━━━━━━━━━━━━━━ 4s 15ms/step - accuracy: 0.9311 - loss: 0.2228 - val_accuracy: 0.8599 - val_loss: 1.5225
+138/138 ━━━━━━━━━━━━━━━━━━━━ 1s 8ms/step - accuracy: 0.8453 - loss: 1.4534 
+Test Accuracy: 84.00%
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 31ms/step - accuracy: 1.0000 - loss: 0.1618
+Input text: ['80603 orderline 80603 orderline 80603 orderline 80603 orderline 80603 orderline 80603 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 4 sysdatatypes 76490 orderline 76490 orderline 76490 orderline 76490 orderline 76490 orderline 76490 orderline']
+Expected output text: ['76490']
+Test Accuracy (n=1): 100.00%
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 8ms/step - accuracy: 0.6941 - loss: 2.8942 
+Test First Token Accuracy: 68.41%
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 9ms/step - accuracy: 0.9965 - loss: 0.0135 
+Test Second Token Accuracy: 99.59%
+Predicting on a five example
+Input: [444   2 444   2 444   2 444   2 444   2 444   2 192   2 192   2 192   2
+ 192   2 192   2 192   2 192   2 192   2 192   2 192   2 192   2 192   2
+   4   3 372   2 372   2 372   2 372   2 372   2 372   2]
+Input text: ['80603 orderline 80603 orderline 80603 orderline 80603 orderline 80603 orderline 80603 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 4 sysdatatypes 76490 orderline 76490 orderline 76490 orderline 76490 orderline 76490 orderline 76490 orderline']
+Expected output text: ['76490']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 85ms/step
+Predicted output: [374]
+Predicted output text: ['76490']
+Input: [  2 444   2 444   2 444   2 444   2 444   2 192   2 192   2 192   2 192
+   2 192   2 192   2 192   2 192   2 192   2 192   2 192   2 192   2   4
+   3 372   2 372   2 372   2 372   2 372   2 372   2 372]
+Input text: ['orderline 80603 orderline 80603 orderline 80603 orderline 80603 orderline 80603 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 79454 orderline 4 sysdatatypes 76490 orderline 76490 orderline 76490 orderline 76490 orderline 76490 orderline 76490 orderline 76490']
+Expected output text: ['orderline']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 15ms/step
+Predicted output: [2]
+Predicted output text: ['orderline']
+Input: [337   2 337   2  25   2  25   2  25   2  25   2  25   2  25   2  25   2
+  25   2  25   2  25   2  25   2  25   2  25   2  25   2  25   2   4   3
+ 338   2 338   2 338   2 338   2 338   2 338   2 338   2]
+Input text: ['79822 orderline 79822 orderline 71146 orderline 71146 orderline 71146 orderline 71146 orderline 71146 orderline 71146 orderline 71146 orderline 71146 orderline 71146 orderline 71146 orderline 71146 orderline 71146 orderline 71146 orderline 71146 orderline 71146 orderline 4 sysdatatypes 78841 orderline 78841 orderline 78841 orderline 78841 orderline 78841 orderline 78841 orderline 78841 orderline']
+Expected output text: ['78841']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 15ms/step
+Predicted output: [576]
+Predicted output text: ['79183']
+Input: [  2 337   2  25   2  25   2  25   2  25   2  25   2  25   2  25   2  25
+   2  25   2  25   2  25   2  25   2  25   2  25   2  25   2   4   3 338
+   2 338   2 338   2 338   2 338   2 338   2 338   2 338]
+Input text: ['orderline 79822 orderline 71146 orderline 71146 orderline 71146 orderline 71146 orderline 71146 orderline 71146 orderline 71146 orderline 71146 orderline 71146 orderline 71146 orderline 71146 orderline 71146 orderline 71146 orderline 71146 orderline 71146 orderline 4 sysdatatypes 78841 orderline 78841 orderline 78841 orderline 78841 orderline 78841 orderline 78841 orderline 78841 orderline 78841']
+Expected output text: ['orderline']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 16ms/step
+Predicted output: [2]
+Predicted output text: ['orderline']
+Input: [ 93   2  93   2  93   2   4   3 140   2 140   2 140   2 140   2 140   2
+ 140   2 140   2 140   2 140   2 140   2 140   2 140   2 140   2 178   2
+ 178   2 178   2 178   2 178   2 178   2 178   2   4   3]
+Input text: ['81050 orderline 81050 orderline 81050 orderline 4 sysdatatypes 79548 orderline 79548 orderline 79548 orderline 79548 orderline 79548 orderline 79548 orderline 79548 orderline 79548 orderline 79548 orderline 79548 orderline 79548 orderline 79548 orderline 79548 orderline 79582 orderline 79582 orderline 79582 orderline 79582 orderline 79582 orderline 79582 orderline 79582 orderline 4 sysdatatypes']
+Expected output text: ['4']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 15ms/step
+Predicted output: [3]
+Predicted output text: ['4']
+Input: [  2  93   2  93   2   4   3 140   2 140   2 140   2 140   2 140   2 140
+   2 140   2 140   2 140   2 140   2 140   2 140   2 140   2 178   2 178
+   2 178   2 178   2 178   2 178   2 178   2   4   3   4]
+Input text: ['orderline 81050 orderline 81050 orderline 4 sysdatatypes 79548 orderline 79548 orderline 79548 orderline 79548 orderline 79548 orderline 79548 orderline 79548 orderline 79548 orderline 79548 orderline 79548 orderline 79548 orderline 79548 orderline 79548 orderline 79582 orderline 79582 orderline 79582 orderline 79582 orderline 79582 orderline 79582 orderline 79582 orderline 4 sysdatatypes 4']
+Expected output text: ['sysdatatypes']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 23ms/step
+Predicted output: [4]
+Predicted output text: ['sysdatatypes']
+Input: [552   2 552   2 552   2 552   2 552   2   4   3 705   2 705   2 705   2
+ 829   2 480   2 480   2 480   2 480   2 480   2 480   2 480   2 237   2
+ 237   2 237   2 237   2 237   2 237   2 237   2 237   2]
+Input text: ['76740 orderline 76740 orderline 76740 orderline 76740 orderline 76740 orderline 4 sysdatatypes 69076 orderline 69076 orderline 69076 orderline 69078 orderline 69077 orderline 69077 orderline 69077 orderline 69077 orderline 69077 orderline 69077 orderline 69077 orderline 79755 orderline 79755 orderline 79755 orderline 79755 orderline 79755 orderline 79755 orderline 79755 orderline 79755 orderline']
+Expected output text: ['79755']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 15ms/step
+Predicted output: [237]
+Predicted output text: ['79755']
+Input: [  2 552   2 552   2 552   2 552   2   4   3 705   2 705   2 705   2 829
+   2 480   2 480   2 480   2 480   2 480   2 480   2 480   2 237   2 237
+   2 237   2 237   2 237   2 237   2 237   2 237   2 237]
+Input text: ['orderline 76740 orderline 76740 orderline 76740 orderline 76740 orderline 4 sysdatatypes 69076 orderline 69076 orderline 69076 orderline 69078 orderline 69077 orderline 69077 orderline 69077 orderline 69077 orderline 69077 orderline 69077 orderline 69077 orderline 79755 orderline 79755 orderline 79755 orderline 79755 orderline 79755 orderline 79755 orderline 79755 orderline 79755 orderline 79755']
+Expected output text: ['orderline']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 16ms/step
+Predicted output: [2]
+Predicted output text: ['orderline']
+Input: [307   2 307   2 307   2 307   2 307   2 307   2 307   2 307   2 307   2
+   4   3  88   2  88   2  88   2  88   2  88   2  88   2  88   2  88   2
+  88   2  88   2  88   2  88   2  88   2  88   2 494   2]
+Input text: ['80217 orderline 80217 orderline 80217 orderline 80217 orderline 80217 orderline 80217 orderline 80217 orderline 80217 orderline 80217 orderline 4 sysdatatypes 79066 orderline 79066 orderline 79066 orderline 79066 orderline 79066 orderline 79066 orderline 79066 orderline 79066 orderline 79066 orderline 79066 orderline 79066 orderline 79066 orderline 79066 orderline 79066 orderline 80301 orderline']
+Expected output text: ['80301']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 16ms/step
+Predicted output: [175]
+Predicted output text: ['75972']
+Input: [  2 307   2 307   2 307   2 307   2 307   2 307   2 307   2 307   2   4
+   3  88   2  88   2  88   2  88   2  88   2  88   2  88   2  88   2  88
+   2  88   2  88   2  88   2  88   2  88   2 494   2 494]
+Input text: ['orderline 80217 orderline 80217 orderline 80217 orderline 80217 orderline 80217 orderline 80217 orderline 80217 orderline 80217 orderline 4 sysdatatypes 79066 orderline 79066 orderline 79066 orderline 79066 orderline 79066 orderline 79066 orderline 79066 orderline 79066 orderline 79066 orderline 79066 orderline 79066 orderline 79066 orderline 79066 orderline 79066 orderline 80301 orderline 80301']
+Expected output text: ['orderline']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 17ms/step
+Predicted output: [2]
+Predicted output text: ['orderline']
+Input: [ 53   2  53   2  53   2  53   2  53   2 376   2 376   2 376   2 376   2
+ 376   2 376   2 376   2 376   2 376   2   4   3   4   3 145   2 145   2
+ 145   2 145   2 145   2 145   2 145   2 145   2 145   2]
+Input text: ['80633 orderline 80633 orderline 80633 orderline 80633 orderline 80633 orderline 81902 orderline 81902 orderline 81902 orderline 81902 orderline 81902 orderline 81902 orderline 81902 orderline 81902 orderline 81902 orderline 4 sysdatatypes 4 sysdatatypes 79939 orderline 79939 orderline 79939 orderline 79939 orderline 79939 orderline 79939 orderline 79939 orderline 79939 orderline 79939 orderline']
+Expected output text: ['79939']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 16ms/step
+Predicted output: [145]
+Predicted output text: ['79939']
+Input: [  2  53   2  53   2  53   2  53   2 376   2 376   2 376   2 376   2 376
+   2 376   2 376   2 376   2 376   2   4   3   4   3 145   2 145   2 145
+   2 145   2 145   2 145   2 145   2 145   2 145   2 145]
+Input text: ['orderline 80633 orderline 80633 orderline 80633 orderline 80633 orderline 81902 orderline 81902 orderline 81902 orderline 81902 orderline 81902 orderline 81902 orderline 81902 orderline 81902 orderline 81902 orderline 4 sysdatatypes 4 sysdatatypes 79939 orderline 79939 orderline 79939 orderline 79939 orderline 79939 orderline 79939 orderline 79939 orderline 79939 orderline 79939 orderline 79939']
+Expected output text: ['orderline']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 27ms/step
+Predicted output: [2]
+Predicted output text: ['orderline']
+Input: [181   2 181   2 181   2 181   2 181   2 181   2   4   3   4   3   4   3
+  76   2  76   2  76   2  76   2  76   2  76   2  76   2  76   2  76   2
+  76   2  76   2  76   2  76   2  76   2 182   2 182   2]
+Input text: ['72733 orderline 72733 orderline 72733 orderline 72733 orderline 72733 orderline 72733 orderline 4 sysdatatypes 4 sysdatatypes 4 sysdatatypes 63919 orderline 63919 orderline 63919 orderline 63919 orderline 63919 orderline 63919 orderline 63919 orderline 63919 orderline 63919 orderline 63919 orderline 63919 orderline 63919 orderline 63919 orderline 63919 orderline 74344 orderline 74344 orderline']
+Expected output text: ['74344']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 15ms/step
+Predicted output: [182]
+Predicted output text: ['74344']
+Input: [  2 181   2 181   2 181   2 181   2 181   2   4   3   4   3   4   3  76
+   2  76   2  76   2  76   2  76   2  76   2  76   2  76   2  76   2  76
+   2  76   2  76   2  76   2  76   2 182   2 182   2 182]
+Input text: ['orderline 72733 orderline 72733 orderline 72733 orderline 72733 orderline 72733 orderline 4 sysdatatypes 4 sysdatatypes 4 sysdatatypes 63919 orderline 63919 orderline 63919 orderline 63919 orderline 63919 orderline 63919 orderline 63919 orderline 63919 orderline 63919 orderline 63919 orderline 63919 orderline 63919 orderline 63919 orderline 63919 orderline 74344 orderline 74344 orderline 74344']
+Expected output text: ['orderline']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 17ms/step
+Predicted output: [2]
+Predicted output text: ['orderline']
+Input: [  9   2   9   2   9   2   9   2   9   2   4   3 638   2 638   2 638   2
+ 638   2 638   2 486   2 486   2 486   2 486   2 486   2 486   2 486   2
+   4   3 684   2 684   2 684   2 684   2 839   2 297   2]
+Input text: ['78955 orderline 78955 orderline 78955 orderline 78955 orderline 78955 orderline 4 sysdatatypes 76863 orderline 76863 orderline 76863 orderline 76863 orderline 76863 orderline 79626 orderline 79626 orderline 79626 orderline 79626 orderline 79626 orderline 79626 orderline 79626 orderline 4 sysdatatypes 81493 orderline 81493 orderline 81493 orderline 81493 orderline 81495 orderline 81494 orderline']
+Expected output text: ['4']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 16ms/step
+Predicted output: [3]
+Predicted output text: ['4']

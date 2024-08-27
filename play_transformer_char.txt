@@ -1,0 +1,192 @@
+Model: "functional"
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━┓
+┃ Layer (type)                         ┃ Output Shape                ┃         Param # ┃
+┡━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━┩
+│ input_layer (InputLayer)             │ (None, 50)                  │               0 │
+├──────────────────────────────────────┼─────────────────────────────┼─────────────────┤
+│ token_and_position_embedding         │ (None, 50, 128)             │         121,600 │
+│ (TokenAndPositionEmbedding)          │                             │                 │
+├──────────────────────────────────────┼─────────────────────────────┼─────────────────┤
+│ transformer_encoder                  │ (None, 50, 128)             │         198,272 │
+│ (TransformerEncoder)                 │                             │                 │
+├──────────────────────────────────────┼─────────────────────────────┼─────────────────┤
+│ get_item (GetItem)                   │ (None, 6, 128)              │               0 │
+├──────────────────────────────────────┼─────────────────────────────┼─────────────────┤
+│ dense (Dense)                        │ (None, 6, 256)              │          33,024 │
+├──────────────────────────────────────┼─────────────────────────────┼─────────────────┤
+│ dense_1 (Dense)                      │ (None, 6, 900)              │         231,300 │
+└──────────────────────────────────────┴─────────────────────────────┴─────────────────┘
+ Total params: 584,196 (2.23 MB)
+ Trainable params: 584,196 (2.23 MB)
+ Non-trainable params: 0 (0.00 B)
+Epoch 1/100
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1724703410.625220   65687 service.cc:146] XLA service 0x7f5ce4008680 initialized for platform CUDA (this does not guarantee that XLA will be used). Devices:
+I0000 00:00:1724703410.625311   65687 service.cc:154]   StreamExecutor device (0): NVIDIA GeForce RTX 2070 SUPER, Compute Capability 7.5
+2024-08-26 20:16:50.702644: I tensorflow/compiler/mlir/tensorflow/utils/dump_mlir_util.cc:268] disabling MLIR crash reproducer, set env var `MLIR_CRASH_REPRODUCER_DIRECTORY` to enable.
+2024-08-26 20:16:50.993671: I external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:531] Loaded cuDNN version 8906
+2024-08-26 20:16:55.192026: I external/local_xla/xla/stream_executor/cuda/cuda_asm_compiler.cc:393] ptxas warning : Registers are spilled to local memory in function 'input_slice_fusion_1', 4 bytes spill stores, 4 bytes spill loads
+
+I0000 00:00:1724703415.221364   65687 device_compiler.h:188] Compiled cluster using XLA!  This line is logged at most once for the lifetime of the process.
+123/129 ━━━━━━━━━━━━━━━━━━━━ 0s 3ms/step - accuracy: 0.7455 - loss: 1.77902024-08-26 20:16:59.667611: I external/local_xla/xla/stream_executor/cuda/cuda_asm_compiler.cc:393] ptxas warning : Registers are spilled to local memory in function 'input_slice_fusion_1', 4 bytes spill stores, 4 bytes spill loads
+
+129/129 ━━━━━━━━━━━━━━━━━━━━ 14s 53ms/step - accuracy: 0.7499 - loss: 1.7335 - val_accuracy: 0.8551 - val_loss: 0.6319
+Epoch 2/100
+129/129 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - accuracy: 0.8571 - loss: 0.6225 - val_accuracy: 0.8530 - val_loss: 0.6693
+Epoch 3/100
+129/129 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - accuracy: 0.8576 - loss: 0.6079 - val_accuracy: 0.8562 - val_loss: 0.6308
+Epoch 4/100
+129/129 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - accuracy: 0.8572 - loss: 0.5992 - val_accuracy: 0.8547 - val_loss: 0.6265
+Epoch 5/100
+129/129 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - accuracy: 0.8519 - loss: 0.6231 - val_accuracy: 0.8619 - val_loss: 0.6047
+Epoch 6/100
+129/129 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - accuracy: 0.8608 - loss: 0.5953 - val_accuracy: 0.8664 - val_loss: 0.5923
+Epoch 7/100
+129/129 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - accuracy: 0.8657 - loss: 0.5626 - val_accuracy: 0.8693 - val_loss: 0.5732
+Epoch 8/100
+129/129 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - accuracy: 0.8739 - loss: 0.5233 - val_accuracy: 0.8635 - val_loss: 0.5872
+Epoch 9/100
+129/129 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - accuracy: 0.8646 - loss: 0.5584 - val_accuracy: 0.8688 - val_loss: 0.5737
+Epoch 10/100
+129/129 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - accuracy: 0.8664 - loss: 0.5410 - val_accuracy: 0.8700 - val_loss: 0.5707
+Epoch 11/100
+129/129 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - accuracy: 0.8720 - loss: 0.5291 - val_accuracy: 0.8693 - val_loss: 0.5845
+Epoch 12/100
+129/129 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - accuracy: 0.8689 - loss: 0.5355 - val_accuracy: 0.8669 - val_loss: 0.5942
+Epoch 13/100
+129/129 ━━━━━━━━━━━━━━━━━━━━ 1s 4ms/step - accuracy: 0.8742 - loss: 0.5089 - val_accuracy: 0.8705 - val_loss: 0.5633
+Epoch 14/100
+129/129 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - accuracy: 0.8642 - loss: 0.5382 - val_accuracy: 0.8664 - val_loss: 0.5835
+Epoch 15/100
+129/129 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - accuracy: 0.8622 - loss: 0.5432 - val_accuracy: 0.8690 - val_loss: 0.5789
+Epoch 16/100
+129/129 ━━━━━━━━━━━━━━━━━━━━ 1s 5ms/step - accuracy: 0.8700 - loss: 0.5129 - val_accuracy: 0.8687 - val_loss: 0.5686
+Epoch 17/100
+129/129 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - accuracy: 0.8700 - loss: 0.5001 - val_accuracy: 0.8649 - val_loss: 0.5843
+Epoch 18/100
+129/129 ━━━━━━━━━━━━━━━━━━━━ 0s 4ms/step - accuracy: 0.8732 - loss: 0.4921 - val_accuracy: 0.8633 - val_loss: 0.5850
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 19ms/step - accuracy: 0.8762 - loss: 0.5356
+Per-character Test Accuracy: 87.62%
+Predicting on a five example
+Input: [ 3  4  5  6 11  2  3  4  5  6 11  2  8 13  8 13  8 13  7  3 12  9 12  2
+  7  3 12  9 12  2  7  3 12  9 12  2  7  3 12  9 12  2  7  3 12  9 12  2
+  8 13]
+Input text: ['7 8 0 9 3 orderline 7 8 0 9 3 orderline 4 sysdatatypes 4 sysdatatypes 4 sysdatatypes 6 7 2 1 2 orderline 6 7 2 1 2 orderline 6 7 2 1 2 orderline 6 7 2 1 2 orderline 6 7 2 1 2 orderline 4 sysdatatypes']
+Expected output text: ['4 sysdatatypes <OOV> <OOV> <OOV> <OOV>']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 1s 785ms/step
+Predicted output: [[ 8 13  0  0  0  2]]
+Predicted output text: ['4 sysdatatypes <OOV> <OOV> <OOV> orderline']
+Input: [ 9  3 12  2  3  3  9  3 12  2  3  3  9  3 12  2  3  3  9  3 12  2  3  3
+  9  3 12  2  8 13  8 13  3 12 10 12 11  2  3 12 10 12 11  2  3 12 10 12
+ 11  2]
+Input text: ['1 7 2 orderline 7 7 1 7 2 orderline 7 7 1 7 2 orderline 7 7 1 7 2 orderline 7 7 1 7 2 orderline 4 sysdatatypes 4 sysdatatypes 7 2 5 2 3 orderline 7 2 5 2 3 orderline 7 2 5 2 3 orderline']
+Expected output text: ['7 2 5 2 3 orderline']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 13ms/step
+Predicted output: [[ 3 12  9 12 11  2]]
+Predicted output text: ['7 2 5 2 3 orderline']
+Input: [10  2  3  3  7  3  3  2  3  3  7  3  7  2  3  3  7  3  7  2  4  9  5  3
+  8  2  4  9  5  3  8  2  4  9  5  3  8  2  4  9  5  3  8  2  4  9  5  3
+  8  2]
+Input text: ['5 orderline 7 7 6 7 7 orderline 7 7 6 7 6 orderline 7 7 6 7 6 orderline 8 1 0 7 4 orderline 8 1 0 7 4 orderline 8 1 0 7 4 orderline 8 1 0 7 4 orderline 8 1 0 7 4 orderline']
+Expected output text: ['8 1 0 7 4 orderline']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 14ms/step
+Predicted output: [[ 4 10  5  3  8  2]]
+Predicted output text: ['8 1 0 7 4 orderline']
+Input: [ 4  9  8 12 11  2  4  9  8 12 11  2  4  9  8 12 11  2  4  9  8 12 11  2
+  8 13  3  6  9  6 12  2  3  6  9  6 12  2  3  6  9  6 12  2  3  6  9  6
+ 12  2]
+Input text: ['8 1 4 2 3 orderline 8 1 4 2 3 orderline 8 1 4 2 3 orderline 8 1 4 2 3 orderline 4 sysdatatypes 7 9 1 9 2 orderline 7 9 1 9 2 orderline 7 9 1 9 2 orderline 7 9 1 9 2 orderline']
+Expected output text: ['7 9 1 9 2 orderline']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 13ms/step
+Predicted output: [[ 3  6 10  6 12  2]]
+Predicted output text: ['7 9 1 9 2 orderline']
+Input: [ 8  2  7 10  7  6  8  2  7 10  7  6  8  2  7 10  7  6  8  2  7 10  7  6
+  8  2  7 10  7  6  8  2  7 10  7  6  8  2  7 10  7  6  8  2  7 10  7  6
+  8  2]
+Input text: ['4 orderline 6 5 6 9 4 orderline 6 5 6 9 4 orderline 6 5 6 9 4 orderline 6 5 6 9 4 orderline 6 5 6 9 4 orderline 6 5 6 9 4 orderline 6 5 6 9 4 orderline 6 5 6 9 4 orderline']
+Expected output text: ['7 7 2 8 4 orderline']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 13ms/step
+Predicted output: [[7 9 7 6 8 2]]
+Predicted output text: ['6 5 6 9 4 orderline']
+Input: [12  2  4  5  4 11 12  2  4  5  4 11 12  2  4  5  4 11 12  2  4  5  4 11
+ 12  2  4  5  4 11 12  2  4  5  4 11 12  2  3 10 10  7  5  2  3 10 10  7
+  5  2]
+Input text: ['2 orderline 8 0 8 3 2 orderline 8 0 8 3 2 orderline 8 0 8 3 2 orderline 8 0 8 3 2 orderline 8 0 8 3 2 orderline 8 0 8 3 2 orderline 7 5 5 6 0 orderline 7 5 5 6 0 orderline']
+Expected output text: ['7 5 5 6 0 orderline']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 13ms/step
+Predicted output: [[3 9 9 7 5 2]]
+Predicted output text: ['7 5 5 6 0 orderline']
+Input: [11  2  3 12 10 12 11  2  3 12 10 12 11  2  3 12 10 12 11  2  3 12 10 12
+ 11  2  3 12 10 12 11  2  3 12 10 12 11  2  3 12 10 12 11  2  3 12 10 12
+ 11  2]
+Input text: ['3 orderline 7 2 5 2 3 orderline 7 2 5 2 3 orderline 7 2 5 2 3 orderline 7 2 5 2 3 orderline 7 2 5 2 3 orderline 7 2 5 2 3 orderline 7 2 5 2 3 orderline 7 2 5 2 3 orderline']
+Expected output text: ['7 6 7 0 2 orderline']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 12ms/step
+Predicted output: [[ 3 12  9 12 11  2]]
+Predicted output text: ['7 2 5 2 3 orderline']
+Input: [11  2  3  6 11 11 11  2  3  6 11 11 11  2  3  6 11 11 11  2  3  5  3  6
+ 12  2  3  5  3  6 12  2  3  5  3  6 12  2  3  5  3  6 12  2  3  5  3  6
+ 12  2]
+Input text: ['3 orderline 7 9 3 3 3 orderline 7 9 3 3 3 orderline 7 9 3 3 3 orderline 7 0 7 9 2 orderline 7 0 7 9 2 orderline 7 0 7 9 2 orderline 7 0 7 9 2 orderline 7 0 7 9 2 orderline']
+Expected output text: ['7 0 7 9 2 orderline']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 13ms/step
+Predicted output: [[ 3  5  3  6 12  2]]
+Predicted output text: ['7 0 7 9 2 orderline']
+Input: [ 4  5 12 12  6  2  4  5 12 12  6  2  4  5 12 12  6  2  4  5 12 12  6  2
+  8 13 10 10 11  3  7  2 10 10 11  3  7  2 10 10 11  3  7  2 10 10 11  3
+  7  2]
+Input text: ['8 0 2 2 9 orderline 8 0 2 2 9 orderline 8 0 2 2 9 orderline 8 0 2 2 9 orderline 4 sysdatatypes 5 5 3 7 6 orderline 5 5 3 7 6 orderline 5 5 3 7 6 orderline 5 5 3 7 6 orderline']
+Expected output text: ['5 5 3 7 6 orderline']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 13ms/step
+Predicted output: [[ 9  9 11  3  7  2]]
+Predicted output text: ['5 5 3 7 6 orderline']
+Input: [11  2  4  5  7  5 11  2  3  6  8 10  8  2  3  6  8 10  8  2  3  6  8 10
+  8  2  3  6  8 10  8  2  3  6  8 10  8  2  3  6  8 10  8  2  3  6  8 10
+  8  2]
+Input text: ['3 orderline 8 0 6 0 3 orderline 7 9 4 5 4 orderline 7 9 4 5 4 orderline 7 9 4 5 4 orderline 7 9 4 5 4 orderline 7 9 4 5 4 orderline 7 9 4 5 4 orderline 7 9 4 5 4 orderline']
+Expected output text: ['7 9 4 5 4 orderline']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 13ms/step
+Predicted output: [[3 6 8 9 8 2]]
+Predicted output text: ['7 9 4 5 4 orderline']
+Input: [ 3  3  7  3 12  2  3  3  7  3 12  2  3  3  7  3 12  2  3  3  7  3 12  2
+  3  3  7  3 12  2  3  3  7  3 12  2  3  3  7  3 12  2  8 13  4  9  5 12
+  6  2]
+Input text: ['7 7 6 7 2 orderline 7 7 6 7 2 orderline 7 7 6 7 2 orderline 7 7 6 7 2 orderline 7 7 6 7 2 orderline 7 7 6 7 2 orderline 7 7 6 7 2 orderline 4 sysdatatypes 8 1 0 2 9 orderline']
+Expected output text: ['8 1 0 2 9 orderline']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 13ms/step
+Predicted output: [[ 4 10  5 12  6  2]]
+Predicted output text: ['8 1 0 2 9 orderline']
+Input: [ 8  2  3 12  9  5  8  2  3 12  9  5  8  2  3 12  9  5  8  2  3 12  9  5
+  8  2  3 12  9  5  8  2  3 12  9  5  8  2  3 12  9  5  8  2  3 12  9  5
+  8  2]
+Input text: ['4 orderline 7 2 1 0 4 orderline 7 2 1 0 4 orderline 7 2 1 0 4 orderline 7 2 1 0 4 orderline 7 2 1 0 4 orderline 7 2 1 0 4 orderline 7 2 1 0 4 orderline 7 2 1 0 4 orderline']
+Expected output text: ['4 sysdatatypes <OOV> <OOV> <OOV> <OOV>']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 13ms/step
+Predicted output: [[ 3 12 10  5  8  2]]
+Predicted output text: ['7 2 1 0 4 orderline']
+Input: [ 9  2  3  6  4  6  9  2  3  6  4  6  9  2  3  6  4  6  9  2  3  6  4  6
+  9  2  3  6  4  6  9  2  3  6  4  6  9  2  3  6  4  6  9  2  8 13  8 13
+  8 13]
+Input text: ['1 orderline 7 9 8 9 1 orderline 7 9 8 9 1 orderline 7 9 8 9 1 orderline 7 9 8 9 1 orderline 7 9 8 9 1 orderline 7 9 8 9 1 orderline 7 9 8 9 1 orderline 4 sysdatatypes 4 sysdatatypes 4 sysdatatypes']
+Expected output text: ['4 sysdatatypes <OOV> <OOV> <OOV> <OOV>']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 13ms/step
+Predicted output: [[ 8 13  0  0  0  2]]
+Predicted output text: ['4 sysdatatypes <OOV> <OOV> <OOV> orderline']
+Input: [10  2  3  5  6 10 10  2  3  5  6 10 10  2  3  5  6 10  3  2  3  5  6 10
+  7  2  7  6 11  3 10  2  7  6 11  3 10  2  7  6 11  3 10  2  7  6 11  3
+ 10  2]
+Input text: ['5 orderline 7 0 9 5 5 orderline 7 0 9 5 5 orderline 7 0 9 5 7 orderline 7 0 9 5 6 orderline 6 9 3 7 5 orderline 6 9 3 7 5 orderline 6 9 3 7 5 orderline 6 9 3 7 5 orderline']
+Expected output text: ['6 9 3 7 5 orderline']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 13ms/step
+Predicted output: [[ 7  6 11  3  9  2]]
+Predicted output text: ['6 9 3 7 5 orderline']
+Input: [ 3 10 10  2  3  6  3 10 10  2  3  6  3 10 10  2  3  6  3 10 10  2  3  6
+  3 10 10  2  3  6  3 10 10  2  8 13  8 13  3  3  4  8  5  2  3  3  4  8
+  5  2]
+Input text: ['7 5 5 orderline 7 9 7 5 5 orderline 7 9 7 5 5 orderline 7 9 7 5 5 orderline 7 9 7 5 5 orderline 7 9 7 5 5 orderline 4 sysdatatypes 4 sysdatatypes 7 7 8 4 0 orderline 7 7 8 4 0 orderline']
+Expected output text: ['7 7 8 4 0 orderline']
+1/1 ━━━━━━━━━━━━━━━━━━━━ 0s 13ms/step
+Predicted output: [[3 3 4 8 5 2]]
+Predicted output text: ['7 7 8 4 0 orderline']
+69/69 ━━━━━━━━━━━━━━━━━━━━ 1s 10ms/step  
+Actual Test Accuracy (n=2203): 80.71%
