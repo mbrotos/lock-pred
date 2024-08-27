@@ -23,7 +23,7 @@ data.columns = data.columns.str.strip()
 data["page_table_combined"] = (
     # TODO: uncomment the line below  and comment the next one for char-based tokenization
     # data["PAGEID"].astype(str).apply(lambda x: " ".join(x))
-    data["PAGEID"].astype(str).apply(lambda x: " ".join(x))
+    data["PAGEID"].astype(str)
     + " "
     + data["TABNAME"].astype(str).apply(lambda x: x.replace("_", ""))
 )
@@ -46,43 +46,39 @@ def create_sequences(data, seq_length):
 
 
 seq_length = 50  # Define sequence length
-out_seq_length = 6  # Define output sequence length I.e., page_id and table_name
+out_seq_length = 4  # Define output sequence length I.e., page_id and table_name
 source_texts, target_texts = create_sequences(data, seq_length)
 
 # Parameters
-num_unqiue_table_names = len(data["TABNAME"].unique())
-vocab_size = num_unqiue_table_names + 10 + 2  # Vocabulary size
+vocab_size = 900  # Vocabulary size
 embedding_dim = 128  # Embedding dimension
 max_length = seq_length  # Maximum length of the input sequences
 lstm_units = 256  # Number of LSTM units
 
-def check_oov(tokenized_texts):
-    """Check how many OOV tokens are present in the tokenized texts"""
-    for text in tokenized_texts:
-        if 1 in text:
-            return True
-    return False
-    
+from tokenizers import Tokenizer
+from tokenizers.pre_tokenizers import Whitespace
+from tokenizers.models import BPE
+from tokenizers.decoders import BPEDecoder
+tokenizer = Tokenizer(BPE())
+tokenizer.pre_tokenizer = Whitespace()
+tokenizer.decoder = BPEDecoder()
+from tokenizers.trainers import BpeTrainer
 
-# Tokenization
-# TODO: create one unified tokenizer for input and output
-source_tokenizer = Tokenizer(num_words=vocab_size, oov_token="<OOV>")
-source_tokenizer.fit_on_texts(source_texts)
-source_sequences = source_tokenizer.texts_to_sequences(source_texts)
+special_tokens = data["TABNAME"].astype(str).apply(lambda x: x.replace("_", "")).unique().tolist()
+
+trainer = BpeTrainer(vocab_size=vocab_size, max_token_length=out_seq_length-1, special_tokens=["<PAD>"] + special_tokens)
+tokenizer.train_from_iterator([*source_texts, *target_texts], trainer=trainer)
+vocab_size = tokenizer.get_vocab_size()
+
+source_sequences = [encode.ids for encode in tokenizer.encode_batch(source_texts)]
 padded_source_sequences = pad_sequences(
-    source_sequences, maxlen=max_length, padding="post", value=-1
+    source_sequences, maxlen=max_length, padding="post", value=tokenizer.token_to_id("<PAD>")
 )
-if check_oov(source_sequences):
-    raise ValueError("OOV tokens found in source sequences")
 
-target_tokenizer = Tokenizer(num_words=vocab_size, oov_token="<OOV>")
-target_tokenizer.fit_on_texts(target_texts)
-target_sequences = target_tokenizer.texts_to_sequences(target_texts)
+target_sequences = [encode.ids for encode in tokenizer.encode_batch(target_texts)]
 padded_target_sequences = pad_sequences(
-    target_sequences, maxlen=out_seq_length, padding="post", value=-1
+    target_sequences, maxlen=out_seq_length, padding="post", value=tokenizer.token_to_id("<PAD>")
 )
-if check_oov(target_sequences):
-    raise ValueError("OOV tokens found in target sequences")
 
 # Shifting target sequences to be the expected output (next token)
 input_data = padded_source_sequences
@@ -145,19 +141,19 @@ history = model.fit(
 
 # Evaluate the model on the test dataset
 loss, accuracy = model.evaluate(x_test, y_test)
-print(f"Per-character Test Accuracy: {accuracy * 100:.2f}%")
+print(f"Test Accuracy: {accuracy * 100:.2f}%")
 
-print("Predicting on a five example")
+print("Predicting on some examples")
 
 for i in range(15):
     print("Input:", x_test[i])
-    print("Input text:", source_tokenizer.sequences_to_texts([x_test[i]]))
+    print("Input text:", tokenizer.decode(x_test[i], skip_special_tokens=False))
     #print("Expected output:", y_test[i])
-    print("Expected output text:", target_tokenizer.sequences_to_texts([np.argmax(y_test[i], axis=-1)]))
+    print("Expected output text:", tokenizer.decode(np.argmax(y_test[i], axis=-1), skip_special_tokens=False))
     output = model.predict(x_test[np.newaxis,i])
     #print("Predicted output softmax:", output)
     print("Predicted output:", np.argmax(output, axis=-1))
-    print("Predicted output text:", target_tokenizer.sequences_to_texts([np.argmax(output, axis=-1)[0]]))
+    print("Predicted output text:", tokenizer.decode(np.argmax(output, axis=-1)[0], skip_special_tokens=False))
 
 # calculate the accuracy using batching
 
@@ -172,8 +168,8 @@ for i in range(len(x_test)):
     #     preds_all[i][np.where(preds_all[i] == 0)[0][0]:] = 0
     if np.all(y_test_all[i] == preds_all[i]):
         count += 1
-
 print(f"Actual Test Accuracy (n={len(x_test)}): {count/len(x_test) * 100:.2f}%")
+
 # %%
 
 
