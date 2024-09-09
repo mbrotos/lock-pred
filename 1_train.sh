@@ -13,13 +13,9 @@ python src/train.py \
 # Word-based tokenization
 python src/train.py \
     --model transformer \
-    --tokenization word \
-    --vocab_size 1000 \
-    --out_seq_length 2
+    --tokenization word 
 
 python src/train.py \
     --model lstm \
-    --tokenization word \
-    --vocab_size 1000 \
-    --out_seq_length 2
+    --tokenization word 
     

@@ -4,20 +4,37 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 from keras.utils import to_categorical
 import numpy as np
 
-def load_data(file_path, char_based=True):
+def load_data(
+    file_path,
+    char_based=True,
+    add_row_id=False,
+    add_start_end_tokens=False,
+    add_label_tokens=False,
+):
     data = pd.read_csv(file_path)
 
     # Strip spaces from column headers
     data.columns = data.columns.str.strip()
+    if char_based:
+        data["PAGEID"] = data["PAGEID"].astype(str).apply(lambda x: " ".join(x))
+        data["ROWID"] = data["ROWID"].astype(str).apply(lambda x: " ".join(x))
+    else:
+        data["PAGEID"] = data["PAGEID"].astype(str)
+        data["ROWID"] = data["ROWID"].astype(str)
+    
+    data["TABNAME"] = data["TABNAME"].astype(str).apply(lambda x: x.replace("_", ""))
 
     # Create features
-    data["page_table_combined"] = (
-        (
-            data["PAGEID"].astype(str).apply(lambda x: " ".join(x)) if char_based 
-            else data["PAGEID"].astype(str)
-        )
-        + " "
-        + data["TABNAME"].astype(str).apply(lambda x: x.replace("_", ""))
+    data["input"] = (
+        ("<START> " if add_start_end_tokens else "") +
+        (("<ROWID> " if add_label_tokens and add_row_id else "") + data["ROWID"] + " " if add_row_id else "") +
+        ("<PAGEID> " if add_label_tokens else "") + data["PAGEID"] + " " +
+        data["TABNAME"] +
+        (" <END>" if add_start_end_tokens else "")
+    )
+
+    data["output"] = (
+        data["PAGEID"] + " " + data["TABNAME"]
     )
 
     return data
@@ -26,18 +43,19 @@ def create_sequences(data, seq_length):
     X, y = [], []
     for i in range(len(data) - seq_length):
         X.append(
-            data.iloc[i : i + seq_length][["page_table_combined"]]
+            data.iloc[i : i + seq_length][["input"]]
             .apply(" ".join)
             .reset_index()
             .values[0][1]
         )
         y.append(
-            data.iloc[i + seq_length]["page_table_combined"]
+            data.iloc[i + seq_length]["output"]
         )  # Predicting combined feature
     return X, y
 
 def tokenize_data(text, vocab_size, max_length):
-    tokenizer = Tokenizer(num_words=vocab_size)
+    # NOTE: The <> symbols are not included in the filters so we don't split on them.
+    tokenizer = Tokenizer(num_words=vocab_size, filters='!"#$%&()*+,-./:;=?@[\\]^_`{|}~\t\n')
     tokenizer.fit_on_texts(text)
     source_sequences = tokenizer.texts_to_sequences(text)
     padded_source_sequences = pad_sequences(
