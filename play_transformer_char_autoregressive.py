@@ -9,7 +9,7 @@ from keras.utils import to_categorical
 import numpy as np
 import keras_nlp
 
-ROW_CSV_FILE = r"data/row_locks.csv"
+ROW_CSV_FILE = r"row_locks.csv"
 
 # Load and preprocess data
 data = pd.read_csv(ROW_CSV_FILE)
@@ -20,11 +20,21 @@ data.columns = data.columns.str.strip()
 # Create features
 # TODO: add row_id, add token for rowid and page id token
 # TODO: try transformer
-data["page_table_combined"] = (
+data["input"] = (
     # TODO: uncomment the line below  and comment the next one for char-based tokenization
     # data["PAGEID"].astype(str).apply(lambda x: " ".join(x))
-    data["PAGEID"].astype(str)
-    + "_"
+    "START " + data["ROWID"].astype(str).apply(lambda x: " ".join(x))
+    + " "
+    + data["PAGEID"].astype(str).apply(lambda x: " ".join(x))
+    + " "
+    + data["TABNAME"].astype(str).apply(lambda x: x.replace("_", "")) + " END"
+)
+
+data["output"] = (
+    # TODO: uncomment the line below  and comment the next one for char-based tokenization
+    # data["PAGEID"].astype(str).apply(lambda x: " ".join(x))
+    data["PAGEID"].astype(str).apply(lambda x: " ".join(x))
+    + " "
     + data["TABNAME"].astype(str).apply(lambda x: x.replace("_", ""))
 )
 
@@ -34,23 +44,24 @@ def create_sequences(data, seq_length):
     X, y = [], []
     for i in range(len(data) - seq_length):
         X.append(
-            data.iloc[i : i + seq_length][["page_table_combined"]]
+            data.iloc[i : i + seq_length][["input"]]
             .apply(" ".join)
             .reset_index()
             .values[0][1]
         )
         y.append(
-            data.iloc[i + seq_length]["page_table_combined"]
+            data.iloc[i + seq_length]["output"]
         )  # Predicting combined feature
     return X, y
 
 
 seq_length = 50  # Define sequence length
-out_seq_length = 2  # Define output sequence length I.e., page_id and table_name
+out_seq_length = 6  # Define output sequence length I.e., page_id and table_name
 source_texts, target_texts = create_sequences(data, seq_length)
 
 # Parameters
-vocab_size = 900  # Vocabulary size
+num_unqiue_table_names = len(data["TABNAME"].unique())
+vocab_size = num_unqiue_table_names + 10 + 1 +2 # Vocabulary size
 embedding_dim = 128  # Embedding dimension
 max_length = seq_length  # Maximum length of the input sequences
 lstm_units = 256  # Number of LSTM units
@@ -65,23 +76,23 @@ def check_oov(tokenized_texts):
 
 # Tokenization
 # TODO: create one unified tokenizer for input and output
-source_tokenizer = Tokenizer(num_words=vocab_size, oov_token="<OOV>")
+source_tokenizer = Tokenizer(num_words=vocab_size)
 source_tokenizer.fit_on_texts(source_texts)
 source_sequences = source_tokenizer.texts_to_sequences(source_texts)
 padded_source_sequences = pad_sequences(
-    source_sequences, maxlen=max_length, padding="post"
+    source_sequences, maxlen=max_length, padding="post", value=0.0
 )
-if check_oov(source_sequences):
-    raise ValueError("OOV tokens found in source sequences")
+# if check_oov(source_sequences):
+#     raise ValueError("OOV tokens found in source sequences")
 
-target_tokenizer = Tokenizer(num_words=vocab_size, oov_token="<OOV>")
+target_tokenizer = Tokenizer(num_words=vocab_size)
 target_tokenizer.fit_on_texts(target_texts)
 target_sequences = target_tokenizer.texts_to_sequences(target_texts)
 padded_target_sequences = pad_sequences(
-    target_sequences, maxlen=out_seq_length, padding="post"
+    target_sequences, maxlen=out_seq_length, padding="post", value=0.0
 )
-if check_oov(target_sequences):
-    raise ValueError("OOV tokens found in target sequences")
+# if check_oov(target_sequences):
+#     raise ValueError("OOV tokens found in target sequences")
 
 # Shifting target sequences to be the expected output (next token)
 input_data = padded_source_sequences
@@ -90,7 +101,7 @@ output_data = to_categorical(padded_target_sequences, num_classes=vocab_size)
 # Partitioning data into train and test sets (70% train, 30% test) randomly but maintaining the order
 # The unshuffled dataset results in a highly skewed dataset split, and the model performs poorly on test
 indices = np.arange(len(input_data))
-#np.random.shuffle(indices)
+np.random.shuffle(indices)
 # Calculate the split index
 split_index = int(len(indices) * 0.7)
 
@@ -111,7 +122,7 @@ embedding = keras_nlp.layers.TokenAndPositionEmbedding(
 )(input)
 transformer = keras_nlp.layers.TransformerEncoder(
     intermediate_dim=512, num_heads=8, dropout=0.1
-)(embedding)[:, -2:, :]
+)(embedding)[:, -out_seq_length:, :]
 dense = Dense(256, activation="relu")(transformer)
 output = Dense(vocab_size, activation="softmax")(dense)
 model = Model(inputs=input, outputs=output)
@@ -144,7 +155,7 @@ history = model.fit(
 
 # Evaluate the model on the test dataset
 loss, accuracy = model.evaluate(x_test, y_test)
-print(f"Test Accuracy: {accuracy * 100:.2f}%")
+print(f"Per-character Test Accuracy: {accuracy * 100:.2f}%")
 
 print("Predicting on a five example")
 
@@ -158,6 +169,21 @@ for i in range(15):
     print("Predicted output:", np.argmax(output, axis=-1))
     print("Predicted output text:", target_tokenizer.sequences_to_texts([np.argmax(output, axis=-1)[0]]))
 
+# calculate the accuracy using batching
+
+preds_all = model.predict(x_test)
+preds_all = np.argmax(preds_all, axis=-1)
+y_test_all = np.argmax(y_test, axis=-1)
+count = 0
+for i in range(len(x_test)):
+    # This heuristic may increase accuracy slightly:
+    # if 0 in preds_all[i]:
+    #     # assign all tokens after the first 0 to 0
+    #     preds_all[i][np.where(preds_all[i] == 0)[0][0]:] = 0
+    if np.all(y_test_all[i] == preds_all[i]):
+        count += 1
+
+print(f"Actual Test Accuracy (n={len(x_test)}): {count/len(x_test) * 100:.2f}%")
 # %%
 
 

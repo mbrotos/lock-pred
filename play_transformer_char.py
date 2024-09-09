@@ -91,13 +91,16 @@ output_data = to_categorical(padded_target_sequences, num_classes=vocab_size)
 # Partitioning data into train and test sets (70% train, 30% test) randomly but maintaining the order
 # The unshuffled dataset results in a highly skewed dataset split, and the model performs poorly on test
 indices = np.arange(len(input_data))
-np.random.shuffle(indices)
+# np.random.shuffle(indices)
 # Calculate the split index
 split_index = int(len(indices) * 0.7)
 
 # Partition the indices into training and testing sets
 train_indices = indices[:split_index]
 test_indices = indices[split_index:]
+
+# Shuffle training set:
+np.random.shuffle(train_indices)
 
 # Use the shuffled indices to partition the data
 x_train, x_test = input_data[train_indices], input_data[test_indices]

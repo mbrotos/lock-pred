@@ -1,4 +1,0 @@
-keras==3.3.3
-tensorflow
-pandas
-ipykernel

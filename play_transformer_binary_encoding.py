@@ -24,7 +24,7 @@ data["page_table_combined"] = (
     # TODO: uncomment the line below  and comment the next one for char-based tokenization
     # data["PAGEID"].astype(str).apply(lambda x: " ".join(x))
     data["PAGEID"].astype(str)
-    + " "
+    + "_"
     + data["TABNAME"].astype(str).apply(lambda x: x.replace("_", ""))
 )
 
