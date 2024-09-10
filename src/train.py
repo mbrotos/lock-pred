@@ -27,6 +27,7 @@ def parse_args(args=None):
     parser.add_argument("--tokenization", type=str, default="char", help="Tokenization")
     parser.add_argument("--patience", type=int, default=5, help="Patience for early stopping")
     parser.add_argument("--results_dir", type=str, default="results", help="Directory to save results")
+    parser.add_argument("--experiment_name", type=str, default="", help="Experiment name")
 
     parser.add_argument("--shuffle", action="store_true", default=False, help="Shuffle data. Not recommended since we want to preserve sequence order.")
     parser.add_argument("--add_start_end_tokens", action="store_true", default=False, help="Add start and end tokens")
@@ -173,6 +174,8 @@ def main(args):
 if __name__ == "__main__":
     args = parse_args()
     results_folder_name = f"{args.model}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4()}"
+    if args.experiment_name:
+        results_folder_name = f"{args.experiment_name}_{results_folder_name}"
     results_folder_path = os.path.join(args.results_dir, results_folder_name)
     os.makedirs(results_folder_path, exist_ok=True)
     log = setup_logger(results_folder_path, __name__)
