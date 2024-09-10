@@ -161,3 +161,4 @@ cython_debug/
 *.zip
 row_locks.csv
 table_locks.csv
+results/*/
