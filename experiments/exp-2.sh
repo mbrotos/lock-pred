@@ -3,13 +3,12 @@
 # SLURM configurations (will be ignored if not running on SLURM)
 #SBATCH --job-name=exp-1
 #SBATCH --account=def-miranska
-#SBATCH --output=logs/exp-1_%A_%a.out
-#SBATCH --error=logs/exp-1_%A_%a.err
+#SBATCH --output=logs/exp-2_%A_%a.out
+#SBATCH --error=logs/exp-2_%A_%a.err
 #SBATCH --array=0-7 # NOTE: Make sure this is equal to the number of configs
 #SBATCH --time=2:59:00
 #SBATCH --mem=8G
 #SBATCH --cpus-per-task=1
-#SBATCH --gres=gpu:1
 #SBATCH --mail-user=adam.sorrenti@torontomu.ca
 #SBATCH --mail-type=ALL
 
