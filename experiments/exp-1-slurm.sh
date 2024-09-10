@@ -9,6 +9,8 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --gres=gpu:1
 
+source .venv/bin/activate
+
 ITERATIONS=10
 
 # Define experiment configurations
