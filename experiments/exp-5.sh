@@ -7,6 +7,7 @@
 # All configurations are run with 10 iterations to get a good average of the performance.
 # All configurations are run with the char-based tokenization.
 # All configurations are run with the transformer model.
+# All configurations are run with the remove_system_tables flag set to true.
 
 # SLURM configurations (will be ignored if not running on SLURM)
 #SBATCH --job-name=exp-5
@@ -28,14 +29,14 @@ ITERATIONS=10
 # Define experiment configurations
 declare -a configs_base=(
     # Base configurations
-    "python src/train.py --experiment_name exp-5/char_ --val_split 0.0"
-    "python src/train.py --experiment_name exp-5/char_se_ --add_start_end_tokens --val_split 0.0"
-    "python src/train.py --experiment_name exp-5/char_r_ --add_row_id --val_split 0.0"
-    "python src/train.py --experiment_name exp-5/char_lr_ --add_label_tokens --val_split 0.0"
-    "python src/train.py --experiment_name exp-5/char_se_r_ --add_start_end_tokens --add_row_id --val_split 0.0"
-    "python src/train.py --experiment_name exp-5/char_se_lr_ --add_start_end_tokens --add_label_tokens --val_split 0.0"
-    "python src/train.py --experiment_name exp-5/char_r_lr_ --add_row_id --add_label_tokens --val_split 0.0"
-    "python src/train.py --experiment_name exp-5/char_se_r_lr_ --add_start_end_tokens --add_row_id --add_label_tokens --val_split 0.0"
+    "python src/train.py --experiment_name exp-5/char_"
+    "python src/train.py --experiment_name exp-5/char_se_ --add_start_end_tokens "
+    "python src/train.py --experiment_name exp-5/char_r_ --add_row_id "
+    "python src/train.py --experiment_name exp-5/char_lr_ --add_label_tokens "
+    "python src/train.py --experiment_name exp-5/char_se_r_ --add_start_end_tokens --add_row_id "
+    "python src/train.py --experiment_name exp-5/char_se_lr_ --add_start_end_tokens --add_label_tokens "
+    "python src/train.py --experiment_name exp-5/char_r_lr_ --add_row_id --add_label_tokens "
+    "python src/train.py --experiment_name exp-5/char_se_r_lr_ --add_start_end_tokens --add_row_id --add_label_tokens "
 )
 
 # Define the training data percentages
@@ -45,7 +46,7 @@ declare -a train_data_percents=(1.0 0.8 0.6 0.4 0.2)
 declare -a configs
 for percent in "${train_data_percents[@]}"; do
     for config in "${configs_base[@]}"; do
-        configs+=("$config --train_data_percent_used $percent")
+        configs+=("$config --train_data_percent_used $percent --val_split 0.0 --model transformer --remove_system_tables")
     done
 done
 
