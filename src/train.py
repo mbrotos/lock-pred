@@ -16,6 +16,11 @@ def parse_args(args=None):
     parser = argparse.ArgumentParser(description="Train a model")
     parser.add_argument("--model", type=str, default="transformer", help="Model to use")
     parser.add_argument("--data", type=str, default="data/row_locks.csv", help="Data to use")
+    parser.add_argument("--train_data_percent_used", type=float, default=1.0, 
+                        help="Percentage of training data to use. 1.0 is the entire dataset. "
+                             "The test dataset will not be changed. Data is first split into "
+                             "train and test, then the oldest lock sequences are removed from "
+                             "the end of the train dataset until the desired percentage is reached.")
     parser.add_argument("--epochs", type=int, default=30, help="Number of epochs")
     parser.add_argument("--batch_size", type=int, default=32, help="Batch size")
     parser.add_argument("--learning_rate", type=float, default=0.001, help="Learning rate")
@@ -125,6 +130,10 @@ def main(args):
         args.test_split,
         args.shuffle,
     )
+
+    if args.train_data_percent_used < 1.0:
+        x_train = x_train[:int(len(x_train) * args.train_data_percent_used)]
+        y_train = y_train[:int(len(y_train) * args.train_data_percent_used)]
 
     if args.model == "transformer":
         model = build_transformer_model(vocab_size, args.seq_length, out_seq_length)
