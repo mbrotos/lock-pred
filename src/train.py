@@ -43,7 +43,7 @@ def parse_args(args=None):
     parser.add_argument("--remove_system_tables", action="store_true", default=False, help="Remove system tables from the dataset")
     return parser.parse_args(args)
 
-def evaluate_model(model, x_test, y_test, target_tokenizer, source_tokenizer):
+def evaluate_model(model, x_test, y_test, target_tokenizer, source_tokenizer, tokenization_type):
     # Evaluate the model on the test dataset
     loss, accuracy = model.evaluate(x_test, y_test)
     log.info(f"Per-output Test Accuracy: {accuracy * 100:.2f}%")
@@ -70,10 +70,41 @@ def evaluate_model(model, x_test, y_test, target_tokenizer, source_tokenizer):
             count += 1
     log.info(f"Actual Test Accuracy (n={len(x_test)}): {count/len(x_test) * 100:.2f}%")
 
+    # Calculate the task specific accuracy for table name, pageid, and padding
+    count_table_name = 0
+    count_pageid = 0
+    count_padding = 0
+    for i in range(len(x_test)):
+        if tokenization_type == "char":
+            if y_test_all[i][0] == preds_all[i][0]: # the first output token is always the table name
+                count_table_name += 1
+            # Get the index of the first padding token from the true ylabel
+            padding_index = np.argmax(y_test_all[i] == 0) # argmax returns the first occurence
+            # Use the padding index to slice the pageid and padding from the predicted output
+            if np.all(y_test_all[i][1:padding_index] == preds_all[i][1:padding_index]):
+                count_pageid += 1
+            if np.all(y_test_all[i][padding_index:] == preds_all[i][padding_index:]):
+                count_padding += 1
+        elif tokenization_type == "word":
+            if y_test_all[i][0] == preds_all[i][0]:
+                count_table_name += 1
+            if y_test_all[i][1] == preds_all[i][1]: # the second output token is the pageid in word tokenization
+                count_pageid += 1
+            count_padding = None # Word tokenization does not have padding in the output
+        else:
+            raise ValueError(f"Invalid tokenization type: {tokenization_type}")
+
+    log.info(f"Table Name Test Accuracy: {count_table_name/len(x_test) * 100:.2f}%")
+    log.info(f"Page ID Test Accuracy: {count_pageid/len(x_test) * 100:.2f}%")
+    if count_padding is not None:
+        log.info(f"Padding Test Accuracy: {count_padding/len(x_test) * 100:.2f}%")
     results = {
         "loss": loss,
         "accuracy_per_output": accuracy,
         "actual_test_accuracy": count/len(x_test),
+        "table_name_test_accuracy": count_table_name/len(x_test),
+        "pageid_test_accuracy": count_pageid/len(x_test),
+        "padding_test_accuracy": count_padding/len(x_test),
     }
     return results
 
@@ -170,7 +201,7 @@ def main(args):
         shuffle=(not args.disable_train_shuffle)
     )
 
-    results = evaluate_model(model, x_test, y_test, target_tokenizer, source_tokenizer)
+    results = evaluate_model(model, x_test, y_test, target_tokenizer, source_tokenizer, args.tokenization)
 
     # Save results to a file
     with open(os.path.join(results_folder_path, "results.json"), "w") as f:
