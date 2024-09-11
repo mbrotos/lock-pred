@@ -194,5 +194,5 @@ if __name__ == "__main__":
         results_folder_name = f"{args.experiment_name}_{results_folder_name}"
     results_folder_path = os.path.join(args.results_dir, results_folder_name)
     os.makedirs(results_folder_path, exist_ok=True)
-    log = setup_logger(results_folder_path, __name__)
+    log = setup_logger(os.path.join(results_folder_path, "train.log"), __name__)
     main(args)

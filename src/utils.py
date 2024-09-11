@@ -2,13 +2,13 @@ import logging
 import os
 import sys
 
-def setup_logger(results_folder_path, name):
+def setup_logger(log_file, name):
     # Create a logger
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
 
     # Create a file handler
-    file_handler = logging.FileHandler(os.path.join(results_folder_path, 'output.log'))
+    file_handler = logging.FileHandler(log_file)
     file_handler.setLevel(logging.INFO)
 
     # Create a console handler

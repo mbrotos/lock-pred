@@ -51,5 +51,5 @@ def extract_data(data_path):
 if __name__ == "__main__":
     args = parse_args()
     data_path = os.path.join('results', args.experiment_name)
-    log = setup_logger(data_path, __name__)
+    log = setup_logger(os.path.join(data_path, "extract.log"), __name__)
     extract_data(data_path)
