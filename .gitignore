@@ -162,3 +162,5 @@ cython_debug/
 row_locks.csv
 table_locks.csv
 results/*/
+logs/*.out
+logs/*.err
