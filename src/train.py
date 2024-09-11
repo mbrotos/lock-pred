@@ -16,7 +16,7 @@ def parse_args(args=None):
     parser = argparse.ArgumentParser(description="Train a model")
     parser.add_argument("--model", type=str, default="transformer", help="Model to use")
     parser.add_argument("--data", type=str, default="data/row_locks.csv", help="Data to use")
-    parser.add_argument("--epochs", type=int, default=100, help="Number of epochs")
+    parser.add_argument("--epochs", type=int, default=30, help="Number of epochs")
     parser.add_argument("--batch_size", type=int, default=32, help="Batch size")
     parser.add_argument("--learning_rate", type=float, default=0.001, help="Learning rate")
     parser.add_argument("--seq_length", type=int, default=50, help="Sequence length")
@@ -29,11 +29,12 @@ def parse_args(args=None):
     parser.add_argument("--results_dir", type=str, default="results", help="Directory to save results")
     parser.add_argument("--experiment_name", type=str, default="", help="Experiment name")
 
-    parser.add_argument("--shuffle", action="store_true", default=False, help="Shuffle data. Not recommended since we want to preserve sequence order.")
+    parser.add_argument("--shuffle", action="store_true", default=False, help="Shuffle entire dataset. Not recommended since we want to preserve sequence order.")
     parser.add_argument("--add_start_end_tokens", action="store_true", default=False, help="Add start and end tokens")
     parser.add_argument("--add_row_id", action="store_true", default=False, help="Add row id")
     parser.add_argument("--add_label_tokens", action="store_true", default=False, help="Add label tokens")
-
+    parser.add_argument("--disable_train_shuffle", action="store_true", default=False, help="Disable shuffling training data")
+    parser.add_argument("--early_stopping", action="store_true", default=False, help="Use early stopping. Not recommended for comparision since different runs will stop at different epochs.")
     return parser.parse_args(args)
 
 def evaluate_model(model, x_test, y_test, target_tokenizer, source_tokenizer):
@@ -58,6 +59,7 @@ def evaluate_model(model, x_test, y_test, target_tokenizer, source_tokenizer):
     y_test_all = np.argmax(y_test, axis=-1)
     count = 0
     for i in range(len(x_test)):
+        # TODO: Add heuristic to disregard padding tokens
         if np.all(y_test_all[i] == preds_all[i]):
             count += 1
     log.info(f"Actual Test Accuracy (n={len(x_test)}): {count/len(x_test) * 100:.2f}%")
@@ -143,7 +145,9 @@ def main(args):
         monitor="val_loss", patience=args.patience, restore_best_weights=True
     )
     
-    callbacks = [early_stopping]
+    callbacks = []
+    if args.early_stopping:
+        callbacks.append(early_stopping)
     # Train the model
     history = model.fit(
         x_train,
@@ -152,6 +156,7 @@ def main(args):
         batch_size=args.batch_size,
         validation_split=args.val_split,
         callbacks=callbacks,
+        shuffle=(not args.disable_train_shuffle)
     )
 
     results = evaluate_model(model, x_test, y_test, target_tokenizer, source_tokenizer)

@@ -1,11 +1,13 @@
 #!/bin/bash
 
+# NOTE: This experiment is used to test the effect of disabling train shuffle.
+
 # SLURM configurations (will be ignored if not running on SLURM)
-#SBATCH --job-name=exp-2
+#SBATCH --job-name=exp-3
 #SBATCH --account=def-miranska
-#SBATCH --output=logs/exp-2_%A_%a.out
-#SBATCH --error=logs/exp-2_%A_%a.err
-#SBATCH --array=0-7 # NOTE: Make sure this is equal to the number of configs
+#SBATCH --output=logs/exp-3_%A_%a.out
+#SBATCH --error=logs/exp-3_%A_%a.err
+#SBATCH --array=0-1 # NOTE: Make sure this is equal to the number of configs
 #SBATCH --time=2:59:00
 #SBATCH --mem=8G
 #SBATCH --cpus-per-task=1
@@ -19,24 +21,8 @@ ITERATIONS=10
 
 # Define experiment configurations
 declare -a configs=(
-    # shuffled
-    # char tokenization
-    "--experiment_name exp-2/shuffled_char_ --model transformer --shuffle" 
-    "--experiment_name exp-2/shuffled_char_ --model lstm --shuffle"
-
-    # word tokenization
-    "--experiment_name exp-2/shuffled_word_ --model transformer --tokenization word --shuffle" 
-    "--experiment_name exp-2/shuffled_word_ --model lstm --tokenization word --shuffle"
-
-    # unshuffled
-    # char tokenization
-    "--experiment_name exp-2/unshuffled_char_ --model transformer" 
-    "--experiment_name exp-2/unshuffled_char_ --model lstm"
-
-    # word tokenization
-    "--experiment_name exp-2/unshuffled_word_ --model transformer --tokenization word" 
-    "--experiment_name exp-2/unshuffled_word_ --model lstm --tokenization word"
-
+    "--experiment_name exp-3/train_shuffle_ --model transformer"
+    "--experiment_name exp-3/disable_train_shuffle_ --model transformer --disable_train_shuffle"
 )
 
 # Determine if running on SLURM or locally
