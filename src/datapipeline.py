@@ -10,6 +10,7 @@ def load_data(
     add_row_id=False,
     add_start_end_tokens=False,
     add_label_tokens=False,
+    remove_system_tables=False,
 ):
     data = pd.read_csv(file_path)
 
@@ -23,6 +24,9 @@ def load_data(
         data["ROWID"] = data["ROWID"].astype(str)
     
     data["TABNAME"] = data["TABNAME"].astype(str).apply(lambda x: x.replace("_", ""))
+
+    if remove_system_tables:
+        data = data[data["TABSCHEMA"] != "SYSIBM"]
 
     # Create features
     data["input"] = (

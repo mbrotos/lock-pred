@@ -35,6 +35,7 @@ def parse_args(args=None):
     parser.add_argument("--add_label_tokens", action="store_true", default=False, help="Add label tokens")
     parser.add_argument("--disable_train_shuffle", action="store_true", default=False, help="Disable shuffling training data")
     parser.add_argument("--early_stopping", action="store_true", default=False, help="Use early stopping. Not recommended for comparision since different runs will stop at different epochs.")
+    parser.add_argument("--remove_system_tables", action="store_true", default=False, help="Remove system tables from the dataset")
     return parser.parse_args(args)
 
 def evaluate_model(model, x_test, y_test, target_tokenizer, source_tokenizer):
@@ -86,6 +87,7 @@ def main(args):
         add_row_id=args.add_row_id,
         add_start_end_tokens=args.add_start_end_tokens,
         add_label_tokens=args.add_label_tokens,
+        remove_system_tables=args.remove_system_tables,
     )
 
     ## Compute vocab size
