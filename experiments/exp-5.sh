@@ -29,14 +29,14 @@ ITERATIONS=10
 # Define experiment configurations
 declare -a configs_base=(
     # Base configurations
-    "python src/train.py --experiment_name exp-5/char_"
-    "python src/train.py --experiment_name exp-5/char_se_ --add_start_end_tokens "
-    "python src/train.py --experiment_name exp-5/char_r_ --add_row_id "
-    "python src/train.py --experiment_name exp-5/char_lr_ --add_label_tokens "
-    "python src/train.py --experiment_name exp-5/char_se_r_ --add_start_end_tokens --add_row_id "
-    "python src/train.py --experiment_name exp-5/char_se_lr_ --add_start_end_tokens --add_label_tokens "
-    "python src/train.py --experiment_name exp-5/char_r_lr_ --add_row_id --add_label_tokens "
-    "python src/train.py --experiment_name exp-5/char_se_r_lr_ --add_start_end_tokens --add_row_id --add_label_tokens "
+    "--experiment_name exp-5/char_"
+    "--experiment_name exp-5/char_se_ --add_start_end_tokens "
+    "--experiment_name exp-5/char_r_ --add_row_id "
+    "--experiment_name exp-5/char_lr_ --add_label_tokens "
+    "--experiment_name exp-5/char_se_r_ --add_start_end_tokens --add_row_id "
+    "--experiment_name exp-5/char_se_lr_ --add_start_end_tokens --add_label_tokens "
+    "--experiment_name exp-5/char_r_lr_ --add_row_id --add_label_tokens "
+    "--experiment_name exp-5/char_se_r_lr_ --add_start_end_tokens --add_row_id --add_label_tokens "
 )
 
 # Define the training data percentages
