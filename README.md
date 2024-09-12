@@ -10,7 +10,7 @@
     source .venv/bin/activate
     pip install -r requirements.txt
     ```
-    *Note: For SLURM-based systems, see `requirements_slurm.txt`.*
+    *Note: For the narval system, see `requirements_narval.txt`.*
 
 2. Download the data to `data/`.
 
