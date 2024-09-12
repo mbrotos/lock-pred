@@ -15,7 +15,7 @@
 #SBATCH --output=logs/exp-5-large_%A_%a.out
 #SBATCH --error=logs/exp-5-large_%A_%a.err
 #SBATCH --array=0-39 # NOTE: Make sure this is equal to the number of configs
-#SBATCH --time=2:59:00
+#SBATCH --time=11:59:00
 #SBATCH --mem=8G
 #SBATCH --cpus-per-task=1
 #SBATCH --mail-user=adam.sorrenti@torontomu.ca
