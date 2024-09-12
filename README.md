@@ -2,15 +2,17 @@
 
 ## Setup
 
-Create a Python 3.11 virtual environment: See `0_prep.sh`. 
+1. Create a Python 3.11 virtual environment: See `0_prep.sh`. 
 
 
-```4:6:0_prep.sh
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-*Note: For SLURM-based systems, see `requirements_slurm.txt`.*
+    ```4:6:0_prep.sh
+    python3 -m venv .venv
+    source .venv/bin/activate
+    pip install -r requirements.txt
+    ```
+    *Note: For SLURM-based systems, see `requirements_slurm.txt`.*
+
+2. Download the data to `data/`.
 
 ## Project Structure
 
