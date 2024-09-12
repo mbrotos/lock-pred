@@ -3,3 +3,4 @@ keras==3.3.3
 keras-nlp==0.12.1
 pandas
 ipykernel
+pytest

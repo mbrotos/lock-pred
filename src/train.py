@@ -117,8 +117,10 @@ def main(args):
     # Load data
     char_based = args.tokenization == "char"
 
+    df = pd.read_csv(args.data)
+
     data = load_data(
-        file_path=args.data,
+        data=df.copy(),
         char_based=char_based,
         add_row_id=args.add_row_id,
         add_start_end_tokens=args.add_start_end_tokens,

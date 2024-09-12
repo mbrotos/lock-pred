@@ -5,15 +5,13 @@ from keras.utils import to_categorical
 import numpy as np
 
 def load_data(
-    file_path,
+    data,
     char_based=True,
     add_row_id=False,
     add_start_end_tokens=False,
     add_label_tokens=False,
     remove_system_tables=False,
 ):
-    data = pd.read_csv(file_path)
-
     # Strip spaces from column headers
     data.columns = data.columns.str.strip()
     if char_based:
@@ -33,10 +31,10 @@ def load_data(
         ("<START> " if add_start_end_tokens else "") +
         (
             ("<ROWID> " if add_label_tokens and add_row_id else "") + 
-            (data["ROWID"] + " ") if add_row_id else ""
+            ((data["ROWID"] + " ") if add_row_id else "")
         ) +
         (
-            "<PAGEID> " if add_label_tokens else "" +
+            ("<PAGEID> " if add_label_tokens else "") +
             (data["PAGEID"] + " ") # Always add the PAGEID
         ) +
         data["TABNAME"] + # Always add the TABNAME
@@ -79,7 +77,7 @@ def split_data(input_data, output_data, test_size, shuffle=False):
     # https://en.wikipedia.org/wiki/Leakage_(machine_learning)#:~:text=Non%2Di.i,origin%20cross%20validation
     if shuffle:
         np.random.shuffle(indices) 
-    split_index = int(len(indices) * test_size)
+    split_index = int(len(indices) * (1-test_size))
     train_indices = indices[:split_index]
     test_indices = indices[split_index:]
     
