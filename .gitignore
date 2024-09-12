@@ -159,8 +159,7 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 *.zip
-row_locks.csv
-table_locks.csv
+data/*
 results/*/
 logs/*.out
 logs/*.err
