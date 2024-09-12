@@ -11,7 +11,7 @@ import uuid
 from datapipeline import load_data, create_sequences, prepare_datasets
 from model import build_lstm_model, build_transformer_model
 from utils import setup_logger
-from evaluate import evaluate_model
+from evaluate import evaluate_predictions, print_examples
 
 def parse_args(args=None):
     parser = argparse.ArgumentParser(description="Train a model")
@@ -148,13 +148,15 @@ def main(args):
     log.info(f"Per-output Test Accuracy: {accuracy * 100:.2f}%")
 
     y_pred = model.predict(x_test)
+    y_pred_argmax = np.argmax(y_pred, axis=-1)
+    y_test_argmax = np.argmax(y_test, axis=-1)
 
-    results = evaluate_model(
-        y_pred, x_test, y_test, target_tokenizer, source_tokenizer, args.tokenization
-    )
+    print_examples(y_pred_argmax, x_test, y_test_argmax, target_tokenizer, source_tokenizer)
+
+    results = evaluate_predictions(y_pred_argmax, x_test, y_test_argmax, args.tokenization)
 
     results["loss"] = loss
-    results["accuracy"] = accuracy
+    results["accuracy_per_output"] = accuracy
 
     # Save results to a file
     with open(os.path.join(results_folder_path, "results.json"), "w") as f:
