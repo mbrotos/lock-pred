@@ -169,4 +169,4 @@ def test_split_data():
 # def test_prepare_datasets():
 
 if __name__ == "__main__":
-    pytest.main()
+    pytest.main(["-v", __file__])

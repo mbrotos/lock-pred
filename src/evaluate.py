@@ -26,11 +26,17 @@ def evaluate_predictions(y_pred, x, y, tokenization_type):
                 count_table_name += 1
             # Get the index of the first padding token from the true ylabel
             padding_index = np.argmax(y[i] == 0) # argmax returns the first occurence
-            # Use the padding index to slice the pageid and padding from the predicted output
-            if np.all(y[i][1:padding_index] == y_pred[i][1:padding_index]):
-                count_pageid += 1
-            if np.all(y[i][padding_index:] == y_pred[i][padding_index:]):
-                count_padding += 1
+            if padding_index > 0:
+                # Use the padding index to slice the pageid and padding from the predicted output
+                if np.all(y[i][1:padding_index] == y_pred[i][1:padding_index]):
+                    count_pageid += 1
+                if np.all(y[i][padding_index:] == y_pred[i][padding_index:]):
+                    count_padding += 1
+            # Else if there are no padding tokens in the true ylabel
+            else:
+                count_padding += 1 # Count the padding as correct if there is no padding
+                if np.all(y[i][1:] == y_pred[i][1:]):
+                    count_pageid += 1
         elif tokenization_type == "word":
             if y[i][0] == y_pred[i][0]:
                 count_table_name += 1
@@ -42,7 +48,10 @@ def evaluate_predictions(y_pred, x, y, tokenization_type):
         
     table_name_test_accuracy = count_table_name/len(x)
     pageid_test_accuracy = count_pageid/len(x)
-    padding_test_accuracy = count_padding/len(x)
+    if count_padding is not None:
+        padding_test_accuracy = count_padding/len(x)
+    else:
+        padding_test_accuracy = None
 
     log.info(f"Actual Test Accuracy (n={len(x)}): {actual_test_accuracy_value * 100:.2f}%")
     log.info(f"Table Name Test Accuracy: {table_name_test_accuracy * 100:.2f}%")
