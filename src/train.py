@@ -11,6 +11,7 @@ import uuid
 from datapipeline import load_data, create_sequences, prepare_datasets
 from model import build_lstm_model, build_transformer_model
 from utils import setup_logger
+from evaluate import evaluate_model
 
 def parse_args(args=None):
     parser = argparse.ArgumentParser(description="Train a model")
@@ -43,75 +44,10 @@ def parse_args(args=None):
     parser.add_argument("--remove_system_tables", action="store_true", default=False, help="Remove system tables from the dataset")
     return parser.parse_args(args)
 
-def evaluate_model(model, x_test, y_test, target_tokenizer, source_tokenizer, tokenization_type):
-    # Evaluate the model on the test dataset
-    loss, accuracy = model.evaluate(x_test, y_test)
-    log.info(f"Per-output Test Accuracy: {accuracy * 100:.2f}%")
-    
-    # Predict on a few examples
-    log.info("Predicting on a few examples")
-    for i in range(15):
-        # print("Input:", x_test[i])
-        log.info(f"Input text: {source_tokenizer.sequences_to_texts([x_test[i]])}")
-        # print("Expected output:", y_test[i])
-        log.info(f"Expected output text: {target_tokenizer.sequences_to_texts([np.argmax(y_test[i], axis=-1)])}")
-        output = model.predict(x_test[np.newaxis, i])
-        # print("Predicted output:", output)
-        log.info(f"Predicted output text: {target_tokenizer.sequences_to_texts([np.argmax(output, axis=-1)[0]])}")
-    
-    # calculate the accuracy using batching
-    preds_all = model.predict(x_test)
-    preds_all = np.argmax(preds_all, axis=-1)
-    y_test_all = np.argmax(y_test, axis=-1)
-    count = 0
-    for i in range(len(x_test)):
-        # TODO: Add heuristic to disregard padding tokens
-        if np.all(y_test_all[i] == preds_all[i]):
-            count += 1
-    log.info(f"Actual Test Accuracy (n={len(x_test)}): {count/len(x_test) * 100:.2f}%")
-
-    # Calculate the task specific accuracy for table name, pageid, and padding
-    count_table_name = 0
-    count_pageid = 0
-    count_padding = 0
-    for i in range(len(x_test)):
-        if tokenization_type == "char":
-            if y_test_all[i][0] == preds_all[i][0]: # the first output token is always the table name
-                count_table_name += 1
-            # Get the index of the first padding token from the true ylabel
-            padding_index = np.argmax(y_test_all[i] == 0) # argmax returns the first occurence
-            # Use the padding index to slice the pageid and padding from the predicted output
-            if np.all(y_test_all[i][1:padding_index] == preds_all[i][1:padding_index]):
-                count_pageid += 1
-            if np.all(y_test_all[i][padding_index:] == preds_all[i][padding_index:]):
-                count_padding += 1
-        elif tokenization_type == "word":
-            if y_test_all[i][0] == preds_all[i][0]:
-                count_table_name += 1
-            if y_test_all[i][1] == preds_all[i][1]: # the second output token is the pageid in word tokenization
-                count_pageid += 1
-            count_padding = None # Word tokenization does not have padding in the output
-        else:
-            raise ValueError(f"Invalid tokenization type: {tokenization_type}")
-
-    log.info(f"Table Name Test Accuracy: {count_table_name/len(x_test) * 100:.2f}%")
-    log.info(f"Page ID Test Accuracy: {count_pageid/len(x_test) * 100:.2f}%")
-    if count_padding is not None:
-        log.info(f"Padding Test Accuracy: {count_padding/len(x_test) * 100:.2f}%")
-    results = {
-        "loss": loss,
-        "accuracy_per_output": accuracy,
-        "actual_test_accuracy": count/len(x_test),
-        "table_name_test_accuracy": count_table_name/len(x_test),
-        "pageid_test_accuracy": count_pageid/len(x_test),
-        "padding_test_accuracy": count_padding/len(x_test),
-    }
-    return results
-
 def main(args):
     # Print args dict with indent
     log.info(f"Arguments:\n{json.dumps(args.__dict__, indent=4)}")
-    
+
     # TODO: Add checks for args given buisness logic
 
     # Load data
@@ -168,13 +104,18 @@ def main(args):
         x_train = x_train[:int(len(x_train) * args.train_data_percent_used)]
         y_train = y_train[:int(len(y_train) * args.train_data_percent_used)]
 
+    log.info(f"x_train shape: {x_train.shape}")
+    log.info(f"y_train shape: {y_train.shape}")
+    log.info(f"x_test shape: {x_test.shape}")
+    log.info(f"y_test shape: {y_test.shape}")
+
     if args.model == "transformer":
         model = build_transformer_model(vocab_size, args.seq_length, out_seq_length)
     elif args.model == "lstm":
         model = build_lstm_model(vocab_size, args.seq_length, out_seq_length)
     else:
         raise ValueError(f"Model {args.model} not found")
-    
+
     # Compile the model
     opt = keras.optimizers.AdamW(learning_rate=args.learning_rate)
     model.compile(optimizer=opt,
@@ -188,7 +129,7 @@ def main(args):
     early_stopping = EarlyStopping(
         monitor="val_loss", patience=args.patience, restore_best_weights=True
     )
-    
+
     callbacks = []
     if args.early_stopping:
         callbacks.append(early_stopping)
@@ -203,7 +144,17 @@ def main(args):
         shuffle=(not args.disable_train_shuffle)
     )
 
-    results = evaluate_model(model, x_test, y_test, target_tokenizer, source_tokenizer, args.tokenization)
+    loss, accuracy = model.evaluate(x_test, y_test)
+    log.info(f"Per-output Test Accuracy: {accuracy * 100:.2f}%")
+
+    y_pred = model.predict(x_test)
+
+    results = evaluate_model(
+        y_pred, x_test, y_test, target_tokenizer, source_tokenizer, args.tokenization, args.results_folder_path
+    )
+
+    results["loss"] = loss
+    results["accuracy"] = accuracy
 
     # Save results to a file
     with open(os.path.join(results_folder_path, "results.json"), "w") as f:
@@ -226,6 +177,7 @@ if __name__ == "__main__":
     if args.experiment_name:
         results_folder_name = f"{args.experiment_name}_{results_folder_name}"
     results_folder_path = os.path.join(args.results_dir, results_folder_name)
+    args.results_folder_path = results_folder_path
     os.makedirs(results_folder_path, exist_ok=True)
     log = setup_logger(os.path.join(results_folder_path, "train.log"), __name__)
     main(args)
