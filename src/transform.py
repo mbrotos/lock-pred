@@ -49,7 +49,7 @@ def clean_data(df):
 if __name__ == "__main__":
     args = parse_args()
     log_file = os.path.join(os.path.dirname(args.input_file), "transform.log")
-    log = setup_logger(log_file, __name__)
+    log = setup_logger(log_file)
     df = pd.read_csv(args.input_file)
     df_clean = clean_data(df.copy())
     output_file = os.path.join(os.path.dirname(args.input_file), args.output_filename)

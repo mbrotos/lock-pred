@@ -150,7 +150,7 @@ def main(args):
     y_pred = model.predict(x_test)
 
     results = evaluate_model(
-        y_pred, x_test, y_test, target_tokenizer, source_tokenizer, args.tokenization, args.results_folder_path
+        y_pred, x_test, y_test, target_tokenizer, source_tokenizer, args.tokenization
     )
 
     results["loss"] = loss
@@ -177,7 +177,6 @@ if __name__ == "__main__":
     if args.experiment_name:
         results_folder_name = f"{args.experiment_name}_{results_folder_name}"
     results_folder_path = os.path.join(args.results_dir, results_folder_name)
-    args.results_folder_path = results_folder_path
     os.makedirs(results_folder_path, exist_ok=True)
-    log = setup_logger(os.path.join(results_folder_path, "train.log"), __name__)
+    log = setup_logger(os.path.join(results_folder_path, "train.log"))
     main(args)

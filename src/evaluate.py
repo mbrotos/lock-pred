@@ -1,12 +1,10 @@
 import numpy as np
 import os
-from utils import setup_logger
+import logging
 
-log = None
+log = logging.getLogger(__name__)
 
-def evaluate_model(y_pred, x_test, y_test, target_tokenizer, source_tokenizer, tokenization_type, results_folder_path):
-    global log
-    log = setup_logger(os.path.join(results_folder_path, "evaluate.log"), __name__)
+def evaluate_model(y_pred, x_test, y_test, target_tokenizer, source_tokenizer, tokenization_type):
     # Predict on a few examples
     log.info("Predicting on a few examples")
     for i in range(15):

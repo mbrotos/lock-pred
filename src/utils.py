@@ -2,9 +2,9 @@ import logging
 import os
 import sys
 
-def setup_logger(log_file, name):
+def setup_logger(log_file):
     # Create a logger
-    logger = logging.getLogger(name)
+    logger = logging.getLogger()
     logger.setLevel(logging.INFO)
 
     # Create a file handler
