@@ -63,12 +63,15 @@ def create_sequences(data, seq_length):
 
 def tokenize_data(text, vocab_size, max_length):
     # NOTE: The <> symbols are not included in the filters so we don't split on them.
-    tokenizer = Tokenizer(num_words=vocab_size, filters='!"#$%&()*+,-./:;=?@[\\]^_`{|}~\t\n')
+    tokenizer = Tokenizer(num_words=vocab_size, filters='!"#$%&()*+,-./:;=?@[\\]^_`{|}~\t\n', oov_token="<OOV>")
     tokenizer.fit_on_texts(text)
     source_sequences = tokenizer.texts_to_sequences(text)
+    tokenizer.oov_token = None # Remove the <OOV> token so padding tokens are not confused for <OOV>
     padded_source_sequences = pad_sequences(
         source_sequences, maxlen=max_length, padding="post", value=0.0
     )
+    # Make sure we don't have any <OOV> tokens
+    assert np.all(padded_source_sequences != tokenizer.word_index["<OOV>"])
     return padded_source_sequences, tokenizer
 
 def split_data(input_data, output_data, test_size, shuffle=False):

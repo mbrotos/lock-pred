@@ -72,11 +72,18 @@ def main(args):
             10, # 10 digits
             1, # padding
         ])
+        # TODO: Investigate why this is needed
+        vocab_size += 1 # stops oov
     else:
         vocab_size = args.vocab_size # keep arg when a vocab size is not predefined
 
     if args.add_start_end_tokens:
         vocab_size += 2 # start and end tokens
+
+    if args.add_label_tokens and not args.add_row_id:
+        vocab_size += 1 # page id label token
+    elif args.add_label_tokens and args.add_row_id:
+        vocab_size += 2 # page id and row id label tokens
 
     ## Compute the output sequence length
     # Using data dataframe compute the number of significant digits in the page_id

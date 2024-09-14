@@ -14,10 +14,10 @@ def test_load_data():
     # Create a sample DataFrame
     data = pd.DataFrame(
         {
-            "PAGEID": ["123", "456", "789"],
-            "ROWID": ["1", "2", "13"],
-            "TABNAME": ["TABLE_1", "TABLE_2", "TABLE_3"],
-            "TABSCHEMA": ["SCHEMA1", "SYSIBM", "SCHEMA3"],
+            "PAGEID": ["123", "456", "789", "72033"],
+            "ROWID": ["1", "2", "13", "40"],
+            "TABNAME": ["TABLE_1", "TABLE_2", "TABLE_3", "ORDERLINE"],
+            "TABSCHEMA": ["SCHEMA1", "SYSIBM", "SCHEMA3", "SCHEMA3"],
         }
     )
 
@@ -44,10 +44,16 @@ def test_load_data():
 
     # Test with add_label_tokens=True
     result = load_data(data.copy(), add_label_tokens=True)
+    # duplicate results rows in dataframe
+    result = pd.concat([result, result])
     assert result["input"].iloc[0] == "<PAGEID> 1 2 3 TABLE1"
     assert result["output"].iloc[0] == "1 2 3 TABLE1"
     assert result["input"].iloc[1] == "<PAGEID> 4 5 6 TABLE2"
     assert result["output"].iloc[1] == "4 5 6 TABLE2"
+    assert result["input"].iloc[2] == "<PAGEID> 7 8 9 TABLE3"
+    assert result["output"].iloc[2] == "7 8 9 TABLE3"
+    assert result["input"].iloc[3] == "<PAGEID> 7 2 0 3 3 ORDERLINE"
+    assert result["output"].iloc[3] == "7 2 0 3 3 ORDERLINE"
 
     # Test with add_start_end_tokens=True
     result = load_data(data.copy(), add_start_end_tokens=True)
