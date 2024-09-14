@@ -67,6 +67,12 @@ def tokenize_data(text, vocab_size, max_length):
     tokenizer.fit_on_texts(text)
     source_sequences = tokenizer.texts_to_sequences(text)
     tokenizer.oov_token = None # Remove the <OOV> token so padding tokens are not confused for <OOV>
+    # NOTE: Padding tends to truncate from the front since the sequences are created from
+    # based on the number of lock observations, and not the number of tokens.
+
+    # TODO: Fix this my creating sequences with the max number of observations
+    # so padding doesn't truncate from the front. This way we do not lose information
+    # when we truncate the sequences from the front. See create_sequences().
     padded_source_sequences = pad_sequences(
         source_sequences, maxlen=max_length, padding="post", value=0.0
     )

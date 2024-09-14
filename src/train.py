@@ -14,6 +14,10 @@ from utils import setup_logger
 from evaluate import evaluate_predictions, print_examples
 
 def parse_args(args=None):
+    if isinstance(args, dict): # For debugging
+        # Return namespace from dict
+        return argparse.Namespace(**args)
+
     parser = argparse.ArgumentParser(description="Train a model")
     parser.add_argument("--model", type=str, default="transformer", help="Model to use")
     parser.add_argument("--data", type=str, default="data/row_locks.csv", help="Data to use")
@@ -76,6 +80,14 @@ def main(args):
         vocab_size += 1 # stops oov
     else:
         vocab_size = args.vocab_size # keep arg when a vocab size is not predefined
+        if args.add_row_id:
+            # Add 50 to the vocab size to account for the unique row ids
+            # NOTE: This is a temporary fix to account for the row ids.
+            # We need to find a more general solution to account for the row ids.
+            # Since row ids in the word tokenization scheme are dataset dependent,
+            # we cannot simply add a fixed number of tokens to the vocab size for
+            # all datasets.
+            vocab_size += 50
 
     if args.add_start_end_tokens:
         vocab_size += 2 # start and end tokens
