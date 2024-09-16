@@ -61,6 +61,31 @@ def create_sequences(data, seq_length):
         )  # Predicting combined feature
     return X, y
 
+def create_sequences_token(data, token_length):
+    X, y = [], []
+    for i in range(len(data)-1):
+        cur_x_seq = data.iloc[i]["input"].split(" ")
+        assert len(cur_x_seq) <= token_length, "Token length is too small"
+
+        if i == len(data)-2:
+            X.append(" ".join(cur_x_seq))
+            y.append(data.iloc[i+1]["output"])
+            break
+        else:
+            for j in range(i+1, len(data)-1):
+                cur_tokens = data.iloc[j]["input"].split(" ")
+                if len(cur_x_seq) + len(cur_tokens) <= token_length:
+                    cur_x_seq.extend(cur_tokens)
+                    if j == len(data)-2:
+                        X.append(" ".join(cur_x_seq))
+                        y.append(data.iloc[j+1]["output"])
+                        break
+                else:
+                    X.append(" ".join(cur_x_seq))
+                    y.append(data.iloc[j]["output"])
+                    break
+    return X, y
+
 def tokenize_data(text, vocab_size, max_length):
     # NOTE: The <> symbols are not included in the filters so we don't split on them.
     tokenizer = Tokenizer(num_words=vocab_size, filters='!"#$%&()*+,-./:;=?@[\\]^_`{|}~\t\n', oov_token="<OOV>")

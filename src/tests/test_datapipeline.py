@@ -4,6 +4,7 @@ import pytest
 from datapipeline import (
     load_data,
     create_sequences,
+    create_sequences_token,
     tokenize_data,
     split_data,
     prepare_datasets,
@@ -114,7 +115,23 @@ def test_create_sequences():
 
     # TODO: Add failure cases for mismatching sequence length
 
+def test_create_sequences_token():
+    data = pd.DataFrame(
+        {"input": ["A B C", "D E F", "G H I", "J K L"], "output": ["X", "Y", "Z", "W"]}
+    )
 
+    X, y = create_sequences_token(data, token_length=6)
+    assert X == ["A B C D E F", "D E F G H I", "G H I"]
+    assert y == ["Z", "W", "W"]
+
+    X, y = create_sequences_token(data, token_length=4)
+    assert X == ["A B C", "D E F", "G H I"]
+    assert y == ['Y', 'Z', 'W']
+
+    X, y = create_sequences_token(data, token_length=3)
+    assert X == ["A B C", "D E F", "G H I"]
+    assert y == ['Y', 'Z', 'W']
+    
 def test_tokenize_data():
     text = ["<START> hello world <END>", "hello python", "world of coding"]
     vocab_size = 10

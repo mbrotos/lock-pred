@@ -8,7 +8,7 @@ import os
 import datetime
 import uuid
 
-from datapipeline import load_data, create_sequences, prepare_datasets
+from datapipeline import create_sequences_token, load_data, create_sequences, prepare_datasets
 from model import build_lstm_model, build_transformer_model
 from utils import setup_logger
 from evaluate import evaluate_predictions, print_examples
@@ -46,6 +46,7 @@ def parse_args(args=None):
     parser.add_argument("--disable_train_shuffle", action="store_true", default=False, help="Disable shuffling training data")
     parser.add_argument("--early_stopping", action="store_true", default=False, help="Use early stopping. Not recommended for comparision since different runs will stop at different epochs.")
     parser.add_argument("--remove_system_tables", action="store_true", default=False, help="Remove system tables from the dataset")
+    parser.add_argument("--token_length_seq", action="store_true", default=False, help="Use token length in order to create sequences")
     return parser.parse_args(args)
 
 def main(args):
@@ -108,7 +109,10 @@ def main(args):
     else:
         out_seq_length = 2
 
-    source_texts, target_texts = create_sequences(data, args.seq_length)
+    if args.token_length_seq:
+        source_texts, target_texts = create_sequences_token(data, args.seq_length) 
+    else:
+        source_texts, target_texts = create_sequences(data, args.seq_length) 
     x_train, x_test, y_train, y_test, source_tokenizer, target_tokenizer = prepare_datasets(
         source_texts,
         target_texts,
