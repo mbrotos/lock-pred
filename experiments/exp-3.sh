@@ -21,8 +21,8 @@ ITERATIONS=10
 
 # Define experiment configurations
 declare -a configs=(
-    "--experiment_name exp-3/train_shuffle_ --model transformer"
-    "--experiment_name exp-3/disable_train_shuffle_ --model transformer --disable_train_shuffle"
+    "--experiment_name exp-3/train_shuffle_ --model transformer --token_length_seq"
+    "--experiment_name exp-3/disable_train_shuffle_ --model transformer --disable_train_shuffle --token_length_seq"
 )
 
 # Determine if running on SLURM or locally

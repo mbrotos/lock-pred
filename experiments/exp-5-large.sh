@@ -15,7 +15,7 @@
 #SBATCH --output=logs/exp-5-large_%A_%a.out
 #SBATCH --error=logs/exp-5-large_%A_%a.err
 #SBATCH --array=0-39 # NOTE: Make sure this is equal to the number of configs
-#SBATCH --time=11:59:00
+#SBATCH --time=23:59:00
 #SBATCH --mem=8G
 #SBATCH --cpus-per-task=1
 #SBATCH --mail-user=adam.sorrenti@torontomu.ca
@@ -46,7 +46,7 @@ declare -a train_data_percents=(1.0 0.8 0.6 0.4 0.2)
 declare -a configs
 for percent in "${train_data_percents[@]}"; do
     for config in "${configs_base[@]}"; do
-        configs+=("$config --train_data_percent_used $percent --val_split 0.0 --model transformer --remove_system_tables --data data/row_locks_large.csv")
+        configs+=("$config --train_data_percent_used $percent --val_split 0.0 --model transformer --remove_system_tables --data data/row_locks_large.csv --token_length_seq")
     done
 done
 

@@ -21,8 +21,8 @@ ITERATIONS=10
 
 # Define experiment configurations
 declare -a configs=(
-    "--experiment_name exp-4/remove_system_tables_ --model transformer --remove_system_tables"
-    "--experiment_name exp-4/keep_system_tables_ --model transformer"
+    "--experiment_name exp-4/remove_system_tables_ --model transformer --remove_system_tables --token_length_seq"
+    "--experiment_name exp-4/keep_system_tables_ --model transformer --token_length_seq"
 )
 
 # Determine if running on SLURM or locally
