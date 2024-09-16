@@ -21,3 +21,10 @@ python src/train.py \
     --tokenization char \
     --patience 5 \
     --results_dir results
+
+experiments=("exp-1" "exp-2" "exp-3" "exp-4" "exp-5" "exp-5-large")
+for experiment in "${experiments[@]}"; do
+    sbatch experiments/$experiment.sh
+    # OR, for local testing
+    # bash experiments/$experiment.sh
+done
