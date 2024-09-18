@@ -23,8 +23,8 @@ ITERATIONS=10
 # Define experiment configurations
 declare -a configs_base=(
     # Base configurations
-    "--experiment_name exp-6/char_" --data data/row_locks.csv
-    "--experiment_name exp-6/char_" --data data/row_locks_large.csv
+    "--experiment_name exp-6/char_ --data data/row_locks.csv"
+    "--experiment_name exp-6/char_ --data data/row_locks_large.csv"
 )
 
 # Define the training data percentages
