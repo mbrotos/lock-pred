@@ -12,9 +12,19 @@ def print_examples(y_pred, x, y, target_tokenizer, source_tokenizer):
         log.info(f"Expected output text: {target_tokenizer.sequences_to_texts([y[i]])}")
         log.info(f"Predicted output text: {target_tokenizer.sequences_to_texts([y_pred[i]])}")
 
-def evaluate_predictions(y_pred, x, y, tokenization_type):  
+def evaluate_predictions(y_pred, x, y, tokenization_type, horizon=1):  
     # Calculate the actual test accuracy
     actual_test_accuracy_value = np.sum(np.all(y == y_pred, axis=-1))/len(y)
+    log.info(f"Actual Test Accuracy (n={len(x)}): {actual_test_accuracy_value * 100:.2f}%")
+
+    if horizon > 1:
+        log.warning("Horizon > 1 is not supported for task specific accuracy calculation.")
+        return {
+            "actual_test_accuracy": actual_test_accuracy_value,
+            "table_name_test_accuracy": None,
+            "pageid_test_accuracy": None,
+            "padding_test_accuracy": None,
+        }
 
     # Calculate the task specific accuracy for table name, pageid, and padding
     count_table_name = 0
@@ -53,7 +63,6 @@ def evaluate_predictions(y_pred, x, y, tokenization_type):
     else:
         padding_test_accuracy = None
 
-    log.info(f"Actual Test Accuracy (n={len(x)}): {actual_test_accuracy_value * 100:.2f}%")
     log.info(f"Table Name Test Accuracy: {table_name_test_accuracy * 100:.2f}%")
     log.info(f"Page ID Test Accuracy: {pageid_test_accuracy * 100:.2f}%")
     if count_padding is not None:

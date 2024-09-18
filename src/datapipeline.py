@@ -3,6 +3,9 @@ from keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.preprocessing.text import Tokenizer
 from keras.utils import to_categorical
 import numpy as np
+import logging
+
+log = logging.getLogger(__name__)
 
 def load_data(
     data,
@@ -48,6 +51,7 @@ def load_data(
     return data
 
 def create_sequences(data, seq_length):
+    log.warning("This function is deprecated. Use create_sequences_token() instead.")
     X, y = [], []
     for i in range(len(data) - seq_length):
         X.append(
@@ -61,28 +65,33 @@ def create_sequences(data, seq_length):
         )  # Predicting combined feature
     return X, y
 
-def create_sequences_token(data, token_length):
+def create_sequences_token(data, token_length, horizon=1):
+    # Get the output sequence for the given index
+    output = lambda x: " ".join(
+        data.iloc[x:x+horizon]["output"].values
+    )
+
     X, y = [], []
-    for i in range(len(data)-1):
+    for i in range(len(data)-horizon):
         cur_x_seq = data.iloc[i]["input"].split(" ")
         assert len(cur_x_seq) <= token_length, "Token length is too small"
 
-        if i == len(data)-2:
+        if i == len(data)-(horizon+1):
             X.append(" ".join(cur_x_seq))
-            y.append(data.iloc[i+1]["output"])
+            y.append(output(i+1))
             break
         else:
-            for j in range(i+1, len(data)-1):
+            for j in range(i+1, len(data)-horizon):
                 cur_tokens = data.iloc[j]["input"].split(" ")
                 if len(cur_x_seq) + len(cur_tokens) <= token_length:
                     cur_x_seq.extend(cur_tokens)
-                    if j == len(data)-2:
+                    if j == len(data)-(horizon+1):
                         X.append(" ".join(cur_x_seq))
-                        y.append(data.iloc[j+1]["output"])
+                        y.append(output(j+1))
                         break
                 else:
                     X.append(" ".join(cur_x_seq))
-                    y.append(data.iloc[j]["output"])
+                    y.append(output(j))
                     break
     return X, y
 

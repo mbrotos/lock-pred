@@ -38,6 +38,7 @@ def parse_args(args=None):
     parser.add_argument("--patience", type=int, default=5, help="Patience for early stopping")
     parser.add_argument("--results_dir", type=str, default="results", help="Directory to save results")
     parser.add_argument("--experiment_name", type=str, default="", help="Experiment name")
+    parser.add_argument("--horizon", type=int, default=1, help="Horizon for forecasting. I.e. how many steps ahead to predict")
 
     parser.add_argument("--shuffle", action="store_true", default=False, help="Shuffle entire dataset. Not recommended since we want to preserve sequence order.")
     parser.add_argument("--add_start_end_tokens", action="store_true", default=False, help="Add start and end tokens")
@@ -105,12 +106,14 @@ def main(args):
         out_seq_length = sum([
             1, # the table name
             page_id_digits,
-        ])
+        ]) * args.horizon
     else:
         out_seq_length = 2
+        if args.horizon > 1:
+            raise NotImplementedError("Horizon > 1 is not supported for word tokenization yet.")
 
     if args.token_length_seq:
-        source_texts, target_texts = create_sequences_token(data, args.seq_length) 
+        source_texts, target_texts = create_sequences_token(data, args.seq_length, args.horizon) 
     else:
         source_texts, target_texts = create_sequences(data, args.seq_length) 
     x_train, x_test, y_train, y_test, source_tokenizer, target_tokenizer = prepare_datasets(
@@ -176,7 +179,7 @@ def main(args):
 
     print_examples(y_pred_argmax, x_test, y_test_argmax, target_tokenizer, source_tokenizer)
 
-    results = evaluate_predictions(y_pred_argmax, x_test, y_test_argmax, args.tokenization)
+    results = evaluate_predictions(y_pred_argmax, x_test, y_test_argmax, args.tokenization, args.horizon)
 
     results["loss"] = loss
     results["accuracy_per_output"] = accuracy
