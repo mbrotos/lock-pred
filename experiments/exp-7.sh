@@ -22,7 +22,7 @@ ITERATIONS=10
 # Define experiment configurations
 declare -a configs=(
     "--experiment_name exp-7/TTT60_ --val_split 0.0 --model transformer --remove_system_tables \
-    --data data/row_locks_large.csv --token_length_seq --token_length 60 \
+    --data data/row_locks_large.csv --token_length_seq --seq_length 60 \
     --add_start_end_tokens --add_row_id --add_label_tokens"
 )
 
