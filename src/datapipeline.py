@@ -72,27 +72,35 @@ def create_sequences_token(data, token_length, horizon=1):
     )
 
     X, y = [], []
+    # Flag to stop the loop when we reach the end of the data
+    # We need a flag because len(data) != number of tokens
+    # We accumulate tokens until we reach the token length limit
+    # or the end of the data.
+    done = False 
+
     for i in range(len(data)-horizon):
+        if done: break
+
         cur_x_seq = data.iloc[i]["input"].split(" ")
         assert len(cur_x_seq) <= token_length, "Token length is too small"
 
-        if i == len(data)-(horizon+1):
-            X.append(" ".join(cur_x_seq))
-            y.append(output(i+1))
-            break
-        else:
-            for j in range(i+1, len(data)-horizon):
-                cur_tokens = data.iloc[j]["input"].split(" ")
-                if len(cur_x_seq) + len(cur_tokens) <= token_length:
-                    cur_x_seq.extend(cur_tokens)
-                    if j == len(data)-(horizon+1):
-                        X.append(" ".join(cur_x_seq))
-                        y.append(output(j+1))
-                        break
-                else:
-                    X.append(" ".join(cur_x_seq))
-                    y.append(output(j))
-                    break
+        j_end = None
+        for j in range(i+1, len(data)-horizon):
+            next_x_seq = data.iloc[j]["input"].split(" ")
+            if len(next_x_seq) + len(cur_x_seq) <= token_length:
+                cur_x_seq.extend(next_x_seq)
+            else:
+                j_end = j
+                break
+
+        X.append(" ".join(cur_x_seq))
+        if j_end is None: # We reached the end of the data
+            y.append(output(len(data)-horizon))
+            # Stop us from creating more sequences by just padding the last one
+            done = True 
+        else: # We reached the token length limit
+            y.append(output(j_end))
+
     return X, y
 
 def tokenize_data(text, vocab_size, max_length):

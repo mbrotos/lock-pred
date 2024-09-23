@@ -121,8 +121,8 @@ def test_create_sequences_token():
     )
 
     X, y = create_sequences_token(data, token_length=6)
-    assert X == ["A B C D E F", "D E F G H I", "G H I"]
-    assert y == ["Z", "W", "W"]
+    assert X == ["A B C D E F", "D E F G H I"]
+    assert y == ["Z", "W"]
 
     X, y = create_sequences_token(data, token_length=4)
     assert X == ["A B C", "D E F", "G H I"]
@@ -135,8 +135,8 @@ def test_create_sequences_token():
     # increase horizon to 2
 
     X, y = create_sequences_token(data, token_length=6, horizon=2)
-    assert X == ["A B C D E F", "D E F"]
-    assert y == ["Z W", "Z W"]
+    assert X == ["A B C D E F"]
+    assert y == ["Z W"]
 
     X, y = create_sequences_token(data, token_length=4, horizon=2)
     assert X == ["A B C", "D E F"]
@@ -151,8 +151,8 @@ def test_create_sequences_token():
     )
 
     X, y = create_sequences_token(data, token_length=6, horizon=2)
-    assert X == ["A B C D E F", "D E F G H I", "G H I"]
-    assert y == ["Z W", "W V", "W V"]
+    assert X == ["A B C D E F", "D E F G H I"]
+    assert y == ["Z W", "W V"]
 
     
 def test_tokenize_data():
