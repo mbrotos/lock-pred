@@ -11,7 +11,7 @@
 #SBATCH --array=0-7 # NOTE: Make sure this is equal to the number of configs
 #SBATCH --time=23:59:00
 #SBATCH --mem=8G
-#SBATCH --cpus-per-task=1
+#SBATCH --cpus-per-task=4
 #SBATCH --mail-user=adam.sorrenti@torontomu.ca
 #SBATCH --mail-type=ALL
 
