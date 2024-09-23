@@ -32,9 +32,15 @@ def build_lstm_model(
     lstm_units=256,
     embedding_dim=128,
     hidden_dim=256,
+    position_embedding=False,
 ):
     input_layer = Input(shape=(max_length,))
-    embedding = Embedding(input_dim=vocab_size, output_dim=embedding_dim)(input_layer)
+    if position_embedding:
+        embedding = keras_nlp.layers.TokenAndPositionEmbedding(
+            vocab_size, max_length, embedding_dim
+        )(input_layer)
+    else:
+        embedding = Embedding(input_dim=vocab_size, output_dim=embedding_dim)(input_layer)
     x = LSTM(lstm_units)(embedding)
     repeat = RepeatVector(out_seq_length)(x)
     dense = Dense(hidden_dim, activation="relu")(repeat)

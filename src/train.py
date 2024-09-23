@@ -48,6 +48,7 @@ def parse_args(args=None):
     parser.add_argument("--early_stopping", action="store_true", default=False, help="Use early stopping. Not recommended for comparision since different runs will stop at different epochs.")
     parser.add_argument("--remove_system_tables", action="store_true", default=False, help="Remove system tables from the dataset")
     parser.add_argument("--token_length_seq", action="store_true", default=False, help="Use token length in order to create sequences")
+    parser.add_argument("--lstm_pe", action="store_true", default=False, help="Use position embedding in LSTM model")
     return parser.parse_args(args)
 
 def main(args):
@@ -138,7 +139,7 @@ def main(args):
     if args.model == "transformer":
         model = build_transformer_model(vocab_size, args.seq_length, out_seq_length)
     elif args.model == "lstm":
-        model = build_lstm_model(vocab_size, args.seq_length, out_seq_length)
+        model = build_lstm_model(vocab_size, args.seq_length, out_seq_length, position_embedding=args.lstm_pe)
     else:
         raise ValueError(f"Model {args.model} not found")
 
