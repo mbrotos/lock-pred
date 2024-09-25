@@ -8,7 +8,7 @@ import os
 import datetime
 import uuid
 
-from datapipeline import create_sequences_token, load_data, create_sequences, prepare_datasets
+from datapipeline import create_sequences_token, load_data, create_sequences, prepare_datasets, load_table_lock_data
 from model import build_lstm_model, build_transformer_model
 from utils import setup_logger
 from evaluate import evaluate_predictions, print_examples
@@ -59,28 +59,40 @@ def main(args):
 
     # Load data
     char_based = args.tokenization == "char"
+    table_lock = 'table_lock' in args.data
 
+    log.info(f"Loading data...")
     df = pd.read_csv(args.data)
 
-    data = load_data(
-        data=df.copy(),
-        char_based=char_based,
-        add_row_id=args.add_row_id,
-        add_start_end_tokens=args.add_start_end_tokens,
-        add_label_tokens=args.add_label_tokens,
-        remove_system_tables=args.remove_system_tables,
-    )
+    if table_lock:
+        if args.add_row_id or args.add_label_tokens or args.add_start_end_tokens:
+            raise ValueError("Row id, label tokens, and start end tokens are not supported for table lock data.")
+        data = load_table_lock_data(
+            data=df.copy(),
+            remove_system_tables=args.remove_system_tables,
+        )
+    else:
+        data = load_data(
+            data=df.copy(),
+            char_based=char_based,
+            add_row_id=args.add_row_id,
+            add_start_end_tokens=args.add_start_end_tokens,
+            add_label_tokens=args.add_label_tokens,
+            remove_system_tables=args.remove_system_tables,
+        )
 
+    log.info("Computing vocab and output size...")
+
+    num_unqiue_table_names = len(data["TABNAME"].unique())
     ## Compute vocab size
-    if char_based:
-        num_unqiue_table_names = len(data["TABNAME"].unique())
+    if table_lock:
+        vocab_size = num_unqiue_table_names + 1 #padding
+    elif char_based:
         vocab_size = sum([
             num_unqiue_table_names, 
             10, # 10 digits
             1, # padding
         ])
-        # TODO: Investigate why this is needed
-        vocab_size += 1 # stops oov
     else:
         vocab_size = args.vocab_size # keep arg when a vocab size is not predefined
         if args.add_row_id:
@@ -91,7 +103,7 @@ def main(args):
             # we cannot simply add a fixed number of tokens to the vocab size for
             # all datasets.
             vocab_size += 50
-
+    vocab_size += 1 # Add 1 to the vocab size to account for the temporary <OOV> token
     if args.add_start_end_tokens:
         vocab_size += 2 # start and end tokens
 
@@ -101,9 +113,11 @@ def main(args):
         vocab_size += 2 # page id and row id label tokens
 
     ## Compute the output sequence length
-    # Using data dataframe compute the number of significant digits in the page_id
-    page_id_digits = len(data["PAGEID"].max())
-    if char_based:
+    if table_lock:
+        out_seq_length = args.horizon
+    elif char_based:
+        # Using data dataframe compute the number of significant digits in the page_id
+        page_id_digits = len(data["PAGEID"].max())
         out_seq_length = sum([
             1, # the table name
             page_id_digits,
@@ -113,6 +127,7 @@ def main(args):
         if args.horizon > 1:
             raise NotImplementedError("Horizon > 1 is not supported for word tokenization yet.")
 
+    log.info("Creating sequences...")
     if args.token_length_seq:
         source_texts, target_texts = create_sequences_token(data, args.seq_length, args.horizon) 
     else:
@@ -136,6 +151,7 @@ def main(args):
     log.info(f"x_test shape: {x_test.shape}")
     log.info(f"y_test shape: {y_test.shape}")
 
+    log.info("Building model...")
     if args.model == "transformer":
         model = build_transformer_model(vocab_size, args.seq_length, out_seq_length)
     elif args.model == "lstm":
@@ -161,6 +177,7 @@ def main(args):
     if args.early_stopping:
         callbacks.append(early_stopping)
     # Train the model
+    log.info("Training model...")
     history = model.fit(
         x_train,
         y_train,
@@ -171,6 +188,7 @@ def main(args):
         shuffle=(not args.disable_train_shuffle)
     )
 
+    log.info("Evaluating model...")
     loss, accuracy = model.evaluate(x_test, y_test)
     log.info(f"Per-output Test Accuracy: {accuracy * 100:.2f}%")
 
@@ -185,6 +203,7 @@ def main(args):
     results["loss"] = loss
     results["accuracy_per_output"] = accuracy
 
+    log.info("Saving results...")
     # Save results to a file
     with open(os.path.join(results_folder_path, "results.json"), "w") as f:
         json.dump(results, f, indent=4)

@@ -7,6 +7,30 @@ import logging
 
 log = logging.getLogger(__name__)
 
+def prep_columns(data, remove_system_tables):
+    data.columns = data.columns.str.strip()
+    # Remove all trailing whitespace from TABNAME and TABSCHEMA
+    # NOTE: This seems to be a problem in the table lock data.
+    data["TABNAME"] = data["TABNAME"].astype(str).apply(lambda x: x.rstrip())
+    data["TABSCHEMA"] = data["TABSCHEMA"].astype(str).apply(lambda x: x.rstrip())
+    
+    # Remove all underscores from TABNAME
+    data["TABNAME"] = data["TABNAME"].astype(str).apply(lambda x: x.replace("_", ""))
+    
+    if remove_system_tables:
+        data = data[data["TABSCHEMA"] != "SYSIBM"]
+    return data
+
+def load_table_lock_data(
+    data,
+    remove_system_tables=False,
+):
+    data = prep_columns(data, remove_system_tables)
+    
+    data["input"] = data["TABNAME"]
+    data["output"] = data["TABNAME"]
+    return data
+
 def load_data(
     data,
     char_based=True,
@@ -16,18 +40,13 @@ def load_data(
     remove_system_tables=False,
 ):
     # Strip spaces from column headers
-    data.columns = data.columns.str.strip()
+    data = prep_columns(data, remove_system_tables)
     if char_based:
         data["PAGEID"] = data["PAGEID"].astype(str).apply(lambda x: " ".join(x))
         data["ROWID"] = data["ROWID"].astype(str).apply(lambda x: " ".join(x))
     else:
         data["PAGEID"] = data["PAGEID"].astype(str)
         data["ROWID"] = data["ROWID"].astype(str)
-    
-    data["TABNAME"] = data["TABNAME"].astype(str).apply(lambda x: x.replace("_", ""))
-
-    if remove_system_tables:
-        data = data[data["TABSCHEMA"] != "SYSIBM"]
 
     # Create features
     data["input"] = (
@@ -109,12 +128,6 @@ def tokenize_data(text, vocab_size, max_length):
     tokenizer.fit_on_texts(text)
     source_sequences = tokenizer.texts_to_sequences(text)
     tokenizer.oov_token = None # Remove the <OOV> token so padding tokens are not confused for <OOV>
-    # NOTE: Padding tends to truncate from the front since the sequences are created from
-    # based on the number of lock observations, and not the number of tokens.
-
-    # TODO: Fix this my creating sequences with the max number of observations
-    # so padding doesn't truncate from the front. This way we do not lose information
-    # when we truncate the sequences from the front. See create_sequences().
     padded_source_sequences = pad_sequences(
         source_sequences, maxlen=max_length, padding="post", value=0.0
     )

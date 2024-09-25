@@ -1,6 +1,7 @@
 from keras.models import Model
 from keras.layers import Embedding, LSTM, Dense, RepeatVector, Input
 import keras_nlp
+import keras
 
 def build_transformer_model(
     vocab_size,
@@ -21,6 +22,8 @@ def build_transformer_model(
     )(embedding)[:, -out_seq_length:, :] # TODO: Replace slicing with keras ops
     dense = Dense(hidden_dim, activation="relu")(transformer)
     output = Dense(vocab_size, activation="softmax")(dense)
+    # Squeeze the output to remove the extra dimension if out_seq_length is 1
+    output = keras.ops.squeeze(output, axis=1) if out_seq_length == 1 else output
 
     model = Model(inputs=input, outputs=output)
     return model
