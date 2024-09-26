@@ -196,6 +196,12 @@ def main(args):
     y_pred_argmax = np.argmax(y_pred, axis=-1)
     y_test_argmax = np.argmax(y_test, axis=-1)
 
+    if len(y_test_argmax.shape) == 1:
+        # This is required because we squeeze the output of the model to remove the singleton dimension
+        # FIXME: A solution would be to change the datapipeline to add singleton dimensions
+        y_test_argmax = np.expand_dims(y_test_argmax, axis=-1)
+        y_pred_argmax = np.expand_dims(y_pred_argmax, axis=-1)
+
     print_examples(y_pred_argmax, x_test, y_test_argmax, target_tokenizer, source_tokenizer)
 
     results = evaluate_predictions(y_pred_argmax, x_test, y_test_argmax, args.tokenization, args.horizon)
