@@ -8,6 +8,7 @@ from datapipeline import (
     tokenize_data,
     split_data,
     prepare_datasets,
+    load_table_lock_data
 )
 
 
@@ -103,6 +104,28 @@ def test_load_data():
     assert result["output"].iloc[2] == "789 TABLE3"
 
     # TODO: Add more tests for different combinations of parameters
+
+def test_load_table_lock_data():
+    data = pd.DataFrame(
+        {
+            "TABNAME": ["TABLE_1", "TABLE_2  ", "TABLE_3  ", "ORDERLINE"],
+            "TABSCHEMA": ["SCHEMA1", "SYSIBM  ", "SCHEMA3", "SCHEMA3"],
+        }
+    )
+    result = load_table_lock_data(data.copy())
+    assert result["input"].iloc[0] == "TABLE1"
+    assert result["output"].iloc[0] == "TABLE1"
+    assert result["input"].iloc[1] == "TABLE2"
+    assert result["output"].iloc[1] == "TABLE2"
+    
+    # Test with remove_system_tables=True
+    result = load_table_lock_data(data.copy(), remove_system_tables=True)
+    assert len(result[result["TABSCHEMA"] == "SYSIBM"]) == 0
+    assert np.all(result["input"] == result["output"])
+    assert result["input"].iloc[0] == "TABLE1"
+    assert result["output"].iloc[0] == "TABLE1"
+    assert result["input"].iloc[1] == "TABLE3"
+    assert result["output"].iloc[1] == "TABLE3"
 
 def test_create_sequences():
     data = pd.DataFrame(
