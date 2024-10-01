@@ -8,6 +8,7 @@ import os
 import datetime
 import uuid
 import pickle
+import hashlib
 
 from datapipeline import create_sequences_token, load_data, create_sequences, prepare_datasets, load_table_lock_data
 from model import build_lstm_model, build_transformer_model
@@ -52,7 +53,7 @@ def parse_args(args=None):
     parser.add_argument("--lstm_pe", action="store_true", default=False, help="Use position embedding in LSTM model")
     return parser.parse_args(args)
 
-def main(args):
+def main(args=None):
     # Print args dict with indent
     log.info(f"Arguments:\n{json.dumps(args.__dict__, indent=4)}")
 
@@ -131,7 +132,7 @@ def main(args):
     log.info("Creating sequences...")
     if args.token_length_seq:
         # Hash the args
-        args_hash = hash(frozenset(args.__dict__.items()))
+        args_hash = hashlib.sha256(json.dumps(args.__dict__).encode('utf-8')).hexdigest()
         # create the dir if it doesn't exist
         os.makedirs("data/.cache", exist_ok=True)
         # check if cache already exists
