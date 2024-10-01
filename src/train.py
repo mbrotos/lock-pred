@@ -7,6 +7,7 @@ import pandas as pd
 import os
 import datetime
 import uuid
+import pickle
 
 from datapipeline import create_sequences_token, load_data, create_sequences, prepare_datasets, load_table_lock_data
 from model import build_lstm_model, build_transformer_model
@@ -129,7 +130,21 @@ def main(args):
 
     log.info("Creating sequences...")
     if args.token_length_seq:
-        source_texts, target_texts = create_sequences_token(data, args.seq_length, args.horizon) 
+        # Hash the args
+        args_hash = hash(frozenset(args.__dict__.items()))
+        # create the dir if it doesn't exist
+        os.makedirs("data/.cache", exist_ok=True)
+        # check if cache already exists
+        if os.path.exists(f"data/.cache/cached_sequences_{args_hash}.pkl"):
+            log.info(f"Loading cached sequences for args: {args_hash}")
+            with open(f"data/.cache/cached_sequences_{args_hash}.pkl", "rb") as f:
+                source_texts, target_texts = pickle.load(f)
+        else:
+            log.info(f"Creating sequences for args: {args_hash}")
+            source_texts, target_texts = create_sequences_token(data, args.seq_length, args.horizon) 
+            # cache the sequences using the hash as the file name
+            with open(f"data/.cache/cached_sequences_{args_hash}.pkl", "wb") as f:
+                pickle.dump((source_texts, target_texts), f)
     else:
         source_texts, target_texts = create_sequences(data, args.seq_length) 
     x_train, x_test, y_train, y_test, source_tokenizer, target_tokenizer = prepare_datasets(
