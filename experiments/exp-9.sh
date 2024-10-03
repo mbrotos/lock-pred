@@ -15,7 +15,7 @@
 #SBATCH --mail-type=ALL
 
 # Activate virtual environment
-conda activate lock-pred
+source .venv/bin/activate
 
 ITERATIONS=10
 
