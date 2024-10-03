@@ -28,80 +28,80 @@ def test_load_data():
     assert "input" in result.columns
     assert "output" in result.columns
     assert np.all(result["input"] == result["output"])
-    assert result["output"].iloc[0] == "1 2 3 TABLE1"
-    assert result["output"].iloc[1] == "4 5 6 TABLE2"
+    assert result["output"].iloc[0] == "TABLE1 1 2 3"
+    assert result["output"].iloc[1] == "TABLE2 4 5 6"
 
     # Test with char_based=False
     result = load_data(data.copy(), char_based=False)
     assert np.all(result["input"] == result["output"])
-    assert result["output"].iloc[0] == "123 TABLE1"
-    assert result["output"].iloc[1] == "456 TABLE2"
+    assert result["output"].iloc[0] == "TABLE1 123"
+    assert result["output"].iloc[1] == "TABLE2 456"
 
     # Test with add_row_id=True
     result = load_data(data.copy(), add_row_id=True)
-    assert result["input"].iloc[0] == "1 1 2 3 TABLE1"
-    assert result["output"].iloc[0] == "1 2 3 TABLE1"
-    assert result["input"].iloc[1] == "2 4 5 6 TABLE2"
-    assert result["output"].iloc[1] == "4 5 6 TABLE2"
+    assert result["input"].iloc[0] == "TABLE1 1 1 2 3"
+    assert result["output"].iloc[0] == "TABLE1 1 2 3"
+    assert result["input"].iloc[1] == "TABLE2 2 4 5 6"
+    assert result["output"].iloc[1] == "TABLE2 4 5 6"
 
     # Test with add_label_tokens=True
     result = load_data(data.copy(), add_label_tokens=True)
     # duplicate results rows in dataframe
     result = pd.concat([result, result])
-    assert result["input"].iloc[0] == "<PAGEID> 1 2 3 TABLE1"
-    assert result["output"].iloc[0] == "1 2 3 TABLE1"
-    assert result["input"].iloc[1] == "<PAGEID> 4 5 6 TABLE2"
-    assert result["output"].iloc[1] == "4 5 6 TABLE2"
-    assert result["input"].iloc[2] == "<PAGEID> 7 8 9 TABLE3"
-    assert result["output"].iloc[2] == "7 8 9 TABLE3"
-    assert result["input"].iloc[3] == "<PAGEID> 7 2 0 3 3 ORDERLINE"
-    assert result["output"].iloc[3] == "7 2 0 3 3 ORDERLINE"
+    assert result["input"].iloc[0] == "TABLE1 <PAGEID> 1 2 3"
+    assert result["output"].iloc[0] == "TABLE1 1 2 3"
+    assert result["input"].iloc[1] == "TABLE2 <PAGEID> 4 5 6"
+    assert result["output"].iloc[1] == "TABLE2 4 5 6"
+    assert result["input"].iloc[2] == "TABLE3 <PAGEID> 7 8 9"
+    assert result["output"].iloc[2] == "TABLE3 7 8 9"
+    assert result["input"].iloc[3] == "ORDERLINE <PAGEID> 7 2 0 3 3"
+    assert result["output"].iloc[3] == "ORDERLINE 7 2 0 3 3"
 
     # Test with add_start_end_tokens=True
     result = load_data(data.copy(), add_start_end_tokens=True)
-    assert result["input"].iloc[0] == "<START> 1 2 3 TABLE1 <END>"
-    assert result["output"].iloc[0] == "1 2 3 TABLE1"
-    assert result["input"].iloc[1] == "<START> 4 5 6 TABLE2 <END>"
-    assert result["output"].iloc[1] == "4 5 6 TABLE2"
+    assert result["input"].iloc[0] == "<START> TABLE1 1 2 3 <END>"
+    assert result["output"].iloc[0] == "TABLE1 1 2 3"
+    assert result["input"].iloc[1] == "<START> TABLE2 4 5 6 <END>"
+    assert result["output"].iloc[1] == "TABLE2 4 5 6"
 
     # Test with remove_system_tables=True
     result = load_data(data.copy(), remove_system_tables=True)
     assert len(result[result["TABSCHEMA"] == "SYSIBM"]) == 0
     assert np.all(result["input"] == result["output"])
-    assert result["output"].iloc[0] == "1 2 3 TABLE1"
-    assert result["output"].iloc[1] == "7 8 9 TABLE3"
+    assert result["output"].iloc[0] == "TABLE1 1 2 3"
+    assert result["output"].iloc[1] == "TABLE3 7 8 9"
 
     # Test with add_row_id=True and add_label_tokens=True
     result = load_data(data.copy(), add_row_id=True, add_label_tokens=True)
-    assert result["input"].iloc[0] == "<ROWID> 1 <PAGEID> 1 2 3 TABLE1"
-    assert result["output"].iloc[0] == "1 2 3 TABLE1"
-    assert result["input"].iloc[1] == "<ROWID> 2 <PAGEID> 4 5 6 TABLE2"
-    assert result["output"].iloc[1] == "4 5 6 TABLE2"
+    assert result["input"].iloc[0] == "TABLE1 <ROWID> 1 <PAGEID> 1 2 3"
+    assert result["output"].iloc[0] == "TABLE1 1 2 3"
+    assert result["input"].iloc[1] == "TABLE2 <ROWID> 2 <PAGEID> 4 5 6"
+    assert result["output"].iloc[1] == "TABLE2 4 5 6"
 
     # Test with add_row_id=True and add_label_tokens=True and char_based=False
     result = load_data(data.copy(), add_row_id=True, add_label_tokens=True, char_based=False)
-    assert result["input"].iloc[0] == "<ROWID> 1 <PAGEID> 123 TABLE1"
-    assert result["output"].iloc[0] == "123 TABLE1"
-    assert result["input"].iloc[1] == "<ROWID> 2 <PAGEID> 456 TABLE2"
-    assert result["output"].iloc[1] == "456 TABLE2"
+    assert result["input"].iloc[0] == "TABLE1 <ROWID> 1 <PAGEID> 123"
+    assert result["output"].iloc[0] == "TABLE1 123"
+    assert result["input"].iloc[1] == "TABLE2 <ROWID> 2 <PAGEID> 456"
+    assert result["output"].iloc[1] == "TABLE2 456"
 
     # Test with add_row_id=True and add_label_tokens=True and start_end_tokens=True
     result = load_data(data.copy(), add_row_id=True, add_label_tokens=True, add_start_end_tokens=True)
-    assert result["input"].iloc[0] == "<START> <ROWID> 1 <PAGEID> 1 2 3 TABLE1 <END>"
-    assert result["output"].iloc[0] == "1 2 3 TABLE1"
-    assert result["input"].iloc[1] == "<START> <ROWID> 2 <PAGEID> 4 5 6 TABLE2 <END>"
-    assert result["output"].iloc[1] == "4 5 6 TABLE2"
-    assert result["input"].iloc[2] == "<START> <ROWID> 1 3 <PAGEID> 7 8 9 TABLE3 <END>"
-    assert result["output"].iloc[2] == "7 8 9 TABLE3"
+    assert result["input"].iloc[0] == "<START> TABLE1 <ROWID> 1 <PAGEID> 1 2 3 <END>"
+    assert result["output"].iloc[0] == "TABLE1 1 2 3"
+    assert result["input"].iloc[1] == "<START> TABLE2 <ROWID> 2 <PAGEID> 4 5 6 <END>"
+    assert result["output"].iloc[1] == "TABLE2 4 5 6"
+    assert result["input"].iloc[2] == "<START> TABLE3 <ROWID> 1 3 <PAGEID> 7 8 9 <END>"
+    assert result["output"].iloc[2] == "TABLE3 7 8 9"
 
     # Test with add_row_id=True and add_label_tokens=True and start_end_tokens=True and char_based=False
     result = load_data(data.copy(), add_row_id=True, add_label_tokens=True, add_start_end_tokens=True, char_based=False)
-    assert result["input"].iloc[0] == "<START> <ROWID> 1 <PAGEID> 123 TABLE1 <END>"
-    assert result["output"].iloc[0] == "123 TABLE1"
-    assert result["input"].iloc[1] == "<START> <ROWID> 2 <PAGEID> 456 TABLE2 <END>"
-    assert result["output"].iloc[1] == "456 TABLE2"
-    assert result["input"].iloc[2] == "<START> <ROWID> 13 <PAGEID> 789 TABLE3 <END>"
-    assert result["output"].iloc[2] == "789 TABLE3"
+    assert result["input"].iloc[0] == "<START> TABLE1 <ROWID> 1 <PAGEID> 123 <END>"
+    assert result["output"].iloc[0] == "TABLE1 123"
+    assert result["input"].iloc[1] == "<START> TABLE2 <ROWID> 2 <PAGEID> 456 <END>"
+    assert result["output"].iloc[1] == "TABLE2 456"
+    assert result["input"].iloc[2] == "<START> TABLE3 <ROWID> 13 <PAGEID> 789 <END>"
+    assert result["output"].iloc[2] == "TABLE3 789"
 
     # TODO: Add more tests for different combinations of parameters
 
