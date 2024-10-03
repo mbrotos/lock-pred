@@ -7,7 +7,7 @@
 #SBATCH --account=def-miranska
 #SBATCH --output=logs/exp-9_%A_%a.out
 #SBATCH --error=logs/exp-9_%A_%a.err
-#SBATCH --array=0 # NOTE: Make sure this is equal to the number of configs
+#SBATCH --array=0-1 # NOTE: Make sure this is equal to the number of configs
 #SBATCH --time=2:59:00
 #SBATCH --mem=8G
 #SBATCH --cpus-per-task=1
@@ -21,7 +21,8 @@ ITERATIONS=10
 
 # Define experiment configurations
 declare -a configs=(
-    "--experiment_name exp-9/ --model transformer --remove_system_tables --token_length_seq --val_split 0.0 --data data/row_locks_nodupes.csv"
+    "--experiment_name exp-9/small_nodupes --model transformer --remove_system_tables --token_length_seq --val_split 0.0 --data data/row_locks_nodupes.csv"
+    "--experiment_name exp-9/large_nodupes --model transformer --remove_system_tables --token_length_seq --val_split 0.0 --data data/row_locks_large_nodupes.csv"
 )
 
 # Determine if running on SLURM or locally
