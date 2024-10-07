@@ -51,20 +51,20 @@ def load_data(
     # Create features
     data["input"] = (
         ("<START> " if add_start_end_tokens else "") +
+        data["TABNAME"] + " " + # Always add the TABNAME
         (
             ("<ROWID> " if add_label_tokens and add_row_id else "") + 
             ((data["ROWID"] + " ") if add_row_id else "")
         ) +
         (
             ("<PAGEID> " if add_label_tokens else "") +
-            (data["PAGEID"] + " ") # Always add the PAGEID
+            (data["PAGEID"]) # Always add the PAGEID
         ) +
-        data["TABNAME"] + # Always add the TABNAME
         (" <END>" if add_start_end_tokens else "")
     )
 
     data["output"] = (
-        data["PAGEID"] + " " + data["TABNAME"]
+        data["TABNAME"] + " " + data["PAGEID"]
     )
 
     return data
