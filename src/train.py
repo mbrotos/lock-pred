@@ -172,7 +172,9 @@ def main(args=None):
         log.info("Evaluating naive baseline...")
         results = evaluate_naive_baseline(y_test)
         log.info(f"Naive Baseline Results:\n{json.dumps(results, indent=4)}")
-        return results
+        with open(os.path.join(results_folder_path, "results.json"), "w") as f:
+            json.dump(results, f, indent=4)
+        exit()
 
     log.info("Building model...")
     if args.model == "transformer":
