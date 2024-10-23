@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from evaluate import evaluate_predictions
+from evaluate import evaluate_predictions, evaluate_naive_baseline
 
 def test_evaluate_predictions():
     x = np.array([[7, 8, 9], [10, 11, 12]])
@@ -101,6 +101,32 @@ def test_pageid_accuracy():
 
     results = evaluate_predictions(y_pred, x, y, "word")
     assert results["pageid_test_accuracy"] == 2/3
+
+def test_evaluate_naive_baseline():
+    y_test = np.array([[1, 1], [1, 1], [4, 5], [6, 7], [8, 9]])
+
+    results = evaluate_naive_baseline(y_test)
+    assert results["actual_test_accuracy"] == 1/4
+
+    y_test = np.array([[1, 1], [1, 1], [4, 5], [4, 5], [8, 9]])
+
+    results = evaluate_naive_baseline(y_test)
+    assert results["actual_test_accuracy"] == 2/4
+
+    y_test = np.array([[1, 1], [1, 1], [1, 1], [1, 1], [1, 1]])
+    results = evaluate_naive_baseline(y_test)
+    assert results["actual_test_accuracy"] == 1.0
+
+    y_test = np.array([[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]])
+    results = evaluate_naive_baseline(y_test)
+    assert results["actual_test_accuracy"] == 0.0
+
+    # Test flatten procedure
+    y_test = np.array([[[1, 1], [1, 1]], [[1, 1], [1, 1]], [[4, 4], [5, 5]], [[4, 4], [5, 5]], [[8, 8], [9, 9]]])
+
+    results = evaluate_naive_baseline(y_test)
+    assert results["actual_test_accuracy"] == 2/4
+
 
 # TODO: Add more tests for pageid_test_accuracy and padding_test_accuracy
 

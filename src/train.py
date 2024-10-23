@@ -13,7 +13,7 @@ import hashlib
 from datapipeline import create_sequences_token, load_data, create_sequences, prepare_datasets, load_table_lock_data
 from model import build_lstm_model, build_transformer_model
 from utils import setup_logger
-from evaluate import evaluate_predictions, print_examples
+from evaluate import evaluate_predictions, print_examples, evaluate_naive_baseline
 
 def parse_args(args=None):
     if isinstance(args, dict): # For debugging
@@ -51,11 +51,16 @@ def parse_args(args=None):
     parser.add_argument("--remove_system_tables", action="store_true", default=False, help="Remove system tables from the dataset")
     parser.add_argument("--token_length_seq", action="store_true", default=False, help="Use token length in order to create sequences")
     parser.add_argument("--lstm_pe", action="store_true", default=False, help="Use position embedding in LSTM model")
+    parser.add_argument("--naive_baseline", action="store_true", default=False, help="Use naive baseline")
+    parser.add_argument("--disable_cache", action="store_true", default=False, help="Disable caching")
     return parser.parse_args(args)
 
 def main(args=None):
     # Print args dict with indent
     log.info(f"Arguments:\n{json.dumps(args.__dict__, indent=4)}")
+
+    if not args.disable_cache:
+        log.warning("Caching is enabled.")
 
     # TODO: Add checks for args given buisness logic
 
@@ -136,7 +141,7 @@ def main(args=None):
         # create the dir if it doesn't exist
         os.makedirs("data/.cache", exist_ok=True)
         # check if cache already exists
-        if os.path.exists(f"data/.cache/cached_sequences_{args_hash}.pkl"):
+        if os.path.exists(f"data/.cache/cached_sequences_{args_hash}.pkl") and not args.disable_cache:
             log.info(f"Loading cached sequences for args: {args_hash}")
             with open(f"data/.cache/cached_sequences_{args_hash}.pkl", "rb") as f:
                 source_texts, target_texts = pickle.load(f)
@@ -166,6 +171,18 @@ def main(args=None):
     log.info(f"y_train shape: {y_train.shape}")
     log.info(f"x_test shape: {x_test.shape}")
     log.info(f"y_test shape: {y_test.shape}")
+
+    if args.naive_baseline:
+        log.info("Evaluating naive baseline...")
+        results = evaluate_naive_baseline(y_test)
+        log.info(f"Naive Baseline Results:\n{json.dumps(results, indent=4)}")
+        # Save results to a file
+        with open(os.path.join(results_folder_path, "results.json"), "w") as f:
+            json.dump(results, f, indent=4)
+        # Save args to a file
+        with open(os.path.join(results_folder_path, "args.json"), "w") as f:
+            json.dump(args.__dict__, f, indent=4)
+        exit()
 
     log.info("Building model...")
     if args.model == "transformer":
