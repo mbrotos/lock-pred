@@ -17,7 +17,7 @@
 # Activate virtual environment
 source .venv/bin/activate
 
-ITERATIONS=10
+ITERATIONS=1 # NOTE: The std should be 0 since the naive baseline is deterministic.
 
 # Define experiment configurations
 declare -a configs=(
