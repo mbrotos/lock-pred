@@ -52,11 +52,15 @@ def parse_args(args=None):
     parser.add_argument("--token_length_seq", action="store_true", default=False, help="Use token length in order to create sequences")
     parser.add_argument("--lstm_pe", action="store_true", default=False, help="Use position embedding in LSTM model")
     parser.add_argument("--naive_baseline", action="store_true", default=False, help="Use naive baseline")
+    parser.add_argument("--disable_cache", action="store_true", default=False, help="Disable caching")
     return parser.parse_args(args)
 
 def main(args=None):
     # Print args dict with indent
     log.info(f"Arguments:\n{json.dumps(args.__dict__, indent=4)}")
+
+    if not args.disable_cache:
+        log.warning("Caching is enabled.")
 
     # TODO: Add checks for args given buisness logic
 
@@ -137,7 +141,7 @@ def main(args=None):
         # create the dir if it doesn't exist
         os.makedirs("data/.cache", exist_ok=True)
         # check if cache already exists
-        if os.path.exists(f"data/.cache/cached_sequences_{args_hash}.pkl"):
+        if os.path.exists(f"data/.cache/cached_sequences_{args_hash}.pkl") and not args.disable_cache:
             log.info(f"Loading cached sequences for args: {args_hash}")
             with open(f"data/.cache/cached_sequences_{args_hash}.pkl", "rb") as f:
                 source_texts, target_texts = pickle.load(f)
