@@ -7,7 +7,7 @@
 #SBATCH --account=def-miranska
 #SBATCH --output=logs/exp-10_%A_%a.out
 #SBATCH --error=logs/exp-10_%A_%a.err
-#SBATCH --array=0-3 # NOTE: Make sure this is equal to the number of configs
+#SBATCH --array=0-15 # NOTE: Make sure this is equal to the number of configs
 #SBATCH --time=2:59:00
 #SBATCH --mem=8G
 #SBATCH --cpus-per-task=1
@@ -20,7 +20,7 @@ source .venv/bin/activate
 ITERATIONS=1 # NOTE: The std should be 0 since the naive baseline is deterministic.
 
 # Define experiment configurations
-declare -a configs=(
+declare -a configs_base=(
     "--experiment_name exp-10/row_naive_small --model transformer --remove_system_tables --token_length_seq --val_split 0.0 --data data/row_locks.csv --naive_baseline"
     "--experiment_name exp-10/row_naive_large --model transformer --remove_system_tables --token_length_seq --val_split 0.0 --data data/row_locks_large.csv --naive_baseline"
     "--experiment_name exp-10/table_naive_small --model transformer --remove_system_tables --token_length_seq --val_split 0.0 --data data/table_locks.csv --naive_baseline"
