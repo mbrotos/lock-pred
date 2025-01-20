@@ -4,6 +4,13 @@ import logging
 
 log = logging.getLogger(__name__)
 
+def detokenization(y_pred, x, y, target_tokenizer, source_tokenizer):
+    # Detokenize the predicted, input, and expected output sequences
+    y_pred_detokenized = target_tokenizer.sequences_to_texts(y_pred)
+    x_detokenized = source_tokenizer.sequences_to_texts(x)
+    y_detokenized = target_tokenizer.sequences_to_texts(y)
+    return y_pred_detokenized, x_detokenized, y_detokenized
+
 def print_examples(y_pred, x, y, target_tokenizer, source_tokenizer):
     # Predict on a few examples
     log.info("Predicting a few examples...")
@@ -93,4 +100,4 @@ def evaluate_naive_baseline(y_test):
             "table_name_test_accuracy": None,
             "pageid_test_accuracy": None,
             "padding_test_accuracy": None,
-        }
+        }, predictions, actual_values
