@@ -104,27 +104,26 @@ def test_pageid_accuracy():
 
 def test_evaluate_naive_baseline():
     y_test = np.array([[1, 1], [1, 1], [4, 5], [6, 7], [8, 9]])
-
-    results = evaluate_naive_baseline(y_test)
+    results, _, _ = evaluate_naive_baseline(y_test)
     assert results["actual_test_accuracy"] == 1/4
 
     y_test = np.array([[1, 1], [1, 1], [4, 5], [4, 5], [8, 9]])
 
-    results = evaluate_naive_baseline(y_test)
+    results, _, _ = evaluate_naive_baseline(y_test)
     assert results["actual_test_accuracy"] == 2/4
 
     y_test = np.array([[1, 1], [1, 1], [1, 1], [1, 1], [1, 1]])
-    results = evaluate_naive_baseline(y_test)
+    results, _, _ = evaluate_naive_baseline(y_test)
     assert results["actual_test_accuracy"] == 1.0
 
     y_test = np.array([[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]])
-    results = evaluate_naive_baseline(y_test)
+    results, _, _ = evaluate_naive_baseline(y_test)
     assert results["actual_test_accuracy"] == 0.0
 
     # Test flatten procedure
-    y_test = np.array([[[1, 1], [1, 1]], [[1, 1], [1, 1]], [[4, 4], [5, 5]], [[4, 4], [5, 5]], [[8, 8], [9, 9]]])
+    y_test = np.array([[1, 1, 1, 1], [1, 1, 1, 1], [4, 4, 5, 5], [4, 4, 5, 5], [8, 8, 9, 9]])
 
-    results = evaluate_naive_baseline(y_test)
+    results, _, _ = evaluate_naive_baseline(y_test)
     assert results["actual_test_accuracy"] == 2/4
 
 

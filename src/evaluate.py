@@ -84,20 +84,18 @@ def evaluate_predictions(y_pred, x, y, tokenization_type, horizon=1):
     return results
 
 def evaluate_naive_baseline(y_test):
-    y_test_flat = y_test.reshape((len(y_test), -1))
     # Generate predictions by assuming the next value is the same as the current one
     # y_test should already be prepared with the correct horizon
-    predictions = y_test_flat[:-1]
-    actual_values = y_test_flat[1:]
-
+    y_pred = y_test.copy()[:-1]
+    y_test = y_test[1:]
     # Calculate the number of correct predictions
-    correct_predictions = sum(np.all(pred == actual, axis=-1) for pred, actual in zip(predictions, actual_values))
+    correct_predictions = sum(np.all(y_test == y_pred, axis=-1))
 
     # Compute accuracy
-    accuracy = correct_predictions / len(predictions)
+    accuracy = correct_predictions / len(y_test)
     return {
             "actual_test_accuracy": accuracy,
             "table_name_test_accuracy": None,
             "pageid_test_accuracy": None,
             "padding_test_accuracy": None,
-        }, predictions, actual_values
+        }, y_pred, y_test

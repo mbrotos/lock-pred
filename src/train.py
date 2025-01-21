@@ -189,7 +189,12 @@ def main(args=None):
 
     if args.naive_baseline:
         log.info("Evaluating naive baseline...")
-        results, predictions, actual_values = evaluate_naive_baseline(y_test)
+        y_test_argmax = np.argmax(y_test, axis=-1)
+
+        if len(y_test_argmax.shape) == 1:
+            y_test_argmax = np.expand_dims(y_test_argmax, axis=-1)
+
+        results, predictions, actual_values = evaluate_naive_baseline(y_test_argmax)
         log.info(f"Naive Baseline Results:\n{json.dumps(results, indent=4)}")
         # Save results to a file
         with open(os.path.join(results_folder_path, "results.json"), "w") as f:
@@ -198,14 +203,7 @@ def main(args=None):
         with open(os.path.join(results_folder_path, "args.json"), "w") as f:
             json.dump(args.__dict__, f, indent=4)
 
-        y_pred_argmax = np.argmax(predictions, axis=-1)
-        y_test_argmax = np.argmax(actual_values, axis=-1)
-
-        if len(y_test_argmax.shape) == 1:
-            y_test_argmax = np.expand_dims(y_test_argmax, axis=-1)
-            y_pred_argmax = np.expand_dims(y_pred_argmax, axis=-1)
-
-        out_lock_preds, in_lock_sequences, gt_lock = detokenization(y_pred_argmax, x_test, y_test_argmax, target_tokenizer, source_tokenizer)
+        out_lock_preds, in_lock_sequences, gt_lock = detokenization(predictions, x_test, actual_values, target_tokenizer, source_tokenizer)
 
         df_out = pd.DataFrame({
             "in_lock_sequences": in_lock_sequences[:-1], # remove the last since we don't have a prediction for it
