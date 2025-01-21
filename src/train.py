@@ -288,7 +288,7 @@ def main(args=None):
 
     results = evaluate_predictions(y_pred_argmax, x_test, y_test_argmax, args.tokenization, args.horizon)
 
-    results["loss"] = loss
+    results["loss"] = float(loss)
     results["accuracy_per_output"] = accuracy
 
     log.info("Saving results...")
