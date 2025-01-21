@@ -77,7 +77,7 @@ def main(args=None):
 
     # Load data
     char_based = args.tokenization == "char"
-    table_lock = 'table_lock' in args.data
+    table_lock = 'table_lock' in args.data or 'table_sep' in args.data
 
     log.info(f"Loading data...")
     df = pd.read_csv(args.data)
