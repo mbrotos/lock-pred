@@ -266,7 +266,7 @@ def main(args=None):
     y_pred_argmax = np.argmax(y_pred, axis=-1)
     y_test_argmax = np.argmax(y_test, axis=-1)
 
-    loss = np.mean(keras.losses.categorical_crossentropy(y_test, y_pred))
+    loss = np.mean(keras.losses.categorical_crossentropy(y_test, y_pred).numpy())
     accuracy = np.mean(y_pred_argmax == y_test_argmax)
     log.info(f"Per-output Test Accuracy: {accuracy * 100:.2f}%")
 
