@@ -261,12 +261,14 @@ def main(args=None):
         )
 
     log.info("Evaluating model...")
-    loss, accuracy = model.evaluate(x_test, y_test)
-    log.info(f"Per-output Test Accuracy: {accuracy * 100:.2f}%")
 
     y_pred = model.predict(x_test)
     y_pred_argmax = np.argmax(y_pred, axis=-1)
     y_test_argmax = np.argmax(y_test, axis=-1)
+
+    loss = np.mean(keras.losses.categorical_crossentropy(y_test, y_pred))
+    accuracy = np.mean(y_pred_argmax == y_test_argmax)
+    log.info(f"Per-output Test Accuracy: {accuracy * 100:.2f}%")
 
     if len(y_test_argmax.shape) == 1:
         # This is required because we squeeze the output of the model to remove the singleton dimension
