@@ -7,7 +7,7 @@
 #SBATCH --account=def-miranska
 #SBATCH --output=logs/exp-11-table-locks-naive_%A_%a.out
 #SBATCH --error=logs/exp-11-table-lock-naives_%A_%a.err
-#SBATCH --array=0-43 # NOTE: Make sure this is equal to the number of configs
+#SBATCH --array=0-35 # NOTE: Make sure this is equal to the number of configs
 #SBATCH --time=2:59:00
 #SBATCH --mem=8G
 #SBATCH --cpus-per-task=1
