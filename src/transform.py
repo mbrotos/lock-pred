@@ -68,23 +68,46 @@ def clean_data(df, iterations=None, logger=None):
     if iterations is not None:
         df = filter_and_truncate_groups(df, group_cols, iterations, logger)
 
-    # Now perform the aggregation on the truncated/filtered dataframe
+    # Define the aggregation dictionary with the original column names
+    possible_agg_columns = {
+        "actual_test_accuracy": {
+            "actual_test_accuracy_mean": "mean",
+            "actual_test_accuracy_std": "std",
+        },
+        "loss": {
+            "loss_mean": "mean",
+            "loss_std": "std",
+        },
+        "accuracy_per_output": {
+            "accuracy_per_output_mean": "mean",
+            "accuracy_per_output_std": "std",
+        },
+        "table_name_test_accuracy": {
+            "table_name_test_accuracy_mean": "mean",
+            "table_name_test_accuracy_std": "std",
+        },
+        "pageid_test_accuracy": {
+            "pageid_test_accuracy_mean": "mean",
+            "pageid_test_accuracy_std": "std",
+        },
+        "padding_test_accuracy": {
+            "padding_test_accuracy_mean": "mean",
+            "padding_test_accuracy_std": "std",
+        },
+    }
+
+    # Dynamically build the aggregation dictionary for available columns
+    agg_dict = {
+        new_col: (col, func)
+        for col, metrics in possible_agg_columns.items()
+        if col in df.columns
+        for new_col, func in metrics.items()
+    }
+
+    # Perform aggregation using the dynamically built dictionary
     df_agg = (
         df.groupby(group_cols, dropna=False)
-        .agg(
-            actual_test_accuracy_mean=("actual_test_accuracy", "mean"),
-            actual_test_accuracy_std=("actual_test_accuracy", "std"),
-            loss_mean=("loss", "mean"),
-            loss_std=("loss", "std"),
-            accuracy_per_output_mean=("accuracy_per_output", "mean"),
-            accuracy_per_output_std=("accuracy_per_output", "std"),
-            table_name_test_accuracy_mean=("table_name_test_accuracy", "mean"),
-            table_name_test_accuracy_std=("table_name_test_accuracy", "std"),
-            pageid_test_accuracy_mean=("pageid_test_accuracy", "mean"),
-            pageid_test_accuracy_std=("pageid_test_accuracy", "std"),
-            padding_test_accuracy_mean=("padding_test_accuracy", "mean"),
-            padding_test_accuracy_std=("padding_test_accuracy", "std"),
-        )
+        .agg(**agg_dict)
         .reset_index()
     )
 

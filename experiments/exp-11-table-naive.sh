@@ -50,14 +50,24 @@ else
     num_tasks=${#configs[@]}
 fi
 
-# Main loop
-for ((i=task_id; i<task_id+num_tasks; i++)); do
-    current_config=${configs[$i]}
-    echo "Running experiment: $current_config"
+# # Main loop
+# for ((i=task_id; i<task_id+num_tasks; i++)); do
+#     current_config=${configs[$i]}
+#     echo "Running experiment: $current_config"
 
-    # Run the experiment for the specified number of iterations
-    for j in $(seq 1 $ITERATIONS); do
-        echo "Running iteration $j"
-        python src/train.py $current_config
+#     # Run the experiment for the specified number of iterations
+#     for j in $(seq 1 $ITERATIONS); do
+#         echo "Running iteration $j"
+#         python src/train.py $current_config
+#     done
+# done
+
+commands=()
+for conf in "${configs[@]}"; do
+    for i in $(seq 1 $ITERATIONS); do
+        commands+=("python src/train.py $conf")
     done
 done
+
+# Finally, run all commands in parallel with 4 parallel jobs (edit -j 4 as you like)
+printf '%s\n' "${commands[@]}" | parallel -j 4
