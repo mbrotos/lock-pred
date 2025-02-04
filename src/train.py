@@ -12,7 +12,7 @@ import hashlib
 
 from datapipeline import create_sequences_token, load_data, create_sequences, prepare_datasets, load_table_lock_data
 from model import build_lstm_model, build_transformer_model
-from utils import setup_logger
+from utils import setup_logger, is_table_locks
 from evaluate import evaluate_predictions, print_examples, evaluate_naive_baseline, detokenization
 
 def parse_args(args=None):
@@ -77,7 +77,7 @@ def main(args=None):
 
     # Load data
     char_based = args.tokenization == "char"
-    table_lock = 'table_lock' in args.data or 'table_sep' in args.data
+    table_lock = is_table_locks(args.data)
 
     log.info(f"Loading data...")
     df = pd.read_csv(args.data)

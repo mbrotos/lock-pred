@@ -25,3 +25,6 @@ def setup_logger(log_file):
     logger.addHandler(console_handler)
 
     return logger
+
+def is_table_locks(data):
+    return 'table_lock' in data or 'table_sep' in data
