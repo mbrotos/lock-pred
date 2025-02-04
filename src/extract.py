@@ -4,6 +4,7 @@ import os
 import json
 import re
 import tqdm
+import uuid
 
 from utils import setup_logger, is_table_locks
 
@@ -97,10 +98,12 @@ def extract_data(data_path):
                 predictions['pred_table'] = pred_extracted[0]
                 predictions['pred_pageid'] = pred_extracted[1].str.replace(' ', '').astype(int)
             predictions['horizon_position'] = 1
+            predictions['unique_id'] = [str(uuid.uuid4()) for _ in range(len(predictions))]
 
         else:
             # --- Horizon > 1: multiple locks per row, need to explode into multiple rows ---
             predictions['orig_idx'] = predictions.index
+            predictions['unique_id'] = [str(uuid.uuid4()) for _ in range(len(predictions))]
 
             if table_locks:
                 predictions['gt_tokens'] = predictions['gt_lock'].str.split()
