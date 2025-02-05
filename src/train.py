@@ -12,8 +12,8 @@ import hashlib
 
 from datapipeline import create_sequences_token, load_data, create_sequences, prepare_datasets, load_table_lock_data
 from model import build_lstm_model, build_transformer_model
-from utils import setup_logger
-from evaluate import evaluate_predictions, print_examples, evaluate_naive_baseline
+from utils import setup_logger, is_table_locks
+from evaluate import evaluate_predictions, print_examples, evaluate_naive_baseline, detokenization
 
 def parse_args(args=None):
     if isinstance(args, dict): # For debugging
@@ -41,6 +41,7 @@ def parse_args(args=None):
     parser.add_argument("--results_dir", type=str, default="results", help="Directory to save results")
     parser.add_argument("--experiment_name", type=str, default="", help="Experiment name")
     parser.add_argument("--horizon", type=int, default=1, help="Horizon for forecasting. I.e. how many steps ahead to predict")
+    parser.add_argument("--model_weights", type=str, default=None, help="Model weights to load")
 
     parser.add_argument("--shuffle", action="store_true", default=False, help="Shuffle entire dataset. Not recommended since we want to preserve sequence order.")
     parser.add_argument("--add_start_end_tokens", action="store_true", default=False, help="Add start and end tokens")
@@ -53,7 +54,17 @@ def parse_args(args=None):
     parser.add_argument("--lstm_pe", action="store_true", default=False, help="Use position embedding in LSTM model")
     parser.add_argument("--naive_baseline", action="store_true", default=False, help="Use naive baseline")
     parser.add_argument("--disable_cache", action="store_true", default=False, help="Disable caching")
-    return parser.parse_args(args)
+
+    parser.add_argument("--args_file", type=str, default=None, help="Load args from a json file. This will override all other args.")
+
+    parsed_args = parser.parse_args(args)
+
+    if parsed_args.args_file:
+        with open(parsed_args.args_file, "r") as f:
+            args_dict = json.load(f)
+        parsed_args = argparse.Namespace(**args_dict)
+
+    return parsed_args
 
 def main(args=None):
     # Print args dict with indent
@@ -66,7 +77,7 @@ def main(args=None):
 
     # Load data
     char_based = args.tokenization == "char"
-    table_lock = 'table_lock' in args.data
+    table_lock = is_table_locks(args.data)
 
     log.info(f"Loading data...")
     df = pd.read_csv(args.data)
@@ -137,7 +148,11 @@ def main(args=None):
     log.info("Creating sequences...")
     if args.token_length_seq:
         # Hash the args
-        args_hash = hashlib.sha256(json.dumps(args.__dict__).encode('utf-8')).hexdigest()
+        args_dict = dict(args.__dict__)
+        log.warning("model_weights and args_file are removed from the args hash.")
+        args_dict.pop("model_weights", None)
+        args_dict.pop("args_file", None)
+        args_hash = hashlib.sha256(json.dumps(args_dict).encode('utf-8')).hexdigest()
         # create the dir if it doesn't exist
         os.makedirs("data/.cache", exist_ok=True)
         # check if cache already exists
@@ -174,7 +189,12 @@ def main(args=None):
 
     if args.naive_baseline:
         log.info("Evaluating naive baseline...")
-        results = evaluate_naive_baseline(y_test)
+        y_test_argmax = np.argmax(y_test, axis=-1)
+
+        if len(y_test_argmax.shape) == 1:
+            y_test_argmax = np.expand_dims(y_test_argmax, axis=-1)
+
+        results, predictions, actual_values = evaluate_naive_baseline(y_test_argmax)
         log.info(f"Naive Baseline Results:\n{json.dumps(results, indent=4)}")
         # Save results to a file
         with open(os.path.join(results_folder_path, "results.json"), "w") as f:
@@ -182,6 +202,19 @@ def main(args=None):
         # Save args to a file
         with open(os.path.join(results_folder_path, "args.json"), "w") as f:
             json.dump(args.__dict__, f, indent=4)
+
+        out_lock_preds, in_lock_sequences, gt_lock = detokenization(predictions, x_test, actual_values, target_tokenizer, source_tokenizer)
+
+        df_out = pd.DataFrame({
+            "in_lock_sequences": in_lock_sequences[:-1], # remove the last since we don't have a prediction for it
+            "out_lock_preds": out_lock_preds,
+            "gt_lock": gt_lock,
+        })
+
+        # Save lock sequences and predictions
+        with open(os.path.join(results_folder_path, "predictions.csv"), "w") as f:
+            df_out.to_csv(f, index=False)
+
         exit()
 
     log.info("Building model...")
@@ -209,25 +242,33 @@ def main(args=None):
     callbacks = []
     if args.early_stopping:
         callbacks.append(early_stopping)
-    # Train the model
-    log.info("Training model...")
-    history = model.fit(
-        x_train,
-        y_train,
-        epochs=args.epochs,
-        batch_size=args.batch_size,
-        validation_split=args.val_split,
-        callbacks=callbacks,
-        shuffle=(not args.disable_train_shuffle)
-    )
+    
+    if args.model_weights:
+        # Load the model weights
+        log.info(f"Loading model weights from {args.model_weights}")
+        model.load_weights(args.model_weights)
+    else:
+        # Train the model
+        log.info("Training model...")
+        history = model.fit(
+            x_train,
+            y_train,
+            epochs=args.epochs,
+            batch_size=args.batch_size,
+            validation_split=args.val_split,
+            callbacks=callbacks,
+            shuffle=(not args.disable_train_shuffle)
+        )
 
     log.info("Evaluating model...")
-    loss, accuracy = model.evaluate(x_test, y_test)
-    log.info(f"Per-output Test Accuracy: {accuracy * 100:.2f}%")
 
     y_pred = model.predict(x_test)
     y_pred_argmax = np.argmax(y_pred, axis=-1)
     y_test_argmax = np.argmax(y_test, axis=-1)
+
+    loss = np.mean(keras.losses.categorical_crossentropy(y_test, y_pred).numpy())
+    accuracy = np.mean(y_pred_argmax == y_test_argmax)
+    log.info(f"Per-output Test Accuracy: {accuracy * 100:.2f}%")
 
     if len(y_test_argmax.shape) == 1:
         # This is required because we squeeze the output of the model to remove the singleton dimension
@@ -237,9 +278,17 @@ def main(args=None):
 
     print_examples(y_pred_argmax, x_test, y_test_argmax, target_tokenizer, source_tokenizer)
 
+    out_lock_preds, in_lock_sequences, gt_lock = detokenization(y_pred_argmax, x_test, y_test_argmax, target_tokenizer, source_tokenizer)
+
+    df_out = pd.DataFrame({
+        "in_lock_sequences": in_lock_sequences,
+        "out_lock_preds": out_lock_preds,
+        "gt_lock": gt_lock,
+    })
+
     results = evaluate_predictions(y_pred_argmax, x_test, y_test_argmax, args.tokenization, args.horizon)
 
-    results["loss"] = loss
+    results["loss"] = float(loss)
     results["accuracy_per_output"] = accuracy
 
     log.info("Saving results...")
@@ -254,9 +303,14 @@ def main(args=None):
     # Save model
     model.save(os.path.join(results_folder_path, "model.keras"))
 
-    # Save history
-    with open(os.path.join(results_folder_path, "history.json"), "w") as f:
-        json.dump(history.history, f, indent=4)
+    if not args.model_weights:
+        # Save history
+        with open(os.path.join(results_folder_path, "history.json"), "w") as f:
+            json.dump(history.history, f, indent=4)
+
+    # Save lock sequences and predictions
+    with open(os.path.join(results_folder_path, "predictions.csv"), "w") as f:
+        df_out.to_csv(f, index=False)
 
 if __name__ == "__main__":
     args = parse_args()
