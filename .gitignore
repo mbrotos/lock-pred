@@ -163,3 +163,10 @@ data/*
 results/*/
 logs/*.out
 logs/*.err
+.Rproj.user
+analysis/data/
+analysis/outputs/
+*.Rproj
+.python-version
+.Rhistory
+.DS_Store
