@@ -9,7 +9,8 @@ import uuid
 from utils import setup_logger, is_table_locks
 
 # Pre-compile the regex for non-table locks
-LOCK_REGEX = re.compile(r'([A-Za-z]+)\s*((?:\d+\s*)+)')
+PATTERN = r'([A-Za-z]+)\s*((?:\d+\s*)+)'
+LOCK_REGEX = re.compile(PATTERN)
 
 def parse_args(args=None):
     parser = argparse.ArgumentParser(description="Extract data from an experiment directory.")
@@ -87,8 +88,8 @@ def extract_data(data_path):
                 predictions['pred_pageid'] = None
             else:
                 # For non-table locks, use vectorized regex extraction.
-                gt_extracted = predictions['gt_lock'].str.extract(r'([A-Za-z]+)\s*((?:\d+\s*)+)', expand=True)
-                pred_extracted = predictions['out_lock_preds'].str.extract(r'([A-Za-z]+)\s*((?:\d+\s*)+)', expand=True)
+                gt_extracted = predictions['gt_lock'].str.extract(PATTERN, expand=True)
+                pred_extracted = predictions['out_lock_preds'].str.extract(PATTERN, expand=True)
                 if gt_extracted.isnull().any().any():
                     raise ValueError("Failed to extract lock from some gt_lock strings in horizon==1")
                 if pred_extracted.isnull().any().any():
