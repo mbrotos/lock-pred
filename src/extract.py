@@ -5,6 +5,7 @@ import json
 import re
 import tqdm
 import uuid
+from collections import Counter
 
 from utils import setup_logger, is_table_locks
 
@@ -42,17 +43,27 @@ def extract_data(data_path):
     data = []
     predictions_df = None
     in_lock_sequences_map = {}
+    counter = Counter()
 
     for folder_path in tqdm.tqdm(folder_paths):
         with open(os.path.join(folder_path, "results.json"), "r") as f:
             results = json.load(f)
         with open(os.path.join(folder_path, "args.json"), "r") as f:
             experiment_args = json.load(f)
+
+        # Using the experiment_args as a key to count the number of iterations, but first remove 'model_weights' key
+        args_copy = experiment_args.copy()
+        args_copy.pop('model_weights', None)
+        args_key = json.dumps(args_copy, sort_keys=True)
+        counter[args_key] += 1
+
+        
         # Save experiment summary info
         data.append({
             **experiment_args,
             **results,
             "folder_path": folder_path,
+            "iteration": counter[args_key]
         })
 
         # Read predictions CSV for this folder
@@ -162,6 +173,9 @@ def extract_data(data_path):
             )
 
         predictions = predictions.drop(columns=['gt_lock', 'out_lock_preds'])
+
+        # Add iteration number to predictions
+        predictions['iteration'] = counter[args_key]
 
         if predictions_df is None:
             predictions_df = predictions

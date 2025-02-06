@@ -62,6 +62,7 @@ def clean_data(df, iterations=None, logger=None):
         "padding_test_accuracy",
         "folder_path",
         "model_weights",
+        "iteration",
     ]
     group_cols = df.columns.drop(agg_columns_to_drop, errors='ignore').tolist()
 
