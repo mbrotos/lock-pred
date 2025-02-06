@@ -9,7 +9,7 @@ def parse_args(args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_file", type=str, required=True)
     parser.add_argument("--output_filename", type=str, default="results-clean.csv")
-    parser.add_argument("--iterations", type=int, required=False, 
+    parser.add_argument("--iterations", type=int, required=False, default=10,
                         help="Minimum number of samples per group. Groups with fewer samples are dropped, and groups with more are truncated.")
     return parser.parse_args(args)
 
@@ -61,6 +61,7 @@ def clean_data(df, iterations=None, logger=None):
         "pageid_test_accuracy",
         "padding_test_accuracy",
         "folder_path",
+        "model_weights",
     ]
     group_cols = df.columns.drop(agg_columns_to_drop, errors='ignore').tolist()
 
