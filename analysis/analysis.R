@@ -476,7 +476,7 @@ ggplot() +
   ) +
   facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
   labs(
-    title = "Transformer vs Naive Baseline Performance: Table vs. Percent Correct by Horizon",
+    title = "Table Lock, Transformer vs Naive Baseline Performance: Table vs. Percent Correct by Horizon",
     x = "Table",
     y = "Percent Correct",
     color = "Model"
@@ -484,6 +484,13 @@ ggplot() +
   scale_color_manual(values = c("Transformer" = "black", "Naive Baseline" = "red")) + # Red for scatter plot
   theme_minimal()
 
+ggsave(
+  "analysis/plots/table-lock_transformer_vs_naive_baseline_by_table.pdf",
+  width = 15,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
 
 
 
