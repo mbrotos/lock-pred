@@ -3,17 +3,21 @@ require(arrow)  # to read parquet
 library(dplyr)
 library(ggplot2)
 
-is_correct <- function(df) {
-  correct <- (df$gt_table == df$pred_table) &
-    (df$gt_pageid == df$pred_pageid)
+is_correct <- function(df, is_table_lock=FALSE) {
+  if (is_table_lock) {
+    correct <- (df$gt_table == df$pred_table)
+  } else {
+    correct <- (df$gt_table == df$pred_table) &
+      (df$gt_pageid == df$pred_pageid) # Row locks require both table and pageid to be correct
+  }
   correct[is.na(correct)] <- FALSE  # Explicitly set NA results to FALSE
   # NA's occur when the prediction output token length is less than the ground truth token length
   return(correct)
 }
 
-load_parquet <- function(path) {
+load_parquet <- function(path, is_table_lock=FALSE) {
   predictions <- read_parquet(path) %>% filter(iteration <= 10)
-  predictions$is_correct <- is_correct(predictions)
+  predictions$is_correct <- is_correct(predictions, is_table_lock)
   predictions$horizon <- as.factor(predictions$horizon)
   return(predictions)
 }
@@ -66,8 +70,14 @@ horizon_iteration_performance_by_table <- function(predictions) {
   return(correct_by_table)
 }
 
-# Command to get prediction parquets
+# Command to get prediction parquets:
 # rsync -aR --prune-empty-dirs --include="*/" --include="*/predictions.parquet" --exclude="*" . ../../analysis/data
+
+
+#####################
+#####################
+
+# Lets look at Row lock performance
 
 predictions <- load_parquet("analysis/data/exp-6-row-locks/predictions.parquet")
 check_iterations(predictions)
@@ -396,5 +406,92 @@ ggsave(
   units = "in",
   dpi = 300
 )
+
+
+#####################
+#####################
+
+# Lets look at table lock performance
+
+predictions_table <- load_parquet("analysis/data/exp-6-table-locks/predictions.parquet", is_table_lock=TRUE)
+check_iterations(predictions_table)
+
+predictions_naive_table <- load_parquet("analysis/data/exp-10/predictions.parquet", is_table_lock=TRUE) %>%
+  filter(data == "data/fixed/table_locks.csv")
+
+correct_table <- horizon_iteration_performance(predictions_table)
+correct_table_by_table <- horizon_iteration_performance_by_table(predictions_table)
+
+correct_naive_table <- horizon_iteration_performance(predictions_naive_table)
+correct_naive_table_by_table <- horizon_iteration_performance_by_table(predictions_naive_table)
+
+rm(predictions_table)
+rm(predictions_naive_table)
+gc()
+
+
+# Box plot w/ correct and scatter plot w/ correct_naive
+ggplot() +
+  geom_boxplot(
+    data = correct_table,
+    aes(x = horizon, y = mean_percent_correct, color = "Model Predictions"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive_table,
+    aes(x = horizon, y = mean_percent_correct, color = "Naive Baseline"),
+    size = 2
+  ) +
+  labs(
+    title = "Table Lock, Transformer and Naive Baseline Performance: Horizon vs. Percent Correct",
+    x = "Horizon",
+    y = "Percent Correct",
+    color = "Legend"
+  ) +  # Ensures only one legend title
+  scale_color_manual(values = c(
+    "Model Predictions" = "black",
+    "Naive Baseline" = "red"
+  )) +
+  theme_minimal()
+
+ggsave(
+  "analysis/plots/table-lock_transformer_vs_naive_baseline.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+ggplot() +
+  geom_boxplot(
+    data = correct_table_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Transformer"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive_table_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Naive Baseline"),
+    size = 2,
+  ) +
+  facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
+  labs(
+    title = "Transformer vs Naive Baseline Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    color = "Model"
+  ) +
+  scale_color_manual(values = c("Transformer" = "black", "Naive Baseline" = "red")) + # Red for scatter plot
+  theme_minimal()
+
+
+
+
+
+
+
+
+
+
 
 
