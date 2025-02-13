@@ -70,6 +70,13 @@ horizon_iteration_performance_by_table <- function(predictions) {
   return(correct_by_table)
 }
 
+horizon_labels <- c(
+  "1" = "Horizon: 1",
+  "2" = "Horizon: 2",
+  "3" = "Horizon: 3",
+  "4" = "Horizon: 4"
+)
+
 # Command to get prediction parquets:
 # rsync -aR --prune-empty-dirs --include="*/" --include="*/predictions.parquet" --exclude="*" . ../../analysis/data
 
@@ -101,12 +108,12 @@ gc()
 ggplot() +
   geom_boxplot(
     data = correct,
-    aes(x = horizon, y = mean_percent_correct, color = "Model Predictions"),
+    aes(x = horizon, y = mean_percent_correct, color = "Global Transformer"),
     alpha = 0.5
   ) +
   geom_point(
     data = correct_naive,
-    aes(x = horizon, y = mean_percent_correct, color = "Naive Baseline"),
+    aes(x = horizon, y = mean_percent_correct, color = "Global Naive Baseline"),
     size = 2
   ) +
   labs(
@@ -116,8 +123,8 @@ ggplot() +
     color = "Legend"
   ) +  # Ensures only one legend title
   scale_color_manual(values = c(
-    "Model Predictions" = "black",
-    "Naive Baseline" = "red"
+    "Global Transformer" = "black",
+    "Global Naive Baseline" = "red"
   )) +
   theme_minimal()
 
@@ -154,6 +161,34 @@ ggsave(
 )
 
 
+ggplot() +
+  geom_boxplot(
+    data = correct_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Global Transformer"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Global Naive Baseline"),
+    size = 2,
+  ) +
+  facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
+  labs(
+    title = "Global, Transformer vs Naive Baseline Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    color = "Model"
+  ) +
+  scale_color_manual(values = c("Global Transformer" = "black", "Global Naive Baseline" = "red")) + # Red for scatter plot
+  theme_minimal()
+
+ggsave(
+  "analysis/plots/global_transformer_vs_naive_baseline_by_table.pdf",
+  width = 15,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
 
 # Lets load the data for local transformer models
 predictions_local <- load_parquet("analysis/data/row_sep/exp-11-row-locks/predictions.parquet")
@@ -204,13 +239,6 @@ correct_by_table$Model <- "Global Transformer"
 correct_local_by_table$Model <- "Local Transformer"
 
 combined_correct_by_table <- bind_rows(correct_by_table, correct_local_by_table)
-
-horizon_labels <- c(
-  "1" = "Horizon: 1",
-  "2" = "Horizon: 2",
-  "3" = "Horizon: 3",
-  "4" = "Horizon: 4"
-)
 
 # Plot with both Global and Local Transformer performances
 ggplot(combined_correct_by_table, aes(x = gt_table, y = mean_percent_correct, fill = Model)) +
