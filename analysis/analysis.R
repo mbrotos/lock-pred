@@ -98,6 +98,7 @@ correct <- horizon_iteration_performance(predictions)
 correct_by_table <- horizon_iteration_performance_by_table(predictions)
 
 correct_naive <- horizon_iteration_performance(predictions_naive)
+correct_naive_by_table <- horizon_iteration_performance_by_table(predictions_naive)
 
 # Offload predictions to free up memory
 rm(predictions)
