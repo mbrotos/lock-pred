@@ -45,17 +45,18 @@ def parse_args(args=None):
     parser.add_argument("--horizon", type=int, default=1, help="Horizon for forecasting. I.e. how many steps ahead to predict")
     parser.add_argument("--model_weights", type=str, default=None, help="Model weights to load")
 
-    parser.add_argument("--shuffle", action="store_true", default=False, help="Shuffle entire dataset. Not recommended since we want to preserve sequence order.")
+    parser.add_argument("--shuffle", action="store_true", default=False, help="[DEPRECATED] Shuffle entire dataset. Not recommended since we want to preserve sequence order.")
     parser.add_argument("--add_start_end_tokens", action="store_true", default=False, help="Add start and end tokens")
     parser.add_argument("--add_row_id", action="store_true", default=False, help="Add row id")
     parser.add_argument("--add_label_tokens", action="store_true", default=False, help="Add label tokens")
-    parser.add_argument("--disable_train_shuffle", action="store_true", default=False, help="Disable shuffling training data")
+    parser.add_argument("--disable_train_shuffle", action="store_true", default=False, help="[DEPRECATED] Disable shuffling training data")
     parser.add_argument("--early_stopping", action="store_true", default=False, help="Use early stopping. Not recommended for comparision since different runs will stop at different epochs.")
     parser.add_argument("--remove_system_tables", action="store_true", default=False, help="Remove system tables from the dataset")
     parser.add_argument("--token_length_seq", action="store_true", default=False, help="Use token length in order to create sequences")
     parser.add_argument("--lstm_pe", action="store_true", default=False, help="Use position embedding in LSTM model")
     parser.add_argument("--naive_baseline", action="store_true", default=False, help="Use naive baseline")
     parser.add_argument("--disable_cache", action="store_true", default=False, help="Disable caching")
+    parser.add_argument("--shuffle_train", action="store_true", default=False, help="Shuffle the training data after sequences are created.")
 
     parser.add_argument("--args_file", type=str, default=None, help="Load args from a json file. This will override all other args.")
 
@@ -221,13 +222,27 @@ def main(args=None):
         args.seq_length,
         out_seq_length,
         args.test_split,
-        args.shuffle,
+        False, # we don't want to shuffle the test data
         is_casual=(args.model == "transformer_causal"),
     )
 
     if args.train_data_percent_used < 1.0:
         x_train = x_train[:int(len(x_train) * args.train_data_percent_used)]
         y_train = y_train[:int(len(y_train) * args.train_data_percent_used)]
+
+    # lets split off the validation data from the training data
+    if args.val_split > 0:
+        split_idx = int(len(x_train) * (1 - args.val_split))
+        x_train, x_val = x_train[:split_idx], x_train[split_idx:]
+        y_train, y_val = y_train[:split_idx], y_train[split_idx:]
+
+    # Lets shuffle the training data
+    if args.shuffle_train:
+        log.info("Shuffling training sequences...")
+        np.random.seed(42)
+        idx = np.random.permutation(len(x_train))
+        x_train = x_train[idx]
+        y_train = y_train[idx]
 
     log.info(f"x_train shape: {x_train.shape}")
     log.info(f"y_train shape: {y_train.shape}")
@@ -314,11 +329,11 @@ def main(args=None):
         history = model.fit(
             x_train,
             y_train,
+            validation_data=(x_val, y_val) if args.val_split > 0 else None,
             epochs=args.epochs,
             batch_size=args.batch_size,
-            validation_split=args.val_split,
             callbacks=callbacks,
-            shuffle=(not args.disable_train_shuffle)
+            shuffle=False
         )
 
     # Save args to a file
