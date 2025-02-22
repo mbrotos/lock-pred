@@ -9,9 +9,11 @@ import datetime
 import uuid
 import pickle
 import hashlib
+import tensorflow as tf
+import keras_nlp
 
 from datapipeline import create_sequences_token, load_data, create_sequences, prepare_datasets, load_table_lock_data
-from model import build_lstm_model, build_transformer_model
+from model import build_lstm_model, build_transformer_model_classifier, build_transformer_model_casual
 from utils import setup_logger, is_table_locks
 from evaluate import evaluate_predictions, print_examples, evaluate_naive_baseline, detokenization
 
@@ -99,75 +101,119 @@ def main(args=None):
             remove_system_tables=args.remove_system_tables,
         )
 
-    log.info("Computing vocab and output size...")
-
     num_unqiue_table_names = len(data["TABNAME"].unique())
-    ## Compute vocab size
-    if table_lock:
-        vocab_size = num_unqiue_table_names + 1 #padding
-    elif char_based:
-        vocab_size = sum([
-            num_unqiue_table_names, 
-            10, # 10 digits
-            1, # padding
-        ])
+
+    if args.model == "transformer_causal":
+        locks = data["input"]
+        lock_tokens = locks.str.cat(sep=" ").split(" ")
+        lock_sequences = []
+        for i in range(0, len(lock_tokens), args.seq_length):
+            lock_sequences.append(" ".join(lock_tokens[i:i+args.seq_length]))
+        lock_sequences = pd.Series(lock_sequences)
+        lock_sequences = lock_sequences[lock_sequences.str.split(" ").apply(len) == args.seq_length]
+
+        # append "<bos>" to the beginning of each sequence and remove the last token from each sequence
+        lock_sequences_input = lock_sequences.apply(lambda x: "<bos> " + x).apply(lambda x: " ".join(x.split(" ")[:-1]))
+        # to numpy array
+        source_texts = lock_sequences_input.to_numpy()
+        target_texts = lock_sequences.to_numpy()
+
+        vocab_size = (
+            num_unqiue_table_names +
+            10 + # 10 digits
+            1 # <bos>
+        )
+        out_seq_length = args.seq_length
+        # assert that the length of the input and output sequences are all equal to seq_length
+        assert all([len(x.split(" ")) == args.seq_length for x in source_texts])
+        assert all([len(x.split(" ")) == args.seq_length for x in target_texts])
     else:
-        vocab_size = args.vocab_size # keep arg when a vocab size is not predefined
-        if args.add_row_id:
-            # Add 50 to the vocab size to account for the unique row ids
-            # NOTE: This is a temporary fix to account for the row ids.
-            # We need to find a more general solution to account for the row ids.
-            # Since row ids in the word tokenization scheme are dataset dependent,
-            # we cannot simply add a fixed number of tokens to the vocab size for
-            # all datasets.
-            vocab_size += 50
-    vocab_size += 1 # Add 1 to the vocab size to account for the temporary <OOV> token
-    if args.add_start_end_tokens:
-        vocab_size += 2 # start and end tokens
 
-    if args.add_label_tokens and not args.add_row_id:
-        vocab_size += 1 # page id label token
-    elif args.add_label_tokens and args.add_row_id:
-        vocab_size += 2 # page id and row id label tokens
 
-    ## Compute the output sequence length
-    if table_lock:
-        out_seq_length = args.horizon
-    elif char_based:
-        # Using data dataframe compute the number of significant digits in the page_id
-        page_id_digits = len(data["PAGEID"].max())
-        out_seq_length = sum([
-            1, # the table name
-            page_id_digits,
-        ]) * args.horizon
-    else:
-        out_seq_length = 2
-        if args.horizon > 1:
-            raise NotImplementedError("Horizon > 1 is not supported for word tokenization yet.")
+        log.info("Computing vocab and output size...")
 
-    log.info("Creating sequences...")
-    if args.token_length_seq:
-        # Hash the args
-        args_dict = dict(args.__dict__)
-        log.warning("model_weights and args_file are removed from the args hash.")
-        args_dict.pop("model_weights", None)
-        args_dict.pop("args_file", None)
-        args_hash = hashlib.sha256(json.dumps(args_dict).encode('utf-8')).hexdigest()
-        # create the dir if it doesn't exist
-        os.makedirs("data/.cache", exist_ok=True)
-        # check if cache already exists
-        if os.path.exists(f"data/.cache/cached_sequences_{args_hash}.pkl") and not args.disable_cache:
-            log.info(f"Loading cached sequences for args: {args_hash}")
-            with open(f"data/.cache/cached_sequences_{args_hash}.pkl", "rb") as f:
-                source_texts, target_texts = pickle.load(f)
+        ## Compute vocab size
+        if table_lock:
+            vocab_size = num_unqiue_table_names + 1 #padding
+        elif char_based:
+            vocab_size = sum([
+                num_unqiue_table_names,
+                10, # 10 digits
+                1, # padding
+            ])
         else:
-            log.info(f"Creating sequences for args: {args_hash}")
-            source_texts, target_texts = create_sequences_token(data, args.seq_length, args.horizon) 
-            # cache the sequences using the hash as the file name
-            with open(f"data/.cache/cached_sequences_{args_hash}.pkl", "wb") as f:
-                pickle.dump((source_texts, target_texts), f)
-    else:
-        source_texts, target_texts = create_sequences(data, args.seq_length) 
+            vocab_size = args.vocab_size # keep arg when a vocab size is not predefined
+            if args.add_row_id:
+                # Add 50 to the vocab size to account for the unique row ids
+                # NOTE: This is a temporary fix to account for the row ids.
+                # We need to find a more general solution to account for the row ids.
+                # Since row ids in the word tokenization scheme are dataset dependent,
+                # we cannot simply add a fixed number of tokens to the vocab size for
+                # all datasets.
+                vocab_size += 50
+        if args.add_start_end_tokens:
+            vocab_size += 2 # start and end tokens
+
+        if args.add_label_tokens and not args.add_row_id:
+            vocab_size += 1 # page id label token
+        elif args.add_label_tokens and args.add_row_id:
+            vocab_size += 2 # page id and row id label tokens
+
+        ## Compute the output sequence length
+        if table_lock:
+            out_seq_length = args.horizon
+        elif char_based:
+            # Using data dataframe compute the number of significant digits in the page_id
+            page_id_digits = len(data["PAGEID"].max())
+            out_seq_length = sum([
+                1, # the table name
+                page_id_digits,
+            ]) * args.horizon
+        else:
+            out_seq_length = 2
+            if args.horizon > 1:
+                raise NotImplementedError("Horizon > 1 is not supported for word tokenization yet.")
+
+        log.info("Creating sequences...")
+        if args.token_length_seq:
+            # Hash the args
+            # lets define args_dict as only those args that are used above to load the data and such
+            # this way we can cache the sequences for different args that use the same data
+            args_dict = {
+                "data": args.data,
+                "seq_length": args.seq_length,
+                "horizon": args.horizon,
+                "tokenization": args.tokenization,
+                "remove_system_tables": args.remove_system_tables,
+                "add_row_id": args.add_row_id,
+                "add_start_end_tokens": args.add_start_end_tokens,
+                "add_label_tokens": args.add_label_tokens,
+                "disable_cache": args.disable_cache,
+                "token_length_seq": args.token_length_seq,
+                "vocab_size": args.vocab_size,
+            } 
+
+            args_hash = hashlib.sha256(json.dumps(args_dict).encode('utf-8')).hexdigest()
+            # create the dir if it doesn't exist
+            os.makedirs("data/.cache", exist_ok=True)
+            # check if cache already exists
+            if os.path.exists(f"data/.cache/cached_sequences_{args_hash}.pkl") and not args.disable_cache:
+                log.info(f"Loading cached sequences for args: {args_hash}")
+                with open(f"data/.cache/cached_sequences_{args_hash}.pkl", "rb") as f:
+                    source_texts, target_texts = pickle.load(f)
+            else:
+                log.info(f"Creating sequences for args: {args_hash}")
+                source_texts, target_texts = create_sequences_token(data, args.seq_length, args.horizon) 
+                # cache the sequences using the hash as the file name
+                with open(f"data/.cache/cached_sequences_{args_hash}.pkl", "wb") as f:
+                    pickle.dump((source_texts, target_texts), f)
+        else:
+            source_texts, target_texts = create_sequences(data, args.seq_length) 
+
+    # check vocab size by counting unique tokens of source_texts
+    unique_tokens = set(" ".join(source_texts).split(" "))
+    assert len(unique_tokens) == vocab_size, f"Unique tokens: {len(unique_tokens)}, Vocab size: {vocab_size}"
+
     x_train, x_test, y_train, y_test, source_tokenizer, target_tokenizer = prepare_datasets(
         source_texts,
         target_texts,
@@ -176,6 +222,7 @@ def main(args=None):
         out_seq_length,
         args.test_split,
         args.shuffle,
+        is_casual=(args.model == "transformer_causal"),
     )
 
     if args.train_data_percent_used < 1.0:
@@ -218,18 +265,27 @@ def main(args=None):
         exit()
 
     log.info("Building model...")
-    if args.model == "transformer":
-        model = build_transformer_model(vocab_size, args.seq_length, out_seq_length)
+    if args.model == "transformer_causal":
+        model = build_transformer_model_casual(vocab_size, args.seq_length)
+        loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
+        mask_token_id = source_tokenizer.word_index["<bos>"]
+        perplexity = keras_nlp.metrics.Perplexity(from_logits=False, mask_token_id=mask_token_id)
+        opt = keras.optimizers.AdamW(learning_rate=args.learning_rate)
+        model.compile(optimizer=opt, loss=loss_fn, metrics=[perplexity])
+    elif args.model == "transformer":
+        model = build_transformer_model_classifier(vocab_size, args.seq_length, out_seq_length)
+        opt = keras.optimizers.AdamW(learning_rate=args.learning_rate)
+        model.compile(optimizer=opt,
+                    loss="categorical_crossentropy",
+                    metrics=["accuracy"])
     elif args.model == "lstm":
         model = build_lstm_model(vocab_size, args.seq_length, out_seq_length, position_embedding=args.lstm_pe)
+        opt = keras.optimizers.AdamW(learning_rate=args.learning_rate)
+        model.compile(optimizer=opt,
+                    loss="categorical_crossentropy",
+                    metrics=["accuracy"])
     else:
         raise ValueError(f"Model {args.model} not found")
-
-    # Compile the model
-    opt = keras.optimizers.AdamW(learning_rate=args.learning_rate)
-    model.compile(optimizer=opt,
-                  loss="categorical_crossentropy",
-                  metrics=["accuracy"])
 
     # Display model summary
     model.summary(print_fn=log.info)
@@ -238,8 +294,13 @@ def main(args=None):
     early_stopping = EarlyStopping(
         monitor="val_loss", patience=args.patience, restore_best_weights=True
     )
+    checkpoint = keras.callbacks.ModelCheckpoint(
+        os.path.join(results_folder_path, "model.keras"),
+        monitor="val_loss",
+        save_best_only=True,
+    )
 
-    callbacks = []
+    callbacks = [checkpoint]
     if args.early_stopping:
         callbacks.append(early_stopping)
     
@@ -259,6 +320,19 @@ def main(args=None):
             callbacks=callbacks,
             shuffle=(not args.disable_train_shuffle)
         )
+
+    # Save args to a file
+    with open(os.path.join(results_folder_path, "args.json"), "w") as f:
+        json.dump(args.__dict__, f, indent=4)
+
+    if not args.model_weights:
+        # Save history
+        with open(os.path.join(results_folder_path, "history.json"), "w") as f:
+            json.dump(history.history, f, indent=4)
+
+    if args.model == "transformer_causal":
+        log.info("Causal model completed. Skipping evaluation.")
+        exit()
 
     log.info("Evaluating model...")
 
@@ -295,18 +369,6 @@ def main(args=None):
     # Save results to a file
     with open(os.path.join(results_folder_path, "results.json"), "w") as f:
         json.dump(results, f, indent=4)
-
-    # Save args to a file
-    with open(os.path.join(results_folder_path, "args.json"), "w") as f:
-        json.dump(args.__dict__, f, indent=4)
-
-    # Save model
-    model.save(os.path.join(results_folder_path, "model.keras"))
-
-    if not args.model_weights:
-        # Save history
-        with open(os.path.join(results_folder_path, "history.json"), "w") as f:
-            json.dump(history.history, f, indent=4)
 
     # Save lock sequences and predictions
     with open(os.path.join(results_folder_path, "predictions.csv"), "w") as f:

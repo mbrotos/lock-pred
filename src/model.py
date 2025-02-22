@@ -3,7 +3,7 @@ from keras.layers import Embedding, LSTM, Dense, RepeatVector, Input
 import keras_nlp
 import keras
 
-def build_transformer_model(
+def build_transformer_model_classifier(
     vocab_size,
     max_length,
     out_seq_length,
@@ -24,6 +24,30 @@ def build_transformer_model(
     output = Dense(vocab_size, activation="softmax")(dense)
     # Squeeze the output to remove the extra dimension if out_seq_length is 1
     output = keras.ops.squeeze(output, axis=1) if out_seq_length == 1 else output
+
+    model = Model(inputs=input, outputs=output)
+    return model
+
+def build_transformer_model_casual(
+    vocab_size,
+    max_length,
+    intermediate_dim=512,
+    num_heads=8,
+    dropout=0.3,
+    embedding_dim=128,
+    num_layers=4
+):
+    input = Input(shape=(max_length,))
+    embedding = keras_nlp.layers.TokenAndPositionEmbedding(
+        vocab_size, max_length, embedding_dim
+    )
+    x = embedding(input)
+    for _ in range(num_layers):
+        decoder_layer = keras_nlp.layers.TransformerDecoder(
+            intermediate_dim=intermediate_dim, num_heads=num_heads, dropout=dropout
+        )
+        x = decoder_layer(x)
+    output = Dense(vocab_size, activation="softmax")(x)
 
     model = Model(inputs=input, outputs=output)
     return model

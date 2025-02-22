@@ -122,17 +122,14 @@ def create_sequences_token(data, token_length, horizon=1):
 
     return X, y
 
-def tokenize_data(text, vocab_size, max_length):
+def tokenize_data(text, vocab_size, max_length, special_tokens=[]):
     # NOTE: The <> symbols are not included in the filters so we don't split on them.
-    tokenizer = Tokenizer(num_words=vocab_size, filters='!"#$%&()*+,-./:;=?@[\\]^_`{|}~\t\n', oov_token="<OOV>")
-    tokenizer.fit_on_texts(text)
+    tokenizer = Tokenizer(num_words=vocab_size, filters='!"#$%&()*+,-./:;=?@[\\]^_`{|}~\t\n')
+    tokenizer.fit_on_texts(np.concatenate([text, special_tokens]))
     source_sequences = tokenizer.texts_to_sequences(text)
-    tokenizer.oov_token = None # Remove the <OOV> token so padding tokens are not confused for <OOV>
     padded_source_sequences = pad_sequences(
         source_sequences, maxlen=max_length, padding="post", value=0.0
     )
-    # Make sure we don't have any <OOV> tokens
-    assert np.all(padded_source_sequences != tokenizer.word_index["<OOV>"])
     return padded_source_sequences, tokenizer
 
 def split_data(input_data, output_data, test_size, shuffle=False):
@@ -149,9 +146,14 @@ def split_data(input_data, output_data, test_size, shuffle=False):
     y_train, y_test = output_data[train_indices], output_data[test_indices]
     return x_train, x_test, y_train, y_test
 
-def prepare_datasets(source_texts, target_texts, vocab_size, max_length, out_seq_length, test_size, shuffle=False):
+def prepare_datasets(source_texts, target_texts, vocab_size, max_length, out_seq_length, test_size, shuffle=False, special_tokens=[], is_casual=False):
     input_data, source_tokenizer = tokenize_data(source_texts, vocab_size, max_length)
-    output_data, target_tokenizer = tokenize_data(target_texts, vocab_size, out_seq_length)
-    output_data = to_categorical(output_data, num_classes=vocab_size)
+    if is_casual:
+        target_tokenizer = None
+        output_data = source_tokenizer.texts_to_sequences(target_texts)
+        output_data = pad_sequences(output_data, maxlen=out_seq_length, padding="post", value=0.0)
+    else:
+        output_data, target_tokenizer = tokenize_data(target_texts, vocab_size, out_seq_length)
+        output_data = to_categorical(output_data, num_classes=vocab_size)
     x_train, x_test, y_train, y_test = split_data(input_data, output_data, test_size, shuffle)
     return x_train, x_test, y_train, y_test, source_tokenizer, target_tokenizer

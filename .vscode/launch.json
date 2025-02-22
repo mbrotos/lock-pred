@@ -14,6 +14,16 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder}/src"
             },
+            // --experiment_name exploring/exp-01 --model transformer --remove_system_tables --token_length_seq --val_split 0.1 --data data/fixed/row_locks.csv  --horizon 1
+            "args": [
+                "--experiment_name", "exploring/exp-01",
+                "--model", "transformer_causal",
+                "--remove_system_tables",
+                "--token_length_seq",
+                "--val_split", "0.1",
+                "--data", "data/fixed/row_locks.csv",
+                "--horizon", "1"
+            ],
             "justMyCode": false
         }
     ]
