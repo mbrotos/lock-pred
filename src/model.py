@@ -2,6 +2,7 @@ from keras.models import Model
 from keras.layers import Embedding, LSTM, Dense, RepeatVector, Input
 import keras_nlp
 import keras
+import numpy as np
 
 def build_transformer_model_classifier(
     vocab_size,
@@ -47,6 +48,8 @@ def build_transformer_model_casual(
             intermediate_dim=intermediate_dim, num_heads=num_heads, dropout=dropout
         )
         x = decoder_layer(x)
+    # Round vocab size to nearest power of 2
+    vocab_size = 2 ** int(np.ceil(np.log2(vocab_size)))
     output = Dense(vocab_size, activation=None)(x) # No activation on the output
 
     model = Model(inputs=input, outputs=output)

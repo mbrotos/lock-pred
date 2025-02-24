@@ -24,7 +24,7 @@
                 "--data", "data/fixed/row_locks.csv",
                 "--horizon", "1",
                 "--epochs", "5",
-
+                "--seq_length", "128",
             ],
             "justMyCode": false
         }

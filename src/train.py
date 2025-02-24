@@ -371,10 +371,12 @@ def main(args=None):
             lock_count = 0
             y_cur_table = []
             y_cur_pageid = [[] for _ in range(args.horizon)]
+            y_cur_idx = (None, None)
             for j in range(len(x_test_masked[i]) - 1, 0, -1):
                 if x_test_masked[i][j] in table_name_ids:
                     lock_count += 1
                     if lock_count == args.horizon + 1: # Add one to ignore the last lock since it may be truncated
+                        y_cur_idx = (j, y_cur_idx[1])
                         y_cur_table.append(x_test_masked[i][j])
                         x_test_masked[i][j] = 0
                         break
@@ -382,27 +384,61 @@ def main(args=None):
                         y_cur_table.append(x_test_masked[i][j])
                 elif lock_count > 0:
                     y_cur_pageid[lock_count - 1].append(x_test_masked[i][j])
+                if lock_count == 1 and len(y_cur_pageid[lock_count - 1])==1:
+                    y_cur_idx = (None, j)
                 x_test_masked[i][j] = 0
                 
             # Reverse the lists since we are going backwards
             y_cur_table = y_cur_table[::-1]
             y_cur_pageid = [y[::-1] for y in y_cur_pageid][::-1]
             # Zip the table and pageid lists and append to y_test_lst
-            y_test_lst.append(list(zip(y_cur_table, y_cur_pageid)))
+            y_test_lst.append(list(zip(y_cur_table, y_cur_pageid))+[y_cur_idx])
 
-        prompt_tokens = x_test_masked[0]
-        # get the index of the first 0 in the prompt tokens
-        index = np.where(prompt_tokens == 0)[0][0]
         sampler = keras_nlp.samplers.GreedySampler()
-        output_tokens = sampler(
-            next=next,
-            stop_token_ids=None, # We will process the entire sequence after inference.
-            prompt=prompt_tokens.reshape(1, -1),
-            index=index,  # Start sampling immediately after the [BOS] token.
-        )
-        txt = tokenizer.detokenize(output_tokens)
+        y_pred_argmax = []
+        y_test_argmax = []
+        for i in range(len(y_test_lst)):
+            prompt_tokens = x_test_masked[i].reshape(1, -1)
+            start_index = y_test_lst[i][-1][0]
+            end_index = y_test_lst[i][-1][1]
+            output_tokens = sampler(
+                next=next,
+                stop_token_ids=None, # We will process the entire sequence after inference.
+                prompt=prompt_tokens,
+                index=start_index,  # Start sampling immediately after the [BOS] token.
+            )[0]
+            y_pred = output_tokens[start_index:end_index+1].numpy()
+            y_test = x_test[i][start_index:end_index+1]
+            y_pred_argmax.append(y_pred)
+            y_test_argmax.append(y_test)
 
-        print(f"Greedy search generated text: \n{txt}\n")
+            if i < 15:  
+                input_text = source_tokenizer.sequences_to_texts([x_test[i]])[0]
+                pred_text = target_tokenizer.sequences_to_texts([y_pred])[0]
+                gt_text = target_tokenizer.sequences_to_texts([y_test])[0]
+                log.info(f"Input: {input_text}")
+                log.info(f"Prediction: {pred_text}")
+                log.info(f"Ground Truth: {gt_text}")
+                log.info("")
+            else:
+                x_test_masked = x_test_masked[:16]
+                break
+        
+        # Padd y_pred_argmax and y_test_argmax to the same length using the max length
+        max_len = max([len(y) for y in y_pred_argmax] + [len(y) for y in y_test_argmax])
+        y_pred_argmax = [np.pad(y, (0, max_len - len(y))) for y in y_pred_argmax]
+        y_test_argmax = [np.pad(y, (0, max_len - len(y))) for y in y_test_argmax]
+
+        # make into numpy arrays
+        y_pred_argmax = np.array(y_pred_argmax)
+        y_test_argmax = np.array(y_test_argmax)
+
+        # Calculate % correct
+        loss = max(history.history["val_loss"])
+        accuracy = np.mean(y_pred_argmax == y_test_argmax)
+        log.info(f"Per-output Test Accuracy: {accuracy * 100:.2f}%")
+
+        x_test = x_test_masked
                 
     else:
         log.info("Evaluating classifier model...")
