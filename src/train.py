@@ -420,9 +420,9 @@ def main(args=None):
                 log.info(f"Prediction: {pred_text}")
                 log.info(f"Ground Truth: {gt_text}")
                 log.info("")
-            else:
-                x_test_masked = x_test_masked[:16]
-                break
+            # else:
+            #     x_test_masked = x_test_masked[:16]
+            #     break
         
         # Padd y_pred_argmax and y_test_argmax to the same length using the max length
         max_len = max([len(y) for y in y_pred_argmax] + [len(y) for y in y_test_argmax])
