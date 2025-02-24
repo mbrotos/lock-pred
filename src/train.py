@@ -128,6 +128,8 @@ def main(args=None):
         # assert that the length of the input and output sequences are all equal to seq_length
         assert all([len(x.split(" ")) == args.seq_length for x in source_texts])
         assert all([len(x.split(" ")) == args.seq_length for x in target_texts])
+
+        # 
     else:
 
 
@@ -282,9 +284,9 @@ def main(args=None):
     log.info("Building model...")
     if args.model == "transformer_causal":
         model = build_transformer_model_casual(vocab_size, args.seq_length)
-        loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=False)
+        loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
         mask_token_id = source_tokenizer.word_index["<bos>"]
-        perplexity = keras_nlp.metrics.Perplexity(from_logits=False, mask_token_id=mask_token_id)
+        perplexity = keras_nlp.metrics.Perplexity(from_logits=True, mask_token_id=mask_token_id)
         opt = keras.optimizers.AdamW(learning_rate=args.learning_rate)
         model.compile(optimizer=opt, loss=loss_fn, metrics=[perplexity])
     elif args.model == "transformer":
@@ -345,25 +347,79 @@ def main(args=None):
         with open(os.path.join(results_folder_path, "history.json"), "w") as f:
             json.dump(history.history, f, indent=4)
 
+    with open(os.path.join(results_folder_path, "source_tokenizer.json"), "w") as f:
+        json.dump(source_tokenizer.to_json(), f, indent=4)
+
+    # load the best model
+    model.load_weights(os.path.join(results_folder_path, "model.keras"))
+
     if args.model == "transformer_causal":
-        log.info("Causal model completed. Skipping evaluation.")
-        exit()
+        target_tokenizer = source_tokenizer
 
-    log.info("Evaluating model...")
+        log.info("Evaluating causal model...")
+        table_name_ids = [source_tokenizer.word_index[name.lower()] for name in data["TABNAME"].unique()]
+        #stop_ids = table_name_ids + [source_tokenizer.word_index["<bos>"]]
+        def next(prompt, cache, index):
+            logits = model(prompt)[:, index-1 , :]
+            # Ignore hidden states for now; only needed for contrastive search.
+            hidden_states = None
+            return logits, hidden_states, cache
+        
+        x_test_masked = x_test.copy()
+        y_test_lst = []
+        for i in range(len(x_test_masked)):
+            lock_count = 0
+            y_cur_table = []
+            y_cur_pageid = [[] for _ in range(args.horizon)]
+            for j in range(len(x_test_masked[i]) - 1, 0, -1):
+                if x_test_masked[i][j] in table_name_ids:
+                    lock_count += 1
+                    if lock_count == args.horizon + 1: # Add one to ignore the last lock since it may be truncated
+                        y_cur_table.append(x_test_masked[i][j])
+                        x_test_masked[i][j] = 0
+                        break
+                    elif lock_count > 1: 
+                        y_cur_table.append(x_test_masked[i][j])
+                elif lock_count > 0:
+                    y_cur_pageid[lock_count - 1].append(x_test_masked[i][j])
+                x_test_masked[i][j] = 0
+                
+            # Reverse the lists since we are going backwards
+            y_cur_table = y_cur_table[::-1]
+            y_cur_pageid = [y[::-1] for y in y_cur_pageid][::-1]
+            # Zip the table and pageid lists and append to y_test_lst
+            y_test_lst.append(list(zip(y_cur_table, y_cur_pageid)))
 
-    y_pred = model.predict(x_test)
-    y_pred_argmax = np.argmax(y_pred, axis=-1)
-    y_test_argmax = np.argmax(y_test, axis=-1)
+        prompt_tokens = x_test_masked[0]
+        # get the index of the first 0 in the prompt tokens
+        index = np.where(prompt_tokens == 0)[0][0]
+        sampler = keras_nlp.samplers.GreedySampler()
+        output_tokens = sampler(
+            next=next,
+            stop_token_ids=None, # We will process the entire sequence after inference.
+            prompt=prompt_tokens.reshape(1, -1),
+            index=index,  # Start sampling immediately after the [BOS] token.
+        )
+        txt = tokenizer.detokenize(output_tokens)
 
-    loss = np.mean(keras.losses.categorical_crossentropy(y_test, y_pred).numpy())
-    accuracy = np.mean(y_pred_argmax == y_test_argmax)
-    log.info(f"Per-output Test Accuracy: {accuracy * 100:.2f}%")
+        print(f"Greedy search generated text: \n{txt}\n")
+                
+    else:
+        log.info("Evaluating classifier model...")
 
-    if len(y_test_argmax.shape) == 1:
-        # This is required because we squeeze the output of the model to remove the singleton dimension
-        # FIXME: A solution would be to change the datapipeline to add singleton dimensions
-        y_test_argmax = np.expand_dims(y_test_argmax, axis=-1)
-        y_pred_argmax = np.expand_dims(y_pred_argmax, axis=-1)
+        y_pred = model.predict(x_test)
+        y_pred_argmax = np.argmax(y_pred, axis=-1)
+        y_test_argmax = np.argmax(y_test, axis=-1)
+
+        loss = np.mean(keras.losses.categorical_crossentropy(y_test, y_pred).numpy())
+        accuracy = np.mean(y_pred_argmax == y_test_argmax)
+        log.info(f"Per-output Test Accuracy: {accuracy * 100:.2f}%")
+
+        if len(y_test_argmax.shape) == 1:
+            # This is required because we squeeze the output of the model to remove the singleton dimension
+            # FIXME: A solution would be to change the datapipeline to add singleton dimensions
+            y_test_argmax = np.expand_dims(y_test_argmax, axis=-1)
+            y_pred_argmax = np.expand_dims(y_pred_argmax, axis=-1)
 
     print_examples(y_pred_argmax, x_test, y_test_argmax, target_tokenizer, source_tokenizer)
 

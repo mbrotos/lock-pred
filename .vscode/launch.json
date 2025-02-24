@@ -22,7 +22,9 @@
                 "--token_length_seq",
                 "--val_split", "0.1",
                 "--data", "data/fixed/row_locks.csv",
-                "--horizon", "1"
+                "--horizon", "1",
+                "--epochs", "5",
+
             ],
             "justMyCode": false
         }

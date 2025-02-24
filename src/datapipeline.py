@@ -146,7 +146,7 @@ def split_data(input_data, output_data, test_size, shuffle=False):
     y_train, y_test = output_data[train_indices], output_data[test_indices]
     return x_train, x_test, y_train, y_test
 
-def prepare_datasets(source_texts, target_texts, vocab_size, max_length, out_seq_length, test_size, shuffle=False, special_tokens=[], is_casual=False):
+def prepare_datasets(source_texts, target_texts, vocab_size, max_length, out_seq_length, test_size, shuffle=False, is_casual=False):
     input_data, source_tokenizer = tokenize_data(source_texts, vocab_size, max_length)
     if is_casual:
         target_tokenizer = None

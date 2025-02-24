@@ -47,7 +47,7 @@ def build_transformer_model_casual(
             intermediate_dim=intermediate_dim, num_heads=num_heads, dropout=dropout
         )
         x = decoder_layer(x)
-    output = Dense(vocab_size, activation="softmax")(x)
+    output = Dense(vocab_size, activation=None)(x) # No activation on the output
 
     model = Model(inputs=input, outputs=output)
     return model

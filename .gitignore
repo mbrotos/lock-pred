@@ -170,3 +170,4 @@ analysis/outputs/
 .python-version
 .Rhistory
 .DS_Store
+*.out
