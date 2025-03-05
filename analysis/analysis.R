@@ -70,6 +70,28 @@ horizon_iteration_performance_by_table <- function(predictions) {
   return(correct_by_table)
 }
 
+export_csv <- function(df, path) {
+  df %>%
+    group_by(horizon) %>%
+    summarise(
+      mean_percent_correct_csv = mean(mean_percent_correct),
+      median_percent_correct_csv = median(mean_percent_correct),
+      .groups='drop'
+    ) %>%
+    write_csv(path)
+}
+
+export_csv_by_table <- function(df, path) {
+  df %>%
+    group_by(horizon, gt_table) %>%
+    summarise(
+      mean_percent_correct_csv = mean(mean_percent_correct),
+      median_percent_correct_csv = median(mean_percent_correct),
+      .groups='drop'
+    ) %>%
+    write_csv(path)
+}
+
 horizon_labels <- c(
   "1" = "Horizon: 1",
   "2" = "Horizon: 2",
@@ -104,6 +126,12 @@ correct_naive_by_table <- horizon_iteration_performance_by_table(predictions_nai
 rm(predictions)
 rm(predictions_naive)
 gc()
+
+export_csv(correct, "analysis/tables/global_transformer_performance.csv")
+export_csv(correct_naive, "analysis/tables/global_naive_baseline_performance.csv")
+export_csv_by_table(correct_by_table, "analysis/tables/global_transformer_performance_by_table.csv")
+export_csv_by_table(correct_naive_by_table, "analysis/tables/global_naive_baseline_performance_by_table.csv")
+
 
 # Box plot w/ correct and scatter plot w/ correct_naive
 ggplot() +
@@ -211,6 +239,12 @@ correct_local_no_orderline_gt_h1_by_table <- horizon_iteration_performance_by_ta
 rm(predictions_local)
 gc()
 
+
+export_csv(correct_local, "analysis/tables/local_transformer_performance.csv")
+export_csv_by_table(correct_local_by_table, "analysis/tables/local_transformer_performance_by_table.csv")
+export_csv(correct_local_no_orderline_gt_h1, "analysis/tables/local_transformer_no_orderline_gt_h1_performance.csv")
+export_csv_by_table(correct_local_no_orderline_gt_h1_by_table, "analysis/tables/local_transformer_no_orderline_gt_h1_performance_by_table.csv")
+
 ggplot() +
   geom_boxplot(
     data = correct_local_by_table,
@@ -303,6 +337,9 @@ correct_naive_local_by_table <- horizon_iteration_performance_by_table(predictio
 rm(predictions_naive_local)
 gc()
 
+export_csv(correct_naive_local, "analysis/tables/local_naive_baseline_performance.csv")
+export_csv_by_table(correct_naive_local_by_table, "analysis/tables/local_naive_baseline_performance_by_table.csv")
+
 ggplot() +
   geom_boxplot(
     data = correct_local,
@@ -376,6 +413,9 @@ correct_local_rowid_by_table <- horizon_iteration_performance_by_table(predictio
 
 rm(predictions_local_rowid)
 gc()
+
+export_csv(correct_local_rowid, "analysis/tables/local_transformer_rowid_performance.csv")
+export_csv_by_table(correct_local_rowid_by_table, "analysis/tables/local_transformer_rowid_performance_by_table.csv")
 
 ggplot() +
   geom_boxplot(
@@ -458,6 +498,11 @@ rm(predictions_table)
 rm(predictions_naive_table)
 gc()
 
+export_csv(correct_table, "analysis/tables/table-lock_transformer_performance.csv")
+export_csv(correct_naive_table, "analysis/tables/table-lock_naive_baseline_performance.csv")
+export_csv_by_table(correct_table_by_table, "analysis/tables/table-lock_transformer_performance_by_table.csv")
+export_csv_by_table(correct_naive_table_by_table, "analysis/tables/table-lock_naive_baseline_performance_by_table.csv")
+
 
 # Box plot w/ correct and scatter plot w/ correct_naive
 ggplot() +
@@ -520,14 +565,3 @@ ggsave(
   units = "in",
   dpi = 300
 )
-
-
-
-
-
-
-
-
-
-
-

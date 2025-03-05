@@ -165,9 +165,13 @@ logs/*.out
 logs/*.err
 .Rproj.user
 analysis/data/
+analysis/plots/
+analysis/tables/
 analysis/outputs/
 *.Rproj
 .python-version
 .Rhistory
 .DS_Store
 *.out
+*.pdf
+*.png
