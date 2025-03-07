@@ -213,12 +213,16 @@ def main(args=None):
                 log.info(f"Loading cached sequences for args: {args_hash}")
                 with open(f"data/.cache/cached_sequences_{args_hash}.pkl", "rb") as f:
                     source_texts, target_texts = pickle.load(f)
+                with open(f"data/.cache/cached_times_{args_hash}.pkl", "rb") as f:
+                    source_times, target_times = pickle.load(f)
             else:
                 log.info(f"Creating sequences for args: {args_hash}")
                 source_texts, target_texts, source_times, target_times = create_sequences_token(data, args.seq_length, args.horizon) 
                 # cache the sequences using the hash as the file name
                 with open(f"data/.cache/cached_sequences_{args_hash}.pkl", "wb") as f:
                     pickle.dump((source_texts, target_texts), f)
+                with open(f"data/.cache/cached_times_{args_hash}.pkl", "wb") as f:
+                    pickle.dump((source_times, target_times), f)
         else:
             source_texts, target_texts = create_sequences(data, args.seq_length) 
 
