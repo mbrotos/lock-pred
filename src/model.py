@@ -1,5 +1,5 @@
 from keras.models import Model
-from keras.layers import Embedding, LSTM, Dense, RepeatVector, Input
+from keras.layers import Embedding, LSTM, Dense, RepeatVector, Input, TimeDistributed
 import keras_nlp
 import keras
 import numpy as np
@@ -73,8 +73,8 @@ def build_lstm_model(
         embedding = Embedding(input_dim=vocab_size, output_dim=embedding_dim)(input_layer)
     x = LSTM(lstm_units)(embedding)
     repeat = RepeatVector(out_seq_length)(x)
-    dense = Dense(hidden_dim, activation="relu")(repeat)
-    output_layer = Dense(vocab_size, activation="softmax")(dense)
+    x = LSTM(lstm_units, return_sequences=True)(repeat)
+    output_layer = TimeDistributed(Dense(vocab_size, activation="softmax"))(x)
 
     model = Model(inputs=input_layer, outputs=output_layer)
     return model
