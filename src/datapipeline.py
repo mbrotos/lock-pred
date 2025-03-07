@@ -7,6 +7,13 @@ import logging
 
 log = logging.getLogger(__name__)
 
+def convert_to_iso(timestamp):
+    """Converts timestamp format to ISO 8601."""
+    parts = timestamp.split("-")  # Split by '-'
+    date_part = "-".join(parts[:3])  # Keep first three elements as YYYY-MM-DD
+    time_part = parts[3].replace(".", ":", 2)  # Replace only first two dots in the time part
+    return f"{date_part}T{time_part}" # Make sure this is UTC!
+
 def prep_columns(data, remove_system_tables):
     data.columns = data.columns.str.strip()
     # Remove all trailing whitespace from TABNAME and TABSCHEMA
@@ -16,6 +23,17 @@ def prep_columns(data, remove_system_tables):
     
     # Remove all underscores from TABNAME
     data["TABNAME"] = data["TABNAME"].astype(str).apply(lambda x: x.replace("_", ""))
+
+    data["Start Timestamp ISO8601"] = data["Start Timestamp"].apply(convert_to_iso)
+    data["End Timestamp ISO8601"] = data["End Timestamp"].apply(convert_to_iso)
+    data["Start Unix Timestamp"] = data["Start Timestamp ISO8601"].apply(
+        lambda x: np.datetime64(x, 'ns').astype('int')
+    )
+    data["End Unix Timestamp"] = data["End Timestamp ISO8601"].apply(
+        lambda x: np.datetime64(x, 'ns').astype('int')
+    )
+    # NOTE: To convert unix timestamp back to ISO timestamp, use:
+    # np.datetime64('1970-01-01T00:00:00Z') + np.timedelta64(unix_ns, 'ns')
     
     if remove_system_tables:
         data = data[data["TABSCHEMA"] != "SYSIBM"]
@@ -89,8 +107,13 @@ def create_sequences_token(data, token_length, horizon=1):
     output = lambda x: " ".join(
         data.iloc[x:x+horizon]["output"].values
     )
+    output_time = lambda x: (
+        data.iloc[x:x+horizon]["Start Unix Timestamp"].values[0], 
+        data.iloc[x:x+horizon]["End Unix Timestamp"].values[-1]
+    )
 
     X, y = [], []
+    X_time, y_time = [], []
     # Flag to stop the loop when we reach the end of the data
     # We need a flag because len(data) != number of tokens
     # We accumulate tokens until we reach the token length limit
@@ -101,6 +124,8 @@ def create_sequences_token(data, token_length, horizon=1):
         if done: break
 
         cur_x_seq = data.iloc[i]["input"].split(" ")
+        start_time = data.iloc[i]["Start Unix Timestamp"]
+        end_time = None
         assert len(cur_x_seq) <= token_length, "Token length is too small"
 
         j_end = None
@@ -108,6 +133,7 @@ def create_sequences_token(data, token_length, horizon=1):
             next_x_seq = data.iloc[j]["input"].split(" ")
             if len(next_x_seq) + len(cur_x_seq) <= token_length:
                 cur_x_seq.extend(next_x_seq)
+                end_time = data.iloc[j]["End Unix Timestamp"]
             else:
                 j_end = j
                 break
@@ -115,12 +141,18 @@ def create_sequences_token(data, token_length, horizon=1):
         X.append(" ".join(cur_x_seq))
         if j_end is None: # We reached the end of the data
             y.append(output(len(data)-horizon))
+            y_start, y_end = output_time(len(data)-horizon)
+            X_time.append((start_time, end_time))
+            y_time.append((y_start, y_end))
             # Stop us from creating more sequences by just padding the last one
             done = True 
         else: # We reached the token length limit
             y.append(output(j_end))
+            y_start, y_end = output_time(j_end)
+            X_time.append((start_time, end_time))
+            y_time.append((y_start, y_end))
 
-    return X, y
+    return X, y, X_time, y_time
 
 def tokenize_data(text, vocab_size, max_length, special_tokens=[]):
     # NOTE: The <> symbols are not included in the filters so we don't split on them.
