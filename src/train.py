@@ -240,20 +240,16 @@ def main(args=None):
     num_test = len(x_test)
     x_test_time = source_times[-num_test:]
     y_test_time = target_times[-num_test:]
-    x_test_detokenized = source_tokenizer.sequences_to_texts(x_test.tolist())
-    y_test_argmax = np.argmax(y_test, axis=-1)
-    y_test_detokenized = target_tokenizer.sequences_to_texts(y_test_argmax.tolist())
 
     if args.save_times_exit:
-        df_test_time = pd.DataFrame({
-            "in_lock_sequences": x_test_detokenized,
-            "gt_lock": y_test_detokenized,
-            "in_lock_start_time": [t[0] for t in x_test_time],
-            "in_lock_end_time": [t[1] for t in x_test_time],
-            "gt_lock_start_time": [t[0] for t in y_test_time],
-            "gt_lock_end_time": [t[1] for t in y_test_time],
-        })
-        df_test_time.to_csv(os.path.join(results_folder_path, "test_time.csv"), index=False)
+        predictions_path = os.path.join(args.save_times_exit, "predictions.csv")
+        predictions_df = pd.read_csv(predictions_path)
+        predictions_df['in_lock_start_time'] = [t[0] for t in x_test_time]
+        predictions_df['in_lock_end_time'] = [t[1] for t in x_test_time]
+        predictions_df['gt_lock_start_time'] = [t[0] for t in y_test_time]
+        predictions_df['gt_lock_end_time'] = [t[1] for t in y_test_time]
+        predictions_df.to_csv(predictions_path, index=False)
+        log.info(f"Saved times to {predictions_path}")
         exit()
 
     if args.train_data_percent_used < 1.0:
