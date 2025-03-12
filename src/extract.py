@@ -17,7 +17,7 @@ def parse_args(args=None):
     parser = argparse.ArgumentParser(description="Extract data from an experiment directory.")
     parser.add_argument("--experiment_name", type=str, default="exp-1", help="Experiment name")
     parser.add_argument("--output_file", type=str, default="results.csv", help="Output file")
-    parser.add_argument("--skip_predictions", action="store_true", help="Skip predictions extraction")
+    parser.add_argument("--skip_predictions", action="store_true", default=False, help="Skip predictions extraction")
     return parser.parse_args(args)
 
 def check_folder(folder_path):
@@ -68,8 +68,8 @@ def extract_data(data_path):
             "iteration": counter[args_key]
         })
 
-        if args.skip_predictions:
-            continue
+        # if args.skip_predictions:
+        #     continue
 
         # Read predictions CSV for this folder
         predictions = pd.read_csv(os.path.join(folder_path, "predictions.csv"))
@@ -191,8 +191,8 @@ def extract_data(data_path):
     output_file = os.path.join(data_path, args.output_file)
     df.to_csv(output_file, index=False)
 
-    if args.skip_predictions:
-        return
+    # if args.skip_predictions:
+    #     return
 
     predictions_df.to_parquet(os.path.join(data_path, "predictions.parquet"))
     in_lock_sequences_df = pd.DataFrame(
@@ -200,6 +200,7 @@ def extract_data(data_path):
         columns=['in_lock_sequences', 'in_lock_sequences_id']
     )
     in_lock_sequences_df.to_parquet(os.path.join(data_path, "in_lock_sequences.parquet"))
+    log.info("Done!")
 
 if __name__ == "__main__":
     args = parse_args()

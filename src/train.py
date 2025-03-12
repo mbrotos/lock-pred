@@ -40,6 +40,7 @@ def parse_args(args=None):
     parser.add_argument("--experiment_name", type=str, default="", help="Experiment name")
     parser.add_argument("--horizon", type=int, default=1, help="Horizon for forecasting. I.e. how many steps ahead to predict")
     parser.add_argument("--model_weights", type=str, default=None, help="Model weights to load")
+    parser.add_argument("--sort_by", type=str, default=None, help="Defines how to sort the locks. If None, no sorting is done.")
 
     parser.add_argument("--shuffle", action="store_true", default=False, help="[DEPRECATED] Shuffle entire dataset. Not recommended since we want to preserve sequence order.")
     parser.add_argument("--add_start_end_tokens", action="store_true", default=False, help="Add start and end tokens")
@@ -100,6 +101,7 @@ def main(args=None):
         data = load_table_lock_data(
             data=df.copy(),
             remove_system_tables=args.remove_system_tables,
+            sort_by=args.sort_by,
         )
     else:
         data = load_data(
@@ -109,6 +111,7 @@ def main(args=None):
             add_start_end_tokens=args.add_start_end_tokens,
             add_label_tokens=args.add_label_tokens,
             remove_system_tables=args.remove_system_tables,
+            sort_by=args.sort_by,
         )
 
     num_unqiue_table_names = len(data["TABNAME"].unique())

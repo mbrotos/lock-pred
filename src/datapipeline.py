@@ -14,7 +14,7 @@ def convert_to_iso(timestamp):
     time_part = parts[3].replace(".", ":", 2)  # Replace only first two dots in the time part
     return f"{date_part}T{time_part}" # Make sure this is UTC!
 
-def prep_columns(data, remove_system_tables):
+def prep_columns(data, remove_system_tables, sort_by=None):
     data.columns = data.columns.str.strip()
     # Remove all trailing whitespace from TABNAME and TABSCHEMA
     # NOTE: This seems to be a problem in the table lock data.
@@ -37,13 +37,18 @@ def prep_columns(data, remove_system_tables):
     
     if remove_system_tables:
         data = data[data["TABSCHEMA"] != "SYSIBM"]
+
+    if sort_by=='start_time':
+        data = data.sort_values(by="Start Unix Timestamp")
+
     return data
 
 def load_table_lock_data(
     data,
     remove_system_tables=False,
+    sort_by=None
 ):
-    data = prep_columns(data, remove_system_tables)
+    data = prep_columns(data, remove_system_tables, sort_by)
     
     data["input"] = data["TABNAME"]
     data["output"] = data["TABNAME"]
@@ -56,9 +61,10 @@ def load_data(
     add_start_end_tokens=False,
     add_label_tokens=False,
     remove_system_tables=False,
+    sort_by=None
 ):
     # Strip spaces from column headers
-    data = prep_columns(data, remove_system_tables)
+    data = prep_columns(data, remove_system_tables, sort_by)
     if char_based:
         data["PAGEID"] = data["PAGEID"].astype(str).apply(lambda x: " ".join(x))
         data["ROWID"] = data["ROWID"].astype(str).apply(lambda x: " ".join(x))
