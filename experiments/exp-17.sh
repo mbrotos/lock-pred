@@ -3,10 +3,10 @@
 # NOTE: This experiment runs LSTM models on the row locks and table locks datasets with different horizons.
 
 # SLURM configurations (will be ignored if not running on SLURM)
-#SBATCH --job-name=exp-16-transformer-sorted
+#SBATCH --job-name=exp-17-transformer-sorted
 #SBATCH --account=def-miranska
-#SBATCH --output=logs/exp-16-transformer-sorted_%A_%a.out
-#SBATCH --error=logs/exp-16-transformer-sorted_%A_%a.err
+#SBATCH --output=logs/exp-17-transformer-sorted_%A_%a.out
+#SBATCH --error=logs/exp-17-transformer-sorted_%A_%a.err
 #SBATCH --array=0-3 # NOTE: Make sure this is equal to the number of configs
 #SBATCH --time=23:59:00
 #SBATCH --mem=64G
@@ -23,8 +23,8 @@ ITERATIONS=10
 # Define experiment configurations
 declare -a configs_base=(
     # Base configurations
-    "--experiment_name exp-16-transformer-sorted-row-locks/char_ --data data/fixed/row_locks.csv --sort_by start_time"
-    "--experiment_name exp-16-transformer-sorted-table-locks/char_ --data data/fixed/table_locks.csv --sort_by start_time"
+    "--experiment_name exp-17-transformer-sorted-row-locks/char_ --data data/fixed/row_locks.csv --sort_by start_time"
+    "--experiment_name exp-17-transformer-sorted-table-locks/char_ --data data/fixed/table_locks.csv --sort_by start_time"
 )
 
 # Define the training data percentages
