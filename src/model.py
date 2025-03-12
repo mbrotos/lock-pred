@@ -75,6 +75,8 @@ def build_lstm_model(
     repeat = RepeatVector(out_seq_length)(x)
     x = LSTM(lstm_units, return_sequences=True)(repeat)
     output_layer = TimeDistributed(Dense(vocab_size, activation="softmax"))(x)
+    # Squeeze the output to remove the extra dimension if out_seq_length is 1
+    output_layer = keras.ops.squeeze(output_layer, axis=1) if out_seq_length == 1 else output_layer
 
     model = Model(inputs=input_layer, outputs=output_layer)
     return model
