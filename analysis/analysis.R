@@ -67,7 +67,69 @@ horizon_iteration_performance_by_table <- function(predictions) {
     group_by(horizon, gt_table) %>%
     summarise(percent_correct = mean(mean_percent_correct), .groups='drop'))
   
-  return(correct_by_table)
+  # Count how many rows for each (horizon, iteration, ground_truth, prediction)
+  conf <- predictions %>%
+    group_by(horizon, iteration, gt_table, pred_table) %>%
+    summarise(n = n(), .groups='drop')
+  
+  # Collect all unique table names that appear as either gt or prediction
+  all_tables <- union(conf$gt_table, conf$pred_table)
+  
+  # We want to produce results for every horizon, iteration, and table
+  all_combos <- conf %>%
+    distinct(horizon, iteration) %>%
+    tidyr::crossing(table = all_tables)
+  
+  # Join to get TP, FP, FN counts for each "table" in all_combos
+  metrics <- all_combos %>%
+    # 1) True Positives: gt_table == pred_table == table
+    left_join(
+      conf %>%
+        filter(gt_table == pred_table) %>%
+        rename(table = gt_table) %>%
+        select(horizon, iteration, table, n),
+      by = c("horizon", "iteration", "table")
+    ) %>%
+    rename(tp = n) %>%
+    mutate(tp = tidyr::replace_na(tp, 0)) %>%
+    
+    # 2) False Positives: gt_table != t but pred_table == t
+    left_join(
+      conf %>%
+        group_by(horizon, iteration, pred_table) %>%
+        summarise(fp = sum(ifelse(gt_table != pred_table, n, 0)),
+                  .groups='drop') %>%
+        rename(table = pred_table),
+      by = c("horizon", "iteration", "table")
+    ) %>%
+    mutate(fp = tidyr::replace_na(fp, 0)) %>%
+    
+    # 3) False Negatives: gt_table == t but pred_table != t
+    left_join(
+      conf %>%
+        group_by(horizon, iteration, gt_table) %>%
+        summarise(fn = sum(ifelse(gt_table != pred_table, n, 0)),
+                  .groups='drop') %>%
+        rename(table = gt_table),
+      by = c("horizon", "iteration", "table")
+    ) %>%
+    mutate(fn = tidyr::replace_na(fn, 0)) %>%
+    
+    # Compute Precision, Recall, F1
+    mutate(
+      precision = ifelse(tp + fp == 0, NA, tp / (tp + fp)),
+      recall    = ifelse(tp + fn == 0, NA, tp / (tp + fn)),
+      f1        = ifelse(
+        !is.na(precision) & !is.na(recall) & (precision + recall > 0),
+        2 * precision * recall / (precision + recall),
+        NA
+      )
+    )  %>%
+    # Rename the 'table' column to 'gt_table' so that it matches
+    # the name in `correct_by_table`
+    rename(gt_table = table)
+  
+  return(correct_by_table %>% left_join(metrics, by = c("horizon", "iteration", "gt_table")))
 }
 
 export_csv <- function(df, path) {
@@ -87,6 +149,12 @@ export_csv_by_table <- function(df, path) {
     summarise(
       mean_percent_correct_csv = mean(mean_percent_correct),
       median_percent_correct_csv = median(mean_percent_correct),
+      mean_precision_csv = mean(precision, na.rm = TRUE),
+      median_precision_csv = median(precision, na.rm = TRUE),
+      mean_recall_csv    = mean(recall, na.rm = TRUE),
+      median_recall_csv = median(recall, na.rm = TRUE),
+      mean_f1_csv        = mean(f1, na.rm = TRUE),
+      median_f1_csv   = median(f1, na.rm = TRUE),
       .groups='drop'
     ) %>%
     write_csv(path)
@@ -98,6 +166,88 @@ horizon_labels <- c(
   "3" = "Horizon: 3",
   "4" = "Horizon: 4"
 )
+
+
+plot_precision_recall <- function(correct_by_table) {
+  
+  # Pivot to long format
+  correct_by_table_long <- correct_by_table %>%
+    pivot_longer(
+      cols = c("precision", "recall"),
+      names_to = "metric",
+      values_to = "value"
+    )
+  
+  # Build the plot
+  ggplot(correct_by_table_long, aes(x = horizon, y = value, fill = metric)) +
+    # Boxplot (dodged)
+    geom_boxplot(
+      position = position_dodge(width = 0.6),
+      alpha = 0.5
+    ) +
+    # Trend lines for each metric
+    stat_summary(
+      aes(group = metric, color = metric),
+      fun = mean,
+      geom = "line",
+      position = position_dodge(width = 0.6)
+    ) +
+    # Points for the mean values
+    stat_summary(
+      aes(group = metric, color = metric),
+      fun = mean,
+      geom = "point",
+      position = position_dodge(width = 0.6)
+    ) +
+    facet_wrap(~ gt_table) +
+    scale_fill_discrete(
+      name = "Metric",
+      labels = c("precision" = "Precision", "recall" = "Recall")
+    ) +
+    scale_color_discrete(
+      name = "Metric",
+      labels = c("precision" = "Precision", "recall" = "Recall")
+    ) +
+    scale_y_continuous(limits = c(0, 1)) +
+    labs(
+      x = "Horizon",
+      y = "Metric Value"
+    ) +
+    theme_light()
+}
+
+plot_accuracy_over_time <- function(predictions_cur, binwidth_ns = 1e9) {
+  correct <- predictions_cur %>%
+    group_by(
+      horizon, iteration, unique_id,
+      in_lock_start_time, in_lock_end_time,
+      gt_lock_start_time, gt_lock_end_time
+    ) %>%
+    summarise(
+      is_correct = all(is_correct),
+      .groups='drop'
+    )
+  
+  correct$is_correct_num = as.numeric(correct$is_correct)
+  correct$in_lock_start_time_rel = as.numeric(correct$in_lock_start_time - min(correct$in_lock_start_time))
+  
+  p <- ggplot(correct, aes(x = in_lock_start_time_rel, y = is_correct_num)) +
+    # stat_summary_bin will split the x-axis into bins and compute
+    # the chosen summary function for y within each bin.
+    stat_summary_bin(
+      fun = "mean",        # how to aggregate y-values in each bin
+      geom = "col",        # use columns (like a histogram)
+      binwidth = binwidth_ns
+    ) +
+    facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
+    labs(
+      x = "Relative Lock End Time (nanoseconds)",
+      y = "Percent Correct"
+    ) +
+    theme_light()
+  
+  return(p)
+}
 
 # Command to get prediction parquets:
 # rsync -aR --prune-empty-dirs --include="*/" --include="*/predictions.parquet" --exclude="*" . ../../analysis/data
@@ -113,6 +263,29 @@ check_iterations(predictions)
 
 predictions_naive <- load_parquet("analysis/data/exp-10/predictions.parquet") %>%
   filter(data == "data/fixed/row_locks.csv")
+
+
+p <- plot_accuracy_over_time(predictions, binwidth_ns = 5e9)
+print(p)
+
+ggsave(
+  "analysis/plots/global_transformer_accuracy_over_time.pdf",
+  width = 10,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+p <- plot_accuracy_over_time(predictions_naive, binwidth_ns = 5e9)
+print(p)
+
+ggsave(
+  "analysis/plots/global_naive_baseline_accuracy_over_time.pdf",
+  width = 10,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
 
 
 
@@ -146,7 +319,7 @@ ggplot() +
     size = 2
   ) +
   labs(
-    title = "Global, Transformer and Naive Baseline Performance: Horizon vs. Percent Correct",
+#    title = "Global, Transformer and Naive Baseline Performance: Horizon vs. Percent Correct",
     x = "Horizon",
     y = "Percent Correct",
     color = "Legend"
@@ -155,7 +328,7 @@ ggplot() +
     "Global Transformer" = "black",
     "Global Naive Baseline" = "red"
   )) +
-  theme_minimal()
+  theme_light()
 
 ggsave(
   "analysis/plots/global_transformer_vs_naive_baseline.pdf",
@@ -174,12 +347,12 @@ ggplot() +
     alpha = 0.5
   ) +
   labs(
-    title = "Global, Transformer Performance: Table vs. Percent Correct by Horizon",
+#    title = "Global, Transformer Performance: Table vs. Percent Correct by Horizon",
     x = "Table",
     y = "Percent Correct",
     fill = "Horizon"
   ) +
-  theme_minimal()
+  theme_light()
 
 ggsave(
   "analysis/plots/global_transformer_by_table.pdf",
@@ -188,6 +361,8 @@ ggsave(
   units = "in",
   dpi = 300
 )
+
+
 
 
 ggplot() +
@@ -203,13 +378,16 @@ ggplot() +
   ) +
   facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
   labs(
-    title = "Global, Transformer vs Naive Baseline Performance: Table vs. Percent Correct by Horizon",
+#    title = "Global, Transformer vs Naive Baseline Performance: Table vs. Percent Correct by Horizon",
     x = "Table",
     y = "Percent Correct",
     color = "Model"
   ) +
   scale_color_manual(values = c("Global Transformer" = "black", "Global Naive Baseline" = "red")) + # Red for scatter plot
-  theme_minimal()
+  theme_light() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
 
 ggsave(
   "analysis/plots/global_transformer_vs_naive_baseline_by_table.pdf",
@@ -252,12 +430,12 @@ ggplot() +
     alpha = 0.5
   ) +
   labs(
-    title = "Local Transformer Performance: Table vs. Percent Correct by Horizon",
+#    title = "Local Transformer Performance: Table vs. Percent Correct by Horizon",
     x = "Table",
     y = "Percent Correct",
     fill = "Horizon"
   ) +
-  theme_minimal()
+  theme_light()
 
 ggsave(
   "analysis/plots/local_transformer_by_table.pdf",
@@ -280,12 +458,15 @@ ggplot(combined_correct_by_table, aes(x = gt_table, y = mean_percent_correct, fi
   geom_boxplot(alpha = 0.5) +
   facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
   labs(
-    title = "Global vs Local Transformer Performance: Table vs. Percent Correct by Horizon",
+#    title = "Global vs Local Transformer Performance: Table vs. Percent Correct by Horizon",
     x = "Table",
     y = "Percent Correct",
     fill = "Model"
   ) +
-  theme_minimal()
+  theme_light() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
 
 ggsave(
   "analysis/plots/global_vs_local_transformer_by_table.pdf",
@@ -310,7 +491,7 @@ ggplot() +
     size = 2
   ) +
   labs(
-    title = "Local Transformer vs Global Naive Baseline Performance: Horizon vs. Percent Correct",
+#    title = "Local Transformer vs Global Naive Baseline Performance: Horizon vs. Percent Correct",
     x = "Horizon",
     y = "Percent Correct",
     color = "Legend"
@@ -319,7 +500,7 @@ ggplot() +
     "Local Transformer" = "black",
     "Global Naive Baseline" = "red"
   )) +
-  theme_minimal()
+  theme_light()
 
 ggsave(
   "analysis/plots/local_transformer_vs_global_naive_baseline.pdf",
@@ -352,7 +533,7 @@ ggplot() +
     size = 2
   ) +
   labs(
-    title = "Local Transformer vs Local Naive Baseline Performance: Horizon vs. Percent Correct",
+#    title = "Local Transformer vs Local Naive Baseline Performance: Horizon vs. Percent Correct",
     x = "Horizon",
     y = "Percent Correct",
     color = "Legend"
@@ -361,7 +542,7 @@ ggplot() +
     "Local Transformer" = "black",
     "Local Naive Baseline" = "red"
   )) +
-  theme_minimal()
+  theme_light()
 
 ggsave(
   "analysis/plots/local_transformer_vs_local_naive_baseline.pdf",
@@ -387,13 +568,16 @@ ggplot() +
   ) +
   facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
   labs(
-    title = "Local Transformer vs Local Naive Baseline Performance: Table vs. Percent Correct by Horizon",
+#    title = "Local Transformer vs Local Naive Baseline Performance: Table vs. Percent Correct by Horizon",
     x = "Table",
     y = "Percent Correct",
     color = "Model"
   ) +
   scale_color_manual(values = c("Local Transformer" = "black", "Local Naive Baseline" = "red")) + # Red for scatter plot
-  theme_minimal()
+  theme_light() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
 
 # Save the updated plot
 ggsave(
@@ -429,7 +613,7 @@ ggplot() +
     alpha = 0.5
   ) +
   labs(
-    title = "Local Transformer w/ & w/o Row ID Performance (Excludes 'orderline' table for Horizon>1): Horizon vs. Percent Correct",
+#    title = "Local Transformer w/ & w/o Row ID Performance (Excludes 'orderline' table for Horizon>1): Horizon vs. Percent Correct",
     x = "Horizon",
     y = "Percent Correct",
     color = "Legend"
@@ -438,7 +622,7 @@ ggplot() +
     "Local Transformer" = "black",
     "Local Transformer with Row ID" = "red"
   )) +
-  theme_minimal()
+  theme_light()
 
 
 ggsave(
@@ -461,12 +645,15 @@ ggplot(combined_correct_local_no_orderline_gt_h1_by_table, aes(x = gt_table, y =
   geom_boxplot(alpha = 0.5) +
   facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
   labs(
-    title = "Local Transformer w/ & w/o Row ID Performance (Excludes 'orderline' table for Horizon>1): Table vs. Percent Correct by Horizon",
+#    title = "Local Transformer w/ & w/o Row ID Performance (Excludes 'orderline' table for Horizon>1): Table vs. Percent Correct by Horizon",
     x = "Table",
     y = "Percent Correct",
     fill = "Model"
   ) +
-  theme_minimal()
+  theme_light() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
 
 ggsave(
   "analysis/plots/local_transformer_vs_local_transformer_rowid_by_table.pdf",
@@ -517,7 +704,7 @@ ggplot() +
     size = 2
   ) +
   labs(
-    title = "Table Lock, Transformer and Naive Baseline Performance: Horizon vs. Percent Correct",
+#    title = "Table Lock, Transformer and Naive Baseline Performance: Horizon vs. Percent Correct",
     x = "Horizon",
     y = "Percent Correct",
     color = "Legend"
@@ -526,7 +713,7 @@ ggplot() +
     "Model Predictions" = "black",
     "Naive Baseline" = "red"
   )) +
-  theme_minimal()
+  theme_light()
 
 ggsave(
   "analysis/plots/table-lock_transformer_vs_naive_baseline.pdf",
@@ -550,17 +737,42 @@ ggplot() +
   ) +
   facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
   labs(
-    title = "Table Lock, Transformer vs Naive Baseline Performance: Table vs. Percent Correct by Horizon",
+#    title = "Table Lock, Transformer vs Naive Baseline Performance: Table vs. Percent Correct by Horizon",
     x = "Table",
     y = "Percent Correct",
     color = "Model"
   ) +
   scale_color_manual(values = c("Transformer" = "black", "Naive Baseline" = "red")) + # Red for scatter plot
-  theme_minimal()
+  theme_light() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
 
 ggsave(
   "analysis/plots/table-lock_transformer_vs_naive_baseline_by_table.pdf",
   width = 15,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+p <- plot_precision_recall(correct_table_by_table)
+print(p)
+
+ggsave(
+  "analysis/plots/table-lock_transformer_precision_recall.pdf",
+  width = 10,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+p <- plot_precision_recall(correct_naive_table_by_table)
+print(p)
+
+ggsave(
+  "analysis/plots/table-lock_naive_baseline_precision_recall.pdf",
+  width = 10,
   height = 6,
   units = "in",
   dpi = 300
