@@ -39,7 +39,7 @@ def prep_columns(data, remove_system_tables, sort_by=None):
         data = data[data["TABSCHEMA"] != "SYSIBM"]
 
     if sort_by=='start_time':
-        data = data.sort_values(by="Start Unix Timestamp")
+        data = data.sort_values(by="Start Unix Timestamp", ascending=True)
 
     return data
 
