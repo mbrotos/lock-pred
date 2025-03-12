@@ -17,6 +17,7 @@ def parse_args(args=None):
     parser = argparse.ArgumentParser(description="Extract data from an experiment directory.")
     parser.add_argument("--experiment_name", type=str, default="exp-1", help="Experiment name")
     parser.add_argument("--output_file", type=str, default="results.csv", help="Output file")
+    parser.add_argument("--skip_predictions", action="store_true", help="Skip predictions extraction")
     return parser.parse_args(args)
 
 def check_folder(folder_path):
@@ -46,6 +47,7 @@ def extract_data(data_path):
     counter = Counter()
 
     for folder_path in tqdm.tqdm(folder_paths):
+        print(folder_path)
         with open(os.path.join(folder_path, "results.json"), "r") as f:
             results = json.load(f)
         with open(os.path.join(folder_path, "args.json"), "r") as f:
@@ -65,6 +67,9 @@ def extract_data(data_path):
             "folder_path": folder_path,
             "iteration": counter[args_key]
         })
+
+        if args.skip_predictions:
+            continue
 
         # Read predictions CSV for this folder
         predictions = pd.read_csv(os.path.join(folder_path, "predictions.csv"))
@@ -185,6 +190,9 @@ def extract_data(data_path):
     df = pd.DataFrame(data)
     output_file = os.path.join(data_path, args.output_file)
     df.to_csv(output_file, index=False)
+
+    if args.skip_predictions:
+        return
 
     predictions_df.to_parquet(os.path.join(data_path, "predictions.parquet"))
     in_lock_sequences_df = pd.DataFrame(

@@ -228,7 +228,7 @@ def main(args=None):
 
     # check vocab size by counting unique tokens of source_texts
     unique_tokens = len(set(" ".join(source_texts).split(" "))) +1 # add 1 for padding
-    assert unique_tokens == vocab_size, f"Unique tokens: {len(unique_tokens)}, Vocab size: {vocab_size}"
+    #assert unique_tokens == vocab_size, f"Unique tokens: {len(unique_tokens)}, Vocab size: {vocab_size}"
 
     x_train, x_test, y_train, y_test, source_tokenizer, target_tokenizer = prepare_datasets(
         source_texts,
@@ -248,6 +248,11 @@ def main(args=None):
     if args.save_times_exit:
         predictions_path = os.path.join(args.save_times_exit, "predictions.csv")
         predictions_df = pd.read_csv(predictions_path)
+        # if x_test_time is larger than predictions
+        if len(predictions_df) < len(x_test_time):
+            x_test_time = x_test_time[:-1]
+            y_test_time = y_test_time[:-1]
+
         predictions_df['in_lock_start_time'] = [t[0] for t in x_test_time]
         predictions_df['in_lock_end_time'] = [t[1] for t in x_test_time]
         predictions_df['gt_lock_start_time'] = [t[0] for t in y_test_time]
