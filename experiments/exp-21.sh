@@ -3,11 +3,11 @@
 # NOTE: This experiment runs LSTM models on the row locks and table locks datasets with different horizons.
 
 # SLURM configurations (will be ignored if not running on SLURM)
-#SBATCH --job-name=exp-15-lstm
+#SBATCH --job-name=exp-21-lstm-sorted
 #SBATCH --account=def-miranska
-#SBATCH --output=logs/exp-15-lstm_%A_%a.out
-#SBATCH --error=logs/exp-15-lstm_%A_%a.err
-#SBATCH --array=0-0 # NOTE: Make sure this is equal to the number of configs
+#SBATCH --output=logs/exp-21-lstm-sorted_%A_%a.out
+#SBATCH --error=logs/exp-21-lstm-sorted_%A_%a.err
+#SBATCH --array=0-7 # NOTE: Make sure this is equal to the number of configs
 #SBATCH --time=23:59:00
 #SBATCH --mem=64G
 #SBATCH --gres=gpu:a100:1
@@ -23,12 +23,12 @@ ITERATIONS=10
 # Define experiment configurations
 declare -a configs_base=(
     # Base configurations
-    "--experiment_name exp-15-lstm-row-locks/char_ --data data/fixed/row_locks.csv"
-    # "--experiment_name exp-15-lstm-table-locks/char_ --data data/fixed/table_locks.csv"
+    "--experiment_name exp-21-lstm-sorted-row-locks/char_ --data data/fixed/row_locks.csv --sort_by start_time"
+    "--experiment_name exp-21-lstm-sorted-table-locks/char_ --data data/fixed/table_locks.csv --sort_by start_time"
 )
 
 # Define the training data percentages
-declare -a horizons=(4)
+declare -a horizons=(1 2 3 4)
 
 # Generate configurations for each training data percentage
 declare -a configs

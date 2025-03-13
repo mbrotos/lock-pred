@@ -7,9 +7,10 @@
 #SBATCH --account=def-miranska
 #SBATCH --output=logs/exp-16-lstm--sep_%A_%a.out
 #SBATCH --error=logs/exp-16-lstm--sep_%A_%a.err
-#SBATCH --array=0-31 # NOTE: Make sure this is equal to the number of configs
-#SBATCH --time=11:59:00
+#SBATCH --array=0-15 # NOTE: Make sure this is equal to the number of configs
+#SBATCH --time=23:59:00
 #SBATCH --mem=32G
+#SBATCH --gres=gpu:a100:1
 #SBATCH --cpus-per-task=1
 #SBATCH --mail-user=adam.sorrenti@torontomu.ca
 #SBATCH --mail-type=ALL
@@ -27,7 +28,7 @@ declare -a configs_base=(
 
 declare -a horizons=(1 2 3 4)
 
-declare -a tables=("DISTRICT" "STOCK" "ORDER_LINE" "ORDERS" "NEW_ORDER" "WAREHOUSE" "CUSTOMER" "HISTORY")
+declare -a tables=("ORDERS" "NEW_ORDER" "CUSTOMER" "HISTORY")
 
 # Generate configurations for each training data percentage
 declare -a configs

@@ -7,7 +7,7 @@
 #SBATCH --account=def-miranska
 #SBATCH --output=logs/exp-17-transformer-sorted_%A_%a.out
 #SBATCH --error=logs/exp-17-transformer-sorted_%A_%a.err
-#SBATCH --array=0-3 # NOTE: Make sure this is equal to the number of configs
+#SBATCH --array=0-7 # NOTE: Make sure this is equal to the number of configs
 #SBATCH --time=23:59:00
 #SBATCH --mem=64G
 #SBATCH --gres=gpu:a100:1

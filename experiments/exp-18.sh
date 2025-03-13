@@ -3,14 +3,13 @@
 # NOTE: This experiment runs LSTM models on the row locks and table locks datasets with different horizons.
 
 # SLURM configurations (will be ignored if not running on SLURM)
-#SBATCH --job-name=exp-15-lstm
+#SBATCH --job-name=exp-18-naive-sorted
 #SBATCH --account=def-miranska
-#SBATCH --output=logs/exp-15-lstm_%A_%a.out
-#SBATCH --error=logs/exp-15-lstm_%A_%a.err
-#SBATCH --array=0-0 # NOTE: Make sure this is equal to the number of configs
+#SBATCH --output=logs/exp-18-naive-sorted_%A_%a.out
+#SBATCH --error=logs/exp-18-naive-sorted_%A_%a.err
+#SBATCH --array=0-7 # NOTE: Make sure this is equal to the number of configs
 #SBATCH --time=23:59:00
 #SBATCH --mem=64G
-#SBATCH --gres=gpu:a100:1
 #SBATCH --cpus-per-task=1
 #SBATCH --mail-user=adam.sorrenti@torontomu.ca
 #SBATCH --mail-type=ALL
@@ -18,23 +17,23 @@
 # Activate virtual environment
 source .venv/bin/activate
 
-ITERATIONS=10
+ITERATIONS=1
 
 # Define experiment configurations
 declare -a configs_base=(
     # Base configurations
-    "--experiment_name exp-15-lstm-row-locks/char_ --data data/fixed/row_locks.csv"
-    # "--experiment_name exp-15-lstm-table-locks/char_ --data data/fixed/table_locks.csv"
+    "--experiment_name exp-18-naive-sorted-row-locks/char_ --data data/fixed/row_locks.csv --sort_by start_time --naive_baseline"
+    "--experiment_name exp-18-naive-sorted-table-locks/char_ --data data/fixed/table_locks.csv --sort_by start_time --naive_baseline"
 )
 
 # Define the training data percentages
-declare -a horizons=(4)
+declare -a horizons=(1 2 3 4)
 
 # Generate configurations for each training data percentage
 declare -a configs
 for horizon in "${horizons[@]}"; do
     for config in "${configs_base[@]}"; do
-        configs+=("$config --horizon $horizon --val_split 0.0 --model lstm --remove_system_tables --token_length_seq")
+        configs+=("$config --horizon $horizon --val_split 0.0 --model transformer --remove_system_tables --token_length_seq")
     done
 done
 
