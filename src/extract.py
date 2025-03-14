@@ -68,8 +68,11 @@ def extract_data(data_path):
             "iteration": counter[args_key]
         })
 
-        # if args.skip_predictions:
-        #     continue
+        if args.skip_predictions:
+            log.info(f"Skipping predictions extraction for {folder_path}")
+            continue
+        else:
+            log.info(f"Extracting predictions for {folder_path}")
 
         # Read predictions CSV for this folder
         predictions = pd.read_csv(os.path.join(folder_path, "predictions.csv"))
@@ -191,8 +194,11 @@ def extract_data(data_path):
     output_file = os.path.join(data_path, args.output_file)
     df.to_csv(output_file, index=False)
 
-    # if args.skip_predictions:
-    #     return
+    if args.skip_predictions:
+        log.info("Skipping predictions extraction, done!")
+        return
+    else:
+        log.info("Saving predictions and in_lock_sequences map...")
 
     predictions_df.to_parquet(os.path.join(data_path, "predictions.parquet"))
     in_lock_sequences_df = pd.DataFrame(
