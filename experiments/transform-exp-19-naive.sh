@@ -27,9 +27,9 @@ echo "Extracting $experiment"
 
 python src/extract.py \
     --experiment_name $experiment \
-    --output_file "results.csv" # --skip_predictions
+    --output_file "results.csv" --iterations 1 # --skip_predictions 
 
 echo "Transforming $experiment"
 python src/transform.py \
     --input_file "results/$experiment/results.csv" \
-    --output_file "results_clean.csv"
+    --output_file "results_clean.csv" --iterations 1
