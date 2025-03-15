@@ -26,7 +26,7 @@ declare -a configs_base=(
 
 declare -a horizons=(1 2 3 4)
 
-declare -a tables=("WAREHOUSE" "DISTRICT" "CUSTOMER" "ITEM" "ORDER_LINE" "STOCK" "ORDERS" "NEW_ORDER" "HISTORY" "POLICY" "HMON_ATM_INFO")
+declare -a tables=("WAREHOUSE" "DISTRICT" "CUSTOMER" "ITEM" "ORDER_LINE" "STOCK" "ORDERS" "NEW_ORDER" "HISTORY") # "POLICY" "HMON_ATM_INFO")
 
 # Generate configurations for each training data percentage
 declare -a configs

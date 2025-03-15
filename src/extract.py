@@ -18,6 +18,7 @@ def parse_args(args=None):
     parser.add_argument("--experiment_name", type=str, default="exp-1", help="Experiment name")
     parser.add_argument("--output_file", type=str, default="results.csv", help="Output file")
     parser.add_argument("--skip_predictions", action="store_true", default=False, help="Skip predictions extraction")
+    parser.add_argument("--iterations", type=int, default=10, help="Maximum number of iterations to extract")
     return parser.parse_args(args)
 
 def check_folder(folder_path):
@@ -58,6 +59,10 @@ def extract_data(data_path):
         args_copy.pop('model_weights', None)
         args_key = json.dumps(args_copy, sort_keys=True)
         counter[args_key] += 1
+
+        if counter[args_key] > args.iterations:
+            log.warning(f"More than {args.iterations} iterations for {args_key}, skipping...")
+            continue
 
         
         # Save experiment summary info

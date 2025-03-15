@@ -4,3 +4,4 @@ keras-nlp==0.12.1
 pandas
 ipykernel
 pytest
+pyarrow
