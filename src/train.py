@@ -206,6 +206,7 @@ def main(args=None):
                 "disable_cache": args.disable_cache,
                 "token_length_seq": args.token_length_seq,
                 "vocab_size": args.vocab_size,
+                "sort_by": args.sort_by,
             } 
 
             args_hash = hashlib.sha256(json.dumps(args_dict).encode('utf-8')).hexdigest()
