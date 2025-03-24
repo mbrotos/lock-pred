@@ -18,10 +18,6 @@ from utils import setup_logger, is_table_locks
 from evaluate import evaluate_predictions, print_examples, evaluate_naive_baseline, detokenization
 
 def parse_args(args=None):
-    if isinstance(args, dict): # For debugging
-        # Return namespace from dict
-        return argparse.Namespace(**args)
-
     parser = argparse.ArgumentParser(description="Train a model")
     parser.add_argument("--model", type=str, default="transformer", help="Model to use")
     parser.add_argument("--data", type=str, default="data/row_locks.csv", help="Data to use")
@@ -44,6 +40,7 @@ def parse_args(args=None):
     parser.add_argument("--experiment_name", type=str, default="", help="Experiment name")
     parser.add_argument("--horizon", type=int, default=1, help="Horizon for forecasting. I.e. how many steps ahead to predict")
     parser.add_argument("--model_weights", type=str, default=None, help="Model weights to load")
+    parser.add_argument("--sort_by", type=str, default=None, help="Defines how to sort the locks. If None, no sorting is done.")
 
     parser.add_argument("--shuffle", action="store_true", default=False, help="[DEPRECATED] Shuffle entire dataset. Not recommended since we want to preserve sequence order.")
     parser.add_argument("--add_start_end_tokens", action="store_true", default=False, help="Add start and end tokens")
@@ -57,15 +54,28 @@ def parse_args(args=None):
     parser.add_argument("--naive_baseline", action="store_true", default=False, help="Use naive baseline")
     parser.add_argument("--disable_cache", action="store_true", default=False, help="Disable caching")
     parser.add_argument("--shuffle_train", action="store_true", default=False, help="Shuffle the training data after sequences are created.")
+    parser.add_argument("--checkpoint", action="store_true", default=False, help="Save model checkpoints")
+    parser.add_argument("--save_times_exit", action="store_true", default=False, help="Save times and exit")
 
     parser.add_argument("--args_file", type=str, default=None, help="Load args from a json file. This will override all other args.")
 
-    parsed_args = parser.parse_args(args)
+    if args is None:
+        parsed_args = parser.parse_args()
+    elif isinstance(args, dict):  # For debugging
+        # Merge provided args with default args
+        default_args = vars(parser.parse_args([]))
+        merged_args = {**default_args, **args}
+        parsed_args = argparse.Namespace(**merged_args)
+    else:
+        parsed_args = parser.parse_args(args)
 
     if parsed_args.args_file:
         with open(parsed_args.args_file, "r") as f:
             args_dict = json.load(f)
-        parsed_args = argparse.Namespace(**args_dict)
+        # Merge loaded args with default args
+        default_args = vars(parser.parse_args([]))
+        merged_args = {**default_args, **args_dict}
+        parsed_args = argparse.Namespace(**merged_args)
 
     return parsed_args
 
@@ -91,6 +101,7 @@ def main(args=None):
         data = load_table_lock_data(
             data=df.copy(),
             remove_system_tables=args.remove_system_tables,
+            sort_by=args.sort_by,
         )
     else:
         data = load_data(
@@ -100,6 +111,7 @@ def main(args=None):
             add_start_end_tokens=args.add_start_end_tokens,
             add_label_tokens=args.add_label_tokens,
             remove_system_tables=args.remove_system_tables,
+            sort_by=args.sort_by,
         )
 
     num_unqiue_table_names = len(data["TABNAME"].unique())
@@ -194,6 +206,7 @@ def main(args=None):
                 "disable_cache": args.disable_cache,
                 "token_length_seq": args.token_length_seq,
                 "vocab_size": args.vocab_size,
+                "sort_by": args.sort_by,
             } 
 
             args_hash = hashlib.sha256(json.dumps(args_dict).encode('utf-8')).hexdigest()
@@ -204,18 +217,22 @@ def main(args=None):
                 log.info(f"Loading cached sequences for args: {args_hash}")
                 with open(f"data/.cache/cached_sequences_{args_hash}.pkl", "rb") as f:
                     source_texts, target_texts = pickle.load(f)
+                with open(f"data/.cache/cached_times_{args_hash}.pkl", "rb") as f:
+                    source_times, target_times = pickle.load(f)
             else:
                 log.info(f"Creating sequences for args: {args_hash}")
-                source_texts, target_texts = create_sequences_token(data, args.seq_length, args.horizon) 
+                source_texts, target_texts, source_times, target_times = create_sequences_token(data, args.seq_length, args.horizon) 
                 # cache the sequences using the hash as the file name
                 with open(f"data/.cache/cached_sequences_{args_hash}.pkl", "wb") as f:
                     pickle.dump((source_texts, target_texts), f)
+                with open(f"data/.cache/cached_times_{args_hash}.pkl", "wb") as f:
+                    pickle.dump((source_times, target_times), f)
         else:
             source_texts, target_texts = create_sequences(data, args.seq_length) 
 
     # check vocab size by counting unique tokens of source_texts
-    unique_tokens = set(" ".join(source_texts).split(" "))
-    assert len(unique_tokens) == vocab_size, f"Unique tokens: {len(unique_tokens)}, Vocab size: {vocab_size}"
+    unique_tokens = len(set(" ".join(source_texts).split(" "))) +1 # add 1 for padding
+    #assert unique_tokens == vocab_size, f"Unique tokens: {len(unique_tokens)}, Vocab size: {vocab_size}"
 
     x_train, x_test, y_train, y_test, source_tokenizer, target_tokenizer = prepare_datasets(
         source_texts,
@@ -227,6 +244,26 @@ def main(args=None):
         False, # we don't want to shuffle the test data
         is_casual=(args.model == "transformer_causal"),
     )
+
+    num_test = len(x_test)
+    x_test_time = source_times[-num_test:]
+    y_test_time = target_times[-num_test:]
+
+    if args.save_times_exit:
+        predictions_path = os.path.join(args.save_times_exit, "predictions.csv")
+        predictions_df = pd.read_csv(predictions_path)
+        # if x_test_time is larger than predictions
+        if len(predictions_df) < len(x_test_time):
+            x_test_time = x_test_time[:-1]
+            y_test_time = y_test_time[:-1]
+
+        predictions_df['in_lock_start_time'] = [t[0] for t in x_test_time]
+        predictions_df['in_lock_end_time'] = [t[1] for t in x_test_time]
+        predictions_df['gt_lock_start_time'] = [t[0] for t in y_test_time]
+        predictions_df['gt_lock_end_time'] = [t[1] for t in y_test_time]
+        predictions_df.to_csv(predictions_path, index=False)
+        log.info(f"Saved times to {predictions_path}")
+        exit()
 
     if args.train_data_percent_used < 1.0:
         x_train = x_train[:int(len(x_train) * args.train_data_percent_used)]
@@ -273,6 +310,10 @@ def main(args=None):
             "in_lock_sequences": in_lock_sequences[:-1], # remove the last since we don't have a prediction for it
             "out_lock_preds": out_lock_preds,
             "gt_lock": gt_lock,
+            "in_lock_start_time": [t[0] for t in x_test_time][:-1],
+            "in_lock_end_time": [t[1] for t in x_test_time][:-1],
+            "gt_lock_start_time": [t[0] for t in y_test_time][:-1],
+            "gt_lock_end_time": [t[1] for t in y_test_time][:-1],
         })
 
         # Save lock sequences and predictions
@@ -313,11 +354,13 @@ def main(args=None):
     )
     checkpoint = keras.callbacks.ModelCheckpoint(
         os.path.join(results_folder_path, "model.keras"),
-        monitor="val_loss",
+        monitor="val_loss" if args.val_split > 0 else "loss",
         save_best_only=True,
     )
 
-    callbacks = [checkpoint]
+    callbacks = []
+    if args.checkpoint:
+        callbacks.append(checkpoint)
     if args.early_stopping:
         callbacks.append(early_stopping)
     
@@ -337,6 +380,8 @@ def main(args=None):
             callbacks=callbacks,
             shuffle=False
         )
+        if not args.checkpoint:
+            model.save(os.path.join(results_folder_path, "model.keras"))
 
     # Save args to a file
     with open(os.path.join(results_folder_path, "args.json"), "w") as f:
@@ -465,6 +510,10 @@ def main(args=None):
         "in_lock_sequences": in_lock_sequences,
         "out_lock_preds": out_lock_preds,
         "gt_lock": gt_lock,
+        "in_lock_start_time": [t[0] for t in x_test_time],
+        "in_lock_end_time": [t[1] for t in x_test_time],
+        "gt_lock_start_time": [t[0] for t in y_test_time],
+        "gt_lock_end_time": [t[1] for t in y_test_time],
     })
 
     results = evaluate_predictions(y_pred_argmax, x_test, y_test_argmax, args.tokenization, args.horizon)

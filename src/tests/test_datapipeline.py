@@ -20,6 +20,8 @@ def test_load_data():
             "ROWID": ["1", "2", "13", "40"],
             "TABNAME": ["TABLE_1", "TABLE_2", "TABLE_3", "ORDERLINE"],
             "TABSCHEMA": ["SCHEMA1", "SYSIBM", "SCHEMA3", "SCHEMA3"],
+            "Start Timestamp": ["2024-12-17-13.28.04.000003000", "2024-12-17-13.28.04.000033000", "2024-12-17-13.29.07.000263000", "2024-12-17-13.29.07.000265000"],
+            "End Timestamp": ["2024-12-17-13.28.04.000003300", "2024-12-17-13.28.04.000033300", "2024-12-17-13.29.07.000263200", "2024-12-17-13.29.07.000265700"],
         }
     )
 
@@ -110,6 +112,8 @@ def test_load_table_lock_data():
         {
             "TABNAME": ["TABLE_1", "TABLE_2  ", "TABLE_3  ", "ORDERLINE"],
             "TABSCHEMA": ["SCHEMA1", "SYSIBM  ", "SCHEMA3", "SCHEMA3"],
+            "Start Timestamp": ["2024-12-17-13.28.04.000003000", "2024-12-17-13.28.04.000033000", "2024-12-17-13.29.07.000263000", "2024-12-17-13.29.07.000265000"],
+            "End Timestamp": ["2024-12-17-13.28.04.000003300", "2024-12-17-13.28.04.000033300", "2024-12-17-13.29.07.000263200", "2024-12-17-13.29.07.000265700"],
         }
     )
     result = load_table_lock_data(data.copy())
@@ -140,42 +144,54 @@ def test_create_sequences():
 
 def test_create_sequences_token():
     data = pd.DataFrame(
-        {"input": ["A B C", "D E F", "G H I", "J K L"], "output": ["X", "Y", "Z", "W"]}
+        {
+            "input": ["A B C", "D E F", "G H I", "J K L"],
+            "output": ["X", "Y", "Z", "W"],
+            "Start Unix Timestamp": [1734442084000003000, 1734442084000033000, 1734442147000263000, 1734442147000265000],
+            "End Unix Timestamp": [1734442084000003300, 1734442084000033300, 1734442147000263200, 1734442147000265700],
+        }
     )
 
-    X, y = create_sequences_token(data, token_length=6)
+    X, y, _, _ = create_sequences_token(data, token_length=6)
     assert X == ["A B C D E F", "D E F G H I"]
     assert y == ["Z", "W"]
 
-    X, y = create_sequences_token(data, token_length=4)
+    X, y, _, _ = create_sequences_token(data, token_length=4)
     assert X == ["A B C", "D E F", "G H I"]
     assert y == ['Y', 'Z', 'W']
 
-    X, y = create_sequences_token(data, token_length=3)
+    X, y, _, _ = create_sequences_token(data, token_length=3)
     assert X == ["A B C", "D E F", "G H I"]
     assert y == ['Y', 'Z', 'W']
 
     # increase horizon to 2
 
-    X, y = create_sequences_token(data, token_length=6, horizon=2)
+    X, y, _, _ = create_sequences_token(data, token_length=6, horizon=2)
     assert X == ["A B C D E F"]
     assert y == ["Z W"]
 
-    X, y = create_sequences_token(data, token_length=4, horizon=2)
+    X, y, _, _ = create_sequences_token(data, token_length=4, horizon=2)
     assert X == ["A B C", "D E F"]
     assert y == ['Y Z', 'Z W']
 
-    X, y = create_sequences_token(data, token_length=3, horizon=2)
+    X, y, _, _ = create_sequences_token(data, token_length=3, horizon=2)
     assert X == ["A B C", "D E F"]
     assert y == ['Y Z', 'Z W']
 
     data = pd.DataFrame(
-        {"input": ["A B C", "D E F", "G H I", "J K L", "M N O"], "output": ["X", "Y", "Z", "W", "V"]}
+        {
+            "input": ["A B C", "D E F", "G H I", "J K L", "M N O"],
+            "output": ["X", "Y", "Z", "W", "V"],
+            "Start Unix Timestamp": [1734442084000003000, 1734442084000033000, 1734442147000263000, 1734442147000265000, 1734442147000266000],
+            "End Unix Timestamp": [1734442084000003300, 1734442084000033300, 1734442147000263200, 1734442147000265700, 1734442147000266700],
+        }
     )
 
-    X, y = create_sequences_token(data, token_length=6, horizon=2)
+    X, y, _, _ = create_sequences_token(data, token_length=6, horizon=2)
     assert X == ["A B C D E F", "D E F G H I"]
     assert y == ["Z W", "W V"]
+
+    # TODO: Test the output time sequences which are currently being ignored
 
     
 def test_tokenize_data():
@@ -236,6 +252,9 @@ def test_split_data():
 
 # TODO: Add test for prepare_datasets
 # def test_prepare_datasets():
+
+# TODO: Add test for timestamp conversion
+# def test_timestamp_conversion():
 
 if __name__ == "__main__":
     pytest.main(["-v", __file__])
