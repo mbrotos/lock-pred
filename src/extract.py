@@ -58,7 +58,6 @@ def extract_data(data_path):
         args_copy = experiment_args.copy()
         args_copy.pop('model_weights', None)
         args_key = json.dumps(args_copy, sort_keys=True)
-        counter[args_key] += 1
 
         if counter[args_key] > args.iterations:
             log.warning(f"More than {args.iterations} iterations for {args_key}, skipping...")
@@ -78,6 +77,16 @@ def extract_data(data_path):
             continue
         else:
             log.info(f"Extracting predictions for {folder_path}")
+
+        # Check if the predictions file exists and is not empty
+        if not os.path.exists(os.path.join(folder_path, "predictions.csv")):
+            log.error(f"Predictions file predictions.csv does not exist in folder {folder_path}.")
+            continue
+        if os.path.getsize(os.path.join(folder_path, "predictions.csv")) == 0:
+            log.error(f"Predictions file predictions.csv is empty in folder {folder_path}.")
+            continue
+
+        counter[args_key] += 1
 
         # Read predictions CSV for this folder
         predictions = pd.read_csv(os.path.join(folder_path, "predictions.csv"))
@@ -179,7 +188,7 @@ def extract_data(data_path):
 
                 predictions['gt_lock_matches'] = predictions['gt_lock'].str.findall(LOCK_REGEX)
                 predictions['gt_lock_matches_len'] = predictions['gt_lock_matches'].apply(get_match_lengths)
-                predictions['pred_lock_split'] = predictions['out_lock_preds'].str.split(' ')
+                predictions['pred_lock_split'] = predictions['out_lock_preds'].fillna('').str.split(' ')
                 predictions['pred_lock_matches'] = predictions.apply(
                     lambda row: get_pred_matches(row['pred_lock_split'], row['gt_lock_matches_len']),
                     axis=1

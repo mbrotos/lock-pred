@@ -7,7 +7,7 @@
 #SBATCH --account=def-miranska
 #SBATCH --output=logs/exp-24-transformer-row-id_%A_%a.out
 #SBATCH --error=logs/exp-24-transformer-row-id_%A_%a.err
-#SBATCH --array=0-7 # NOTE: Make sure this is equal to the number of configs
+#SBATCH --array=0-3 # NOTE: Make sure this is equal to the number of configs
 #SBATCH --time=23:59:00
 #SBATCH --mem=64G
 #SBATCH --gres=gpu:a100:1
@@ -16,7 +16,9 @@
 #SBATCH --mail-type=ALL
 
 # Activate virtual environment
-source .venv/bin/activate
+module load gcc arrow
+module load python/3.11
+source ~/.venv/bin/activate
 
 ITERATIONS=10
 
@@ -24,7 +26,7 @@ ITERATIONS=10
 declare -a configs_base=(
     # Base configurations
     "--experiment_name exp-24-transformer-row-locks-row-id/char_ --data data/fixed/row_locks.csv --sort_by start_time"
-    "--experiment_name exp-24-transformer-table-locks-row-id/char_ --data data/fixed/table_locks.csv --sort_by start_time"
+    #"--experiment_name exp-24-transformer-table-locks-row-id/char_ --data data/fixed/table_locks.csv --sort_by start_time"
 )
 
 # Define the training data percentages

@@ -7,15 +7,15 @@
 #SBATCH --account=def-miranska
 #SBATCH --output=logs/transform-exp-21-lstm-sorted_%A_%a.out
 #SBATCH --error=logs/transform-exp-21-lstm-sorted_%A_%a.err
-#SBATCH --time=23:59:00
+#SBATCH --time=11:59:00
 #SBATCH --mem=128G
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=1
 #SBATCH --mail-user=adam.sorrenti@torontomu.ca
 #SBATCH --mail-type=ALL
-#SBATCH --array=0-1
+#SBATCH --array=1-1
 module load gcc arrow
-# Activate virtual environment
-source .venv/bin/activate
+module load python/3.11
+source ~/.venv/bin/activate
 
 set -e  # Exit immediately if a command exits with a non-zero status
 set -o pipefail  # Ensure pipeline errors are caught
@@ -27,7 +27,7 @@ echo "Extracting $experiment"
 
 python src/extract.py \
     --experiment_name $experiment \
-    --output_file "results.csv" --iterations 10 # --skip_predictions 
+    --output_file "results.csv" --iterations 10  #--skip_predictions 
 
 echo "Transforming $experiment"
 python src/transform.py \

@@ -12,15 +12,15 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --mail-user=adam.sorrenti@torontomu.ca
 #SBATCH --mail-type=ALL
-#SBATCH --array=0-1
+#SBATCH --array=0-0
 module load gcc arrow
-# Activate virtual environment
-source .venv/bin/activate
+module load python/3.11
+source ~/.venv/bin/activate
 
 set -e  # Exit immediately if a command exits with a non-zero status
 set -o pipefail  # Ensure pipeline errors are caught
 
-experiments=("exp-19-naive-sorted-row-locks" "exp-19-naive-sorted-table-locks")
+experiments=("exp-19-naive-sorted-row-locks")
 
 experiment=${experiments[$SLURM_ARRAY_TASK_ID]}
 echo "Extracting $experiment"

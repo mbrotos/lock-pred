@@ -310,6 +310,10 @@ def main(args=None):
             "in_lock_sequences": in_lock_sequences[:-1], # remove the last since we don't have a prediction for it
             "out_lock_preds": out_lock_preds,
             "gt_lock": gt_lock,
+            "in_lock_start_time": [t[0] for t in x_test_time][:-1],
+            "in_lock_end_time": [t[1] for t in x_test_time][:-1],
+            "gt_lock_start_time": [t[0] for t in y_test_time][:-1],
+            "gt_lock_end_time": [t[1] for t in y_test_time][:-1],
         })
 
         # Save lock sequences and predictions

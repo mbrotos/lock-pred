@@ -9,14 +9,16 @@
 #SBATCH --error=logs/exp-20-lstm-sorted-row-locks_%A_%a.err
 #SBATCH --array=0-31 # NOTE: Make sure this is equal to the number of configs
 #SBATCH --time=23:59:00
-#SBATCH --mem=64G
-#SBATCH --gres=gpu:a100:1
+#SBATCH --mem=16G
+#SBATCH --gres=gpu:a100_3g.20gb:1
 #SBATCH --cpus-per-task=1
 #SBATCH --mail-user=adam.sorrenti@torontomu.ca
 #SBATCH --mail-type=ALL
 
 # Activate virtual environment
-source .venv/bin/activate
+module load gcc arrow
+module load python/3.11
+source ~/.venv/bin/activate
 
 ITERATIONS=10
 
