@@ -14,7 +14,9 @@
 #SBATCH --mail-type=ALL
 
 # Activate virtual environment
-source .venv/bin/activate
+module load gcc arrow
+module load python/3.11
+source ~/.venv/bin/activate
 
 ITERATIONS=10
 
