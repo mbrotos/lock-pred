@@ -131,6 +131,10 @@ def main(args=None):
         source_texts = lock_sequences_input.to_numpy()
         target_texts = lock_sequences.to_numpy()
 
+        log.warning("Timing data is not yet supported for transformer_causal model.")
+        source_times = []
+        target_times = []
+
         vocab_size = (
             num_unqiue_table_names +
             10 + # 10 digits
@@ -307,13 +311,13 @@ def main(args=None):
         out_lock_preds, in_lock_sequences, gt_lock = detokenization(predictions, x_test, actual_values, target_tokenizer, source_tokenizer)
 
         df_out = pd.DataFrame({
-            "in_lock_sequences": in_lock_sequences[:-1], # remove the last since we don't have a prediction for it
+            "in_lock_sequences": in_lock_sequences[1:], # remove the first lock since it is not predicted
             "out_lock_preds": out_lock_preds,
             "gt_lock": gt_lock,
-            "in_lock_start_time": [t[0] for t in x_test_time][:-1],
-            "in_lock_end_time": [t[1] for t in x_test_time][:-1],
-            "gt_lock_start_time": [t[0] for t in y_test_time][:-1],
-            "gt_lock_end_time": [t[1] for t in y_test_time][:-1],
+            "in_lock_start_time": [t[0] for t in x_test_time][1:],
+            "in_lock_end_time": [t[1] for t in x_test_time][1:],
+            "gt_lock_start_time": [t[0] for t in y_test_time][1:],
+            "gt_lock_end_time": [t[1] for t in y_test_time][1:],
         })
 
         # Save lock sequences and predictions
