@@ -14,7 +14,7 @@ def convert_to_iso(timestamp):
     time_part = parts[3].replace(".", ":", 2)  # Replace only first two dots in the time part
     return f"{date_part}T{time_part}" # Make sure this is UTC!
 
-def prep_columns(data, remove_system_tables, sort_by=None):
+def prep_columns(data, remove_system_tables, sort_by=None, table_lock=False):
     data.columns = data.columns.str.strip()
     # Remove all trailing whitespace from TABNAME and TABSCHEMA
     # NOTE: This seems to be a problem in the table lock data.
@@ -40,6 +40,17 @@ def prep_columns(data, remove_system_tables, sort_by=None):
 
     if sort_by=='start_time':
         data = data.sort_values(by="Start Unix Timestamp", ascending=True)
+    elif sort_by=='start_time-dedupe':
+        # Sort by start time and remove duplicates with the same start time if they have:
+        # - The same TABNAME for table locks
+        # - The same TABNAME and PAGEID for row locks
+        data = data.sort_values(by="Start Unix Timestamp", ascending=True)
+        if table_lock:
+            data = data.drop_duplicates(subset=["Start Unix Timestamp", "TABNAME"], keep="first")
+        else:
+            data = data.drop_duplicates(subset=["Start Unix Timestamp", "TABNAME", "PAGEID"], keep="first")
+    elif sort_by!=None:
+        raise ValueError(f"Unknown sort_by value: {sort_by}")
 
     return data
 
@@ -48,7 +59,7 @@ def load_table_lock_data(
     remove_system_tables=False,
     sort_by=None
 ):
-    data = prep_columns(data, remove_system_tables, sort_by)
+    data = prep_columns(data, remove_system_tables, sort_by, table_lock=True)
     
     data["input"] = data["TABNAME"]
     data["output"] = data["TABNAME"]
@@ -64,7 +75,7 @@ def load_data(
     sort_by=None
 ):
     # Strip spaces from column headers
-    data = prep_columns(data, remove_system_tables, sort_by)
+    data = prep_columns(data, remove_system_tables, sort_by, table_lock=False)
     if char_based:
         data["PAGEID"] = data["PAGEID"].astype(str).apply(lambda x: " ".join(x))
         data["ROWID"] = data["ROWID"].astype(str).apply(lambda x: " ".join(x))
