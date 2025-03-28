@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from evaluate import evaluate_predictions, evaluate_naive_baseline
+from evaluate import evaluate_predictions, evaluate_naive_baseline, evaluate_naive_baseline_skip
 
 def test_evaluate_predictions():
     x = np.array([[7, 8, 9], [10, 11, 12]])
@@ -106,18 +106,29 @@ def test_evaluate_naive_baseline():
     y_test = np.array([[1, 1], [1, 1], [4, 5], [6, 7], [8, 9]])
     results, _, _ = evaluate_naive_baseline(y_test)
     assert results["actual_test_accuracy"] == 1/4
+    y_pred = np.array([[1, 2], [1, 23], [42, 52], [6, 71], [8, 9]])
+    results, _, _ = evaluate_naive_baseline_skip(y_pred, y_test)
+    assert results["actual_test_accuracy"] == 1/5
 
     y_test = np.array([[1, 1], [1, 1], [4, 5], [4, 5], [8, 9]])
-
     results, _, _ = evaluate_naive_baseline(y_test)
     assert results["actual_test_accuracy"] == 2/4
+    y_pred = np.array([[1, 12], [1, 1], [42, 5], [4, 5], [82, 9]])
+    results, _, _ = evaluate_naive_baseline_skip(y_pred, y_test)
+    assert results["actual_test_accuracy"] == 2/5
 
     y_test = np.array([[1, 1], [1, 1], [1, 1], [1, 1], [1, 1]])
     results, _, _ = evaluate_naive_baseline(y_test)
     assert results["actual_test_accuracy"] == 1.0
+    y_pred = np.array([[1, 1], [1, 1], [1, 1], [1, 1], [1, 1]])
+    results, _, _ = evaluate_naive_baseline_skip(y_pred, y_test)
+    assert results["actual_test_accuracy"] == 1.0
 
     y_test = np.array([[1, 1], [2, 2], [3, 3], [4, 4], [5, 5]])
     results, _, _ = evaluate_naive_baseline(y_test)
+    assert results["actual_test_accuracy"] == 0.0
+    y_pred = np.array([[11, 11], [22, 22], [32, 23], [24, 4], [25, 5]])
+    results, _, _ = evaluate_naive_baseline_skip(y_pred, y_test)
     assert results["actual_test_accuracy"] == 0.0
 
     # Test flatten procedure

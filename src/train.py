@@ -15,7 +15,7 @@ import keras_nlp
 from datapipeline import create_sequences_token, load_data, create_sequences, prepare_datasets, load_table_lock_data
 from model import build_lstm_model, build_transformer_model_classifier, build_transformer_model_casual
 from utils import setup_logger, is_table_locks
-from evaluate import evaluate_predictions, print_examples, evaluate_naive_baseline, detokenization
+from evaluate import evaluate_predictions, print_examples, evaluate_naive_baseline, detokenization, evaluate_naive_baseline_skip
 
 def parse_args(args=None):
     parser = argparse.ArgumentParser(description="Train a model")
@@ -211,6 +211,7 @@ def main(args=None):
                 "token_length_seq": args.token_length_seq,
                 "vocab_size": args.vocab_size,
                 "sort_by": args.sort_by,
+                "naive_baseline": args.naive_baseline,
             } 
 
             args_hash = hashlib.sha256(json.dumps(args_dict).encode('utf-8')).hexdigest()
@@ -220,15 +221,15 @@ def main(args=None):
             if os.path.exists(f"data/.cache/cached_sequences_{args_hash}.pkl") and not args.disable_cache:
                 log.info(f"Loading cached sequences for args: {args_hash}")
                 with open(f"data/.cache/cached_sequences_{args_hash}.pkl", "rb") as f:
-                    source_texts, target_texts = pickle.load(f)
+                    source_texts, target_texts, naive_target_texts = pickle.load(f)
                 with open(f"data/.cache/cached_times_{args_hash}.pkl", "rb") as f:
                     source_times, target_times = pickle.load(f)
             else:
                 log.info(f"Creating sequences for args: {args_hash}")
-                source_texts, target_texts, source_times, target_times = create_sequences_token(data, args.seq_length, args.horizon) 
+                source_texts, target_texts, naive_target_texts, source_times, target_times = create_sequences_token(data, args.seq_length, args.horizon, args.naive_baseline) 
                 # cache the sequences using the hash as the file name
                 with open(f"data/.cache/cached_sequences_{args_hash}.pkl", "wb") as f:
-                    pickle.dump((source_texts, target_texts), f)
+                    pickle.dump((source_texts, target_texts, naive_target_texts), f)
                 with open(f"data/.cache/cached_times_{args_hash}.pkl", "wb") as f:
                     pickle.dump((source_times, target_times), f)
         else:
@@ -238,9 +239,10 @@ def main(args=None):
     unique_tokens = len(set(" ".join(source_texts).split(" "))) +1 # add 1 for padding
     #assert unique_tokens == vocab_size, f"Unique tokens: {len(unique_tokens)}, Vocab size: {vocab_size}"
 
-    x_train, x_test, y_train, y_test, source_tokenizer, target_tokenizer = prepare_datasets(
+    x_train, x_test, y_train, _, y_test, y_test_naive, source_tokenizer, target_tokenizer = prepare_datasets(
         source_texts,
         target_texts,
+        naive_target_texts,
         vocab_size,
         args.seq_length,
         out_seq_length,
@@ -295,11 +297,12 @@ def main(args=None):
     if args.naive_baseline:
         log.info("Evaluating naive baseline...")
         y_test_argmax = np.argmax(y_test, axis=-1)
+        y_test_naive = np.argmax(y_test_naive, axis=-1)
 
         if len(y_test_argmax.shape) == 1:
             y_test_argmax = np.expand_dims(y_test_argmax, axis=-1)
 
-        results, predictions, actual_values = evaluate_naive_baseline(y_test_argmax)
+        results, predictions, actual_values = evaluate_naive_baseline_skip(y_test_naive, y_test_argmax)
         log.info(f"Naive Baseline Results:\n{json.dumps(results, indent=4)}")
         # Save results to a file
         with open(os.path.join(results_folder_path, "results.json"), "w") as f:

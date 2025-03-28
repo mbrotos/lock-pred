@@ -120,8 +120,8 @@ def create_sequences(data, seq_length):
         )  # Predicting combined feature
     return X, y
 
-def create_sequences_token(data, token_length, horizon=1):
-    X, y = [], []
+def create_sequences_token(data, token_length, horizon=1, naive_baseline=False):
+    X, y, y_naive = [], [], []
     X_time, y_time = [], []
     # Flag to stop the loop when we reach the end of the data
     # We need a flag because len(data) != number of tokens
@@ -169,6 +169,10 @@ def create_sequences_token(data, token_length, horizon=1):
 
         X.append(" ".join(data.iloc[i:j]["input"].values))
         y.append(" ".join(data.iloc[j:j+horizon]["output"].values))
+        if naive_baseline:
+            naive_prediction = data.iloc[j-(horizon-1):j+1]["output"].values
+            assert len(naive_prediction) == horizon, "Naive prediction length does not match horizon."
+            y_naive.append(" ".join(naive_prediction))
 
         x_start = data.iloc[i]["Start Unix Timestamp"]
         x_end = data.iloc[j-1]["End Unix Timestamp"]
@@ -178,7 +182,7 @@ def create_sequences_token(data, token_length, horizon=1):
         y_end = data.iloc[j+horizon-1]["End Unix Timestamp"]
         y_time.append((y_start, y_end))
 
-    return X, y, X_time, y_time
+    return X, y, y_naive, X_time, y_time
 
 def tokenize_data(text, vocab_size, max_length, special_tokens=[]):
     # NOTE: The <> symbols are not included in the filters so we don't split on them.
@@ -190,7 +194,7 @@ def tokenize_data(text, vocab_size, max_length, special_tokens=[]):
     )
     return padded_source_sequences, tokenizer
 
-def split_data(input_data, output_data, test_size, shuffle=False):
+def split_data(input_data, output_data, output_data_naive, test_size, shuffle=False):
     indices = np.arange(len(input_data))
     # Don't shuffle the data. Time leakage, see:
     # https://en.wikipedia.org/wiki/Leakage_(machine_learning)#:~:text=Non%2Di.i,origin%20cross%20validation
@@ -201,17 +205,28 @@ def split_data(input_data, output_data, test_size, shuffle=False):
     test_indices = indices[split_index:]
     
     x_train, x_test = input_data[train_indices], input_data[test_indices]
-    y_train, y_test = output_data[train_indices], output_data[test_indices]
-    return x_train, x_test, y_train, y_test
+    if len(output_data_naive) > 0:
+        y_train, y_train_naive, y_test, y_test_naive = output_data[train_indices], output_data_naive[train_indices], output_data[test_indices], output_data_naive[test_indices]
+    else:
+        y_train, y_train_naive, y_test, y_test_naive = output_data[train_indices], [], output_data[test_indices], []
+    return x_train, x_test, y_train, y_train_naive, y_test, y_test_naive
 
-def prepare_datasets(source_texts, target_texts, vocab_size, max_length, out_seq_length, test_size, shuffle=False, is_casual=False):
+def prepare_datasets(source_texts, target_texts, naive_target_texts, vocab_size, max_length, out_seq_length, test_size, shuffle=False, is_casual=False):
     input_data, source_tokenizer = tokenize_data(source_texts, vocab_size, max_length)
     if is_casual:
         target_tokenizer = None
         output_data = source_tokenizer.texts_to_sequences(target_texts)
         output_data = pad_sequences(output_data, maxlen=out_seq_length, padding="post", value=0.0)
+        if len(naive_target_texts) > 0:
+            output_data_naive = source_tokenizer.texts_to_sequences(naive_target_texts)
+            output_data_naive = pad_sequences(output_data_naive, maxlen=out_seq_length, padding="post", value=0.0)
     else:
         output_data, target_tokenizer = tokenize_data(target_texts, vocab_size, out_seq_length)
         output_data = to_categorical(output_data, num_classes=vocab_size)
-    x_train, x_test, y_train, y_test = split_data(input_data, output_data, test_size, shuffle)
-    return x_train, x_test, y_train, y_test, source_tokenizer, target_tokenizer
+        if len(naive_target_texts) > 0:
+            output_data_naive = target_tokenizer.texts_to_sequences(naive_target_texts)
+            output_data_naive = pad_sequences(output_data_naive, maxlen=out_seq_length, padding="post", value=0.0)
+            output_data_naive = to_categorical(output_data_naive, num_classes=vocab_size)
+
+    x_train, x_test, y_train, y_train_naive, y_test, y_test_naive = split_data(input_data, output_data, output_data_naive, test_size, shuffle)
+    return x_train, x_test, y_train, y_train_naive, y_test, y_test_naive, source_tokenizer, target_tokenizer

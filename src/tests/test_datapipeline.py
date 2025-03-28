@@ -152,29 +152,29 @@ def test_create_sequences_token():
         }
     )
 
-    X, y, _, _ = create_sequences_token(data, token_length=6)
+    X, y, _, _, _ = create_sequences_token(data, token_length=6)
     assert X == ["A B C D E F", "D E F G H I"]
     assert y == ["Z", "W"]
 
-    X, y, _, _ = create_sequences_token(data, token_length=4)
+    X, y, _, _, _ = create_sequences_token(data, token_length=4)
     assert X == ["A B C", "D E F", "G H I"]
     assert y == ['Y', 'Z', 'W']
 
-    X, y, _, _ = create_sequences_token(data, token_length=3)
+    X, y, _, _, _ = create_sequences_token(data, token_length=3)
     assert X == ["A B C", "D E F", "G H I"]
     assert y == ['Y', 'Z', 'W']
 
     # increase horizon to 2
 
-    X, y, _, _ = create_sequences_token(data, token_length=6, horizon=2)
+    X, y, _, _, _ = create_sequences_token(data, token_length=6, horizon=2)
     assert X == ["A B C D E F"]
     assert y == ["Z W"]
 
-    X, y, _, _ = create_sequences_token(data, token_length=4, horizon=2)
+    X, y, _, _, _ = create_sequences_token(data, token_length=4, horizon=2)
     assert X == ["A B C", "D E F"]
     assert y == ['Y Z', 'Z W']
 
-    X, y, _, _ = create_sequences_token(data, token_length=3, horizon=2)
+    X, y, _, _, _ = create_sequences_token(data, token_length=3, horizon=2)
     assert X == ["A B C", "D E F"]
     assert y == ['Y Z', 'Z W']
 
@@ -187,11 +187,13 @@ def test_create_sequences_token():
         }
     )
 
-    X, y, _, _ = create_sequences_token(data, token_length=6, horizon=2)
+    X, y, _, _, _ = create_sequences_token(data, token_length=6, horizon=2)
     assert X == ["A B C D E F", "D E F G H I"]
     assert y == ["Z W", "W V"]
 
     # TODO: Test the output time sequences which are currently being ignored
+
+    # TODO: Test the naive outputs
 
     
 def test_tokenize_data():
@@ -219,7 +221,7 @@ def test_split_data():
     output_data = np.array([[0, 1], [1, 0], [1, 1], [0, 0], [1, 1]])
     test_size = 0.2
 
-    x_train, x_test, y_train, y_test = split_data(input_data, output_data, test_size)
+    x_train, x_test, y_train, _, y_test, _, = split_data(input_data, output_data, [], test_size)
 
     # Test case for default behavior (no shuffle)
     assert len(x_train) == 4
@@ -232,7 +234,7 @@ def test_split_data():
     np.testing.assert_array_equal(y_test, np.array([[1, 1]]))
 
     # Test case with shuffle=True
-    x_train_shuffled, x_test_shuffled, y_train_shuffled, y_test_shuffled = split_data(input_data, output_data, test_size, shuffle=True)
+    x_train_shuffled, x_test_shuffled, y_train_shuffled, _, y_test_shuffled, _, = split_data(input_data, output_data, [], test_size, shuffle=True)
     
     assert len(x_train_shuffled) == 4
     assert len(x_test_shuffled) == 1
@@ -243,12 +245,14 @@ def test_split_data():
     assert not np.array_equal(x_train, x_train_shuffled) or not np.array_equal(y_train, y_train_shuffled)
 
     # Test case with different test_size
-    x_train_half, x_test_half, y_train_half, y_test_half = split_data(input_data, output_data, test_size=0.5)
+    x_train_half, x_test_half, y_train_half, _, y_test_half, _, = split_data(input_data, output_data, [], test_size=0.5)
     
     assert len(x_train_half) == 2
     assert len(x_test_half) == 3
     assert len(y_train_half) == 2
     assert len(y_test_half) == 3
+
+    # TODO: Test the naive outputs 
 
 # TODO: Add test for prepare_datasets
 # def test_prepare_datasets():

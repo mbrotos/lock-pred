@@ -99,3 +99,20 @@ def evaluate_naive_baseline(y_test):
             "pageid_test_accuracy": None,
             "padding_test_accuracy": None,
         }, y_pred, y_test
+
+# This naive baseline implementation is robust to scenarios where the next
+# lock isn't necessarily the previous ground truth lock.
+# This can happen when during sequence creation, multiple locks fit within the
+# Token length budget and thus are appended to the input sequence.
+def evaluate_naive_baseline_skip(y_pred, y_test):
+    # Calculate the number of correct predictions
+    correct_predictions = sum(np.all(y_test == y_pred, axis=-1))
+
+    # Compute accuracy
+    accuracy = correct_predictions / len(y_test)
+    return {
+            "actual_test_accuracy": accuracy,
+            "table_name_test_accuracy": None,
+            "pageid_test_accuracy": None,
+            "padding_test_accuracy": None,
+        }, y_pred, y_test
