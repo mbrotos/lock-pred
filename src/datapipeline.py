@@ -147,7 +147,7 @@ def create_sequences_token(data, token_length, horizon=1):
         accumulated_tokens = 0
 
         j = i
-        while accumulated_tokens < token_length and j < n and not done:
+        while j < n and accumulated_tokens < token_length and not done:
             if (j + 1) + horizon > n:
                 # The lookahead has exceed the end of the data when we account for the horizon
                 # We need to stop here or we will have an index out of bounds error.
