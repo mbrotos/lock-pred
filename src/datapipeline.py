@@ -4,6 +4,7 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 from keras.utils import to_categorical
 import numpy as np
 import logging
+import tqdm
 
 log = logging.getLogger(__name__)
 
@@ -120,15 +121,6 @@ def create_sequences(data, seq_length):
     return X, y
 
 def create_sequences_token(data, token_length, horizon=1):
-    # Get the output sequence for the given index
-    output = lambda x: " ".join(
-        data.iloc[x:x+horizon]["output"].values
-    )
-    output_time = lambda x: (
-        data.iloc[x:x+horizon]["Start Unix Timestamp"].values[0], 
-        data.iloc[x:x+horizon]["End Unix Timestamp"].values[-1]
-    )
-
     X, y = [], []
     X_time, y_time = [], []
     # Flag to stop the loop when we reach the end of the data
@@ -137,37 +129,54 @@ def create_sequences_token(data, token_length, horizon=1):
     # or the end of the data.
     done = False 
 
-    for i in range(len(data)-horizon):
-        if done: break
+    token_counts = data["input"].apply(lambda x: len(x.split())).values
+    assert all(token_counts <= token_length), "A lock has more tokens than the allowable token length."
+    
+    n = len(data)
 
-        cur_x_seq = data.iloc[i]["input"].split(" ")
-        start_time = data.iloc[i]["Start Unix Timestamp"]
-        end_time = None
-        assert len(cur_x_seq) <= token_length, "Token length is too small"
+    for i in tqdm.tqdm(range(n), desc="Creating sequences", unit="lock"):
+        # Our lookahead has reached the end of the data, thus we stop
+        if done: 
+            break
 
-        j_end = None
-        for j in range(i+1, len(data)-horizon):
-            next_x_seq = data.iloc[j]["input"].split(" ")
-            if len(next_x_seq) + len(cur_x_seq) <= token_length:
-                cur_x_seq.extend(next_x_seq)
-                end_time = data.iloc[j]["End Unix Timestamp"]
-            else:
-                j_end = j
+        # I dont expect i + horizon to be greater than n because we are looking ahead
+        # If it is, i think we have a bug because if it wasnt caught in the
+        # lookahead than it may mean we have a single lock greater than the token length.
+        assert (i + 1) + horizon <= n, "We may have a lock that is greater than the token length."
+
+        accumulated_tokens = 0
+
+        j = i
+        while accumulated_tokens < token_length and j < n and not done:
+            if (j + 1) + horizon > n:
+                # The lookahead has exceed the end of the data when we account for the horizon
+                # We need to stop here or we will have an index out of bounds error.
+                done = True 
                 break
 
-        X.append(" ".join(cur_x_seq))
-        if j_end is None: # We reached the end of the data
-            y.append(output(len(data)-horizon))
-            y_start, y_end = output_time(len(data)-horizon)
-            X_time.append((start_time, end_time))
-            y_time.append((y_start, y_end))
-            # Stop us from creating more sequences by just padding the last one
-            done = True 
-        else: # We reached the token length limit
-            y.append(output(j_end))
-            y_start, y_end = output_time(j_end)
-            X_time.append((start_time, end_time))
-            y_time.append((y_start, y_end))
+            cur_lock_token_count = token_counts[j]
+            if accumulated_tokens + cur_lock_token_count > token_length:
+                break
+            else:
+                if (j + 1) + horizon == n:
+                    # The lookahead has added the last new lock we can add from the data
+                    # The next iteration will not add any new locks
+                    # Let's flag this so we can stop the loop after this iteration
+                    done = True
+
+                accumulated_tokens += cur_lock_token_count
+                j += 1
+
+        X.append(" ".join(data.iloc[i:j]["input"].values))
+        y.append(" ".join(data.iloc[j:j+horizon]["output"].values))
+
+        x_start = data.iloc[i]["Start Unix Timestamp"]
+        x_end = data.iloc[j-1]["End Unix Timestamp"]
+        X_time.append((x_start, x_end))
+
+        y_start = data.iloc[j]["Start Unix Timestamp"]
+        y_end = data.iloc[j+horizon-1]["End Unix Timestamp"]
+        y_time.append((y_start, y_end))
 
     return X, y, X_time, y_time
 
