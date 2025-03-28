@@ -299,6 +299,9 @@ def main(args=None):
         y_test_argmax = np.argmax(y_test, axis=-1)
         y_test_naive = np.argmax(y_test_naive, axis=-1)
 
+        if len(y_test_naive.shape) == 1:
+            y_test_naive = np.expand_dims(y_test_naive, axis=-1)
+
         if len(y_test_argmax.shape) == 1:
             y_test_argmax = np.expand_dims(y_test_argmax, axis=-1)
 
@@ -314,13 +317,13 @@ def main(args=None):
         out_lock_preds, in_lock_sequences, gt_lock = detokenization(predictions, x_test, actual_values, target_tokenizer, source_tokenizer)
 
         df_out = pd.DataFrame({
-            "in_lock_sequences": in_lock_sequences[1:], # remove the first lock since it is not predicted
+            "in_lock_sequences": in_lock_sequences,
             "out_lock_preds": out_lock_preds,
             "gt_lock": gt_lock,
-            "in_lock_start_time": [t[0] for t in x_test_time][1:],
-            "in_lock_end_time": [t[1] for t in x_test_time][1:],
-            "gt_lock_start_time": [t[0] for t in y_test_time][1:],
-            "gt_lock_end_time": [t[1] for t in y_test_time][1:],
+            "in_lock_start_time": [t[0] for t in x_test_time],
+            "in_lock_end_time": [t[1] for t in x_test_time],
+            "gt_lock_start_time": [t[0] for t in y_test_time],
+            "gt_lock_end_time": [t[1] for t in y_test_time],
         })
 
         # Save lock sequences and predictions

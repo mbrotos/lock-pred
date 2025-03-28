@@ -170,7 +170,7 @@ def create_sequences_token(data, token_length, horizon=1, naive_baseline=False):
         X.append(" ".join(data.iloc[i:j]["input"].values))
         y.append(" ".join(data.iloc[j:j+horizon]["output"].values))
         if naive_baseline:
-            naive_prediction = data.iloc[j-(horizon-1):j+1]["output"].values
+            naive_prediction = data.iloc[j-1-(horizon-1):j]["output"].values
             assert len(naive_prediction) == horizon, "Naive prediction length does not match horizon."
             y_naive.append(" ".join(naive_prediction))
 
