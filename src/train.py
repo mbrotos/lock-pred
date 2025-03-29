@@ -134,6 +134,7 @@ def main(args=None):
         log.warning("Timing data is not yet supported for transformer_causal model.")
         source_times = []
         target_times = []
+        naive_target_texts=[]
 
         vocab_size = (
             num_unqiue_table_names +

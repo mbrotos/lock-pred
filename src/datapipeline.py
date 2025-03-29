@@ -213,6 +213,7 @@ def split_data(input_data, output_data, output_data_naive, test_size, shuffle=Fa
 
 def prepare_datasets(source_texts, target_texts, naive_target_texts, vocab_size, max_length, out_seq_length, test_size, shuffle=False, is_casual=False):
     input_data, source_tokenizer = tokenize_data(source_texts, vocab_size, max_length)
+    output_data_naive = []
     if is_casual:
         target_tokenizer = None
         output_data = source_tokenizer.texts_to_sequences(target_texts)
