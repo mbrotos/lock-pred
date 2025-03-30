@@ -240,6 +240,15 @@ def main(args=None):
     unique_tokens = len(set(" ".join(source_texts).split(" "))) +1 # add 1 for padding
     #assert unique_tokens == vocab_size, f"Unique tokens: {len(unique_tokens)}, Vocab size: {vocab_size}"
 
+    # lets trim the data before preparing if args.train_data_percent_used < 1.0 
+    if args.train_data_percent_used < 1.0:
+        num_train = int(len(source_texts) * args.train_data_percent_used)
+        source_texts = source_texts[:num_train]
+        target_texts = target_texts[:num_train]
+        naive_target_texts = naive_target_texts[:num_train] if len(naive_target_texts) > 0 else []
+        source_times = source_times[:num_train]
+        target_times = target_times[:num_train]
+
     x_train, x_test, y_train, _, y_test, y_test_naive, source_tokenizer, target_tokenizer = prepare_datasets(
         source_texts,
         target_texts,
@@ -271,10 +280,6 @@ def main(args=None):
         predictions_df.to_csv(predictions_path, index=False)
         log.info(f"Saved times to {predictions_path}")
         exit()
-
-    if args.train_data_percent_used < 1.0:
-        x_train = x_train[:int(len(x_train) * args.train_data_percent_used)]
-        y_train = y_train[:int(len(y_train) * args.train_data_percent_used)]
 
     # lets split off the validation data from the training data
     if args.val_split > 0:

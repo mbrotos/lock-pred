@@ -41,14 +41,22 @@ def prep_columns(data, remove_system_tables, sort_by=None, table_lock=False):
 
     if sort_by=='start_time':
         data = data.sort_values(by="Start Unix Timestamp", ascending=True)
-    elif sort_by=='start_time-dedupe':
+    elif sort_by=='start_time-dedupe' or sort_by=='start_time_tabname-dedupe' or sort_by=='start_time_pageid-dedupe':
         # Sort by start time and remove duplicates with the same start time if they have:
         # - The same TABNAME for table locks
         # - The same TABNAME and PAGEID for row locks
         data = data.sort_values(by="Start Unix Timestamp", ascending=True)
         if table_lock:
+            assert sort_by != 'start_time_pageid-dedupe', "sort_by cannot be 'start_time_pageid-dedupe' for table locks"
+            if sort_by=='start_time_tabname-dedupe':
+                data = data.sort_values(by=["Start Unix Timestamp", "TABNAME"], ascending=True)
+            
             data = data.drop_duplicates(subset=["Start Unix Timestamp", "TABNAME"], keep="first")
         else:
+            if sort_by=='start_time_pageid-dedupe':
+                data = data.sort_values(by=["Start Unix Timestamp", "PAGEID", "TABNAME"], ascending=True)
+            elif sort_by=='start_time_tabname-dedupe':
+                data = data.sort_values(by=["Start Unix Timestamp", "TABNAME", "PAGEID"], ascending=True)
             data = data.drop_duplicates(subset=["Start Unix Timestamp", "TABNAME", "PAGEID"], keep="first")
     elif sort_by!=None:
         raise ValueError(f"Unknown sort_by value: {sort_by}")
