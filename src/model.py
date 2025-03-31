@@ -29,6 +29,30 @@ def build_transformer_model_classifier(
     model = Model(inputs=input, outputs=output)
     return model
 
+def build_transformer_model_regression(
+    feature_dim,
+    max_length,
+    horizon,
+    intermediate_dim=512,
+    num_heads=8,
+    dropout=0.1,
+    hidden_dim=256,
+    embedding_dim=128,
+):
+    input = Input(shape=(max_length, feature_dim))
+    embedding = keras_nlp.layers.TokenAndPositionEmbedding(
+        feature_dim, max_length, embedding_dim
+    )(input)
+    transformer = keras_nlp.layers.TransformerEncoder(
+        intermediate_dim=intermediate_dim, num_heads=num_heads, dropout=dropout
+    )(embedding)
+    pooling = keras.layers.GlobalAveragePooling2D(data_format='channels_last')(transformer)
+    dense = Dense(hidden_dim, activation="relu")(pooling)
+    output = Dense(horizon, activation="sigmoid")(dense)
+
+    model = Model(inputs=input, outputs=output)
+    return model
+
 def build_transformer_model_casual(
     vocab_size,
     max_length,
@@ -81,3 +105,49 @@ def build_lstm_model(
     model = Model(inputs=input_layer, outputs=output_layer)
     return model
 
+def build_lstm_model_regression(
+    feature_dim,
+    max_length,
+    horizon,
+    lstm_units=256,
+    hidden_dim=256,
+    dropout=0.2
+):
+    input_layer = keras.Input(shape=(max_length, feature_dim))
+    
+    # LSTM layer
+    x = LSTM(lstm_units, return_sequences=False, dropout=dropout)(input_layer)
+    
+    # Dense layer(s)
+    x = Dense(hidden_dim, activation='relu')(x)
+    
+    # Final output for regression
+    output_layer = Dense(horizon, activation='sigmoid')(x)
+
+    model = Model(inputs=input_layer, outputs=output_layer)
+    return model
+
+def build_ann_model_regression(
+    feature_dim,
+    max_length,
+    horizon,
+    hidden_dim=256,
+    dropout=0.2
+):
+    input_layer = keras.Input(shape=(max_length, feature_dim))
+    
+    # Dense layer(s)
+    x = Dense(hidden_dim, activation='relu')(input_layer)
+    x = keras.layers.Dropout(dropout)(x)
+    x = Dense(hidden_dim, activation='relu')(x)
+    x = keras.layers.Dropout(dropout)(x)
+    x = Dense(hidden_dim, activation='relu')(x)
+    x = keras.layers.Dropout(dropout)(x)
+    x = Dense(hidden_dim, activation='relu')(x)
+    x = keras.layers.Dropout(dropout)(x)
+    
+    # Final output for regression
+    output_layer = Dense(horizon, activation='sigmoid')(x)
+
+    model = Model(inputs=input_layer, outputs=output_layer)
+    return model
