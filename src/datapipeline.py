@@ -15,7 +15,7 @@ def convert_to_iso(timestamp):
     time_part = parts[3].replace(".", ":", 2)  # Replace only first two dots in the time part
     return f"{date_part}T{time_part}" # Make sure this is UTC!
 
-def prep_columns(data, remove_system_tables, sort_by=None, table_lock=False):
+def prep_columns(data, remove_system_tables, sort_by=None, table_lock=False, rounding_bin_size=None):
     data.columns = data.columns.str.strip()
     # Remove all trailing whitespace from TABNAME and TABSCHEMA
     # NOTE: This seems to be a problem in the table lock data.
@@ -60,6 +60,12 @@ def prep_columns(data, remove_system_tables, sort_by=None, table_lock=False):
             data = data.drop_duplicates(subset=["Start Unix Timestamp", "TABNAME", "PAGEID"], keep="first")
     elif sort_by!=None:
         raise ValueError(f"Unknown sort_by value: {sort_by}")
+    
+    if rounding_bin_size is not None:
+        data["PAGEID_unrounded"] = data["PAGEID"] # Store the original PAGEID for later use
+        # floor the pagesize to the nearest bin size
+        data["PAGEID"] = np.floor(data["PAGEID"].astype(float) / 10_000).astype(int).astype(str)
+        assert data["PAGEID"].astype(int).max() == 9, "PAGEID max is not 9. Check the range of PAGEID values, the max should be 90000."
 
     return data
 
@@ -81,10 +87,11 @@ def load_data(
     add_start_end_tokens=False,
     add_label_tokens=False,
     remove_system_tables=False,
-    sort_by=None
+    sort_by=None,
+    rounding_bin_size=None,
 ):
     # Strip spaces from column headers
-    data = prep_columns(data, remove_system_tables, sort_by, table_lock=False)
+    data = prep_columns(data, remove_system_tables, sort_by, table_lock=False, rounding_bin_size=rounding_bin_size)
     if char_based:
         data["PAGEID"] = data["PAGEID"].astype(str).apply(lambda x: " ".join(x))
         data["ROWID"] = data["ROWID"].astype(str).apply(lambda x: " ".join(x))

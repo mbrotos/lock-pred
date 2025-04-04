@@ -41,6 +41,7 @@ def parse_args(args=None):
     parser.add_argument("--horizon", type=int, default=1, help="Horizon for forecasting. I.e. how many steps ahead to predict")
     parser.add_argument("--model_weights", type=str, default=None, help="Model weights to load")
     parser.add_argument("--sort_by", type=str, default=None, help="Defines how to sort the locks. If None, no sorting is done.")
+    parser.add_argument("--rounding_bin_size", type=int, default=None, help="Rounding bin size for the page id. This is used to group the page ids into bins. The default is None, which means no rounding is done.")
 
     parser.add_argument("--shuffle", action="store_true", default=False, help="[DEPRECATED] Shuffle entire dataset. Not recommended since we want to preserve sequence order.")
     parser.add_argument("--add_start_end_tokens", action="store_true", default=False, help="Add start and end tokens")
@@ -112,6 +113,7 @@ def main(args=None):
             add_label_tokens=args.add_label_tokens,
             remove_system_tables=args.remove_system_tables,
             sort_by=args.sort_by,
+            rounding_bin_size=args.rounding_bin_size,
         )
 
     num_unqiue_table_names = len(data["TABNAME"].unique())
@@ -213,6 +215,7 @@ def main(args=None):
                 "vocab_size": args.vocab_size,
                 "sort_by": args.sort_by,
                 "naive_baseline": args.naive_baseline,
+                "rounding_bin_size": args.rounding_bin_size,
             } 
 
             args_hash = hashlib.sha256(json.dumps(args_dict).encode('utf-8')).hexdigest()
