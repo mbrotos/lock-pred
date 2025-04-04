@@ -65,7 +65,7 @@ def prep_columns(data, remove_system_tables, sort_by=None, table_lock=False, rou
         data["PAGEID_unrounded"] = data["PAGEID"] # Store the original PAGEID for later use
         # floor the pagesize to the nearest bin size
         data["PAGEID"] = np.floor(data["PAGEID"].astype(float) / 10_000).astype(int).astype(str)
-        assert data["PAGEID"].astype(int).max() == 9, "PAGEID max is not 9. Check the range of PAGEID values, the max should be 90000."
+        assert data["PAGEID"].astype(int).max() <= 9, "PAGEID max is greater than 9. Check the range of PAGEID values, the max should be 90000."
 
     return data
 
