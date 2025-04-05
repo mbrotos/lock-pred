@@ -492,20 +492,21 @@ ggsave(
 )
 
 # Lets load the data for local transformer models
+
+
+# correct_local <- horizon_iteration_performance(
+#   predictions_local %>%
+#     filter(!(as.numeric(as.character(horizon))>1 & gt_table == "orderline"))
+# )
+# correct_local_by_table <- horizon_iteration_performance_by_table(
+#   predictions_local %>%
+#     filter(!(as.numeric(as.character(horizon))>1 & gt_table == "orderline"))
+# )
+
 predictions_local <- load_parquet("analysis/data/row_sep/exp-11-row-locks/predictions.parquet")
 check_iterations(predictions_local)
 correct_local <- horizon_iteration_performance(predictions_local)
 correct_local_by_table <- horizon_iteration_performance_by_table(predictions_local)
-
-
-correct_local <- horizon_iteration_performance(
-  predictions_local %>%
-    filter(!(as.numeric(as.character(horizon))>1 & gt_table == "orderline"))
-)
-correct_local_by_table <- horizon_iteration_performance_by_table(
-  predictions_local %>%
-    filter(!(as.numeric(as.character(horizon))>1 & gt_table == "orderline"))
-)
 
 # Offload predictions to free up memory
 rm(predictions_local)
@@ -1194,6 +1195,26 @@ check_iterations(predictions_local)
 predictions_local_lstm <- load_parquet("analysis/data/exp-20-lstm-sorted-row-locks/predictions.parquet")
 check_iterations(predictions_local_lstm)
 
+predictions_naive_local <- load_parquet("analysis/data/exp-19-naive-sorted-row-locks/predictions.parquet")
+
+
+p <- plot_accuracy_over_time_list(
+  list(predictions_local, predictions_local_lstm, predictions_naive_local),
+  c("Local Transformer", "Local LSTM", "Local Naive Baseline")
+)
+print(p)
+
+ggsave(
+  "analysis/plots/sorted/local_transformer_lstm_naive_baseline_accuracy_over_time.pdf",
+  width = 10,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+correct_naive_local <- horizon_iteration_performance(predictions_naive_local)
+correct_naive_local_by_table <- horizon_iteration_performance_by_table(predictions_naive_local)
+
 correct_local <- horizon_iteration_performance(predictions_local)
 correct_local_by_table <- horizon_iteration_performance_by_table(predictions_local)
 
@@ -1213,7 +1234,12 @@ correct_local_no_orderline_gt_h1_by_table <- horizon_iteration_performance_by_ta
 # Offload predictions to free up memory
 rm(predictions_local)
 rm(predictions_local_lstm)
+rm(predictions_naive_local)
 gc()
+
+
+export_csv(correct_naive_local, "analysis/tables/sorted/local_naive_baseline_performance.csv")
+export_csv_by_table(correct_naive_local_by_table, "analysis/tables/sorted/local_naive_baseline_performance_by_table.csv")
 
 
 export_csv(correct_local, "analysis/tables/sorted/local_transformer_performance.csv")
@@ -1394,17 +1420,6 @@ ggsave(
   units = "in",
   dpi = 300
 )
-
-predictions_naive_local <- load_parquet("analysis/data/exp-19-naive-sorted-row-locks/predictions.parquet")
-
-correct_naive_local <- horizon_iteration_performance(predictions_naive_local)
-correct_naive_local_by_table <- horizon_iteration_performance_by_table(predictions_naive_local)
-
-rm(predictions_naive_local)
-gc()
-
-export_csv(correct_naive_local, "analysis/tables/sorted/local_naive_baseline_performance.csv")
-export_csv_by_table(correct_naive_local_by_table, "analysis/tables/sorted/local_naive_baseline_performance_by_table.csv")
 
 ggplot() +
   geom_boxplot(
@@ -2029,7 +2044,7 @@ predictions <- load_parquet("analysis/data/exp-26-tranformer-dedupe-row-locks/pr
 check_iterations(predictions)
 
 predictions_lstm <- load_parquet("analysis/data/exp-28-lstm-dedupe-row-locks/predictions.parquet")
-check_iterations(predictions_lstm)
+# check_iterations(predictions_lstm)
 
 predictions_naive <- load_parquet("analysis/data/exp-27-naive-dedupe-row-locks/predictions.parquet") %>%
   filter(data == "data/fixed/row_locks.csv")
@@ -2926,5 +2941,1926 @@ ggsave(
   units = "in",
   dpi = 300
 )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#######
+#######
+#######
+# Lets look at deduped global results:
+
+predictions <- load_parquet("analysis/data/exp-26-tranformer-dedupe-row-locks/predictions.parquet")
+check_iterations(predictions)
+
+predictions_lstm <- load_parquet("analysis/data/exp-28-lstm-dedupe-row-locks/predictions.parquet")
+# check_iterations(predictions_lstm)
+
+predictions_naive <- load_parquet("analysis/data/exp-27-naive-dedupe-row-locks/predictions.parquet") %>%
+  filter(data == "data/fixed/row_locks.csv")
+
+
+p <- plot_accuracy_over_time_list(
+  list(predictions, predictions_lstm, predictions_naive),
+  c("Global Transformer", "Global LSTM", "Global Naive Baseline")
+)
+print(p)
+
+ggsave(
+  "analysis/plots/deduped/global_transformer_lstm_naive_baseline_accuracy_over_time.pdf",
+  width = 10,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+p <- plot_accuracy_over_time(predictions)
+print(p)
+
+ggsave(
+  "analysis/plots/deduped/global_transformer_accuracy_over_time.pdf",
+  width = 10,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+p <- plot_accuracy_over_time(predictions_naive)
+print(p)
+
+ggsave(
+  "analysis/plots/deduped/global_naive_baseline_accuracy_over_time.pdf",
+  width = 10,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+
+correct <- horizon_iteration_performance(predictions)
+correct_by_table <- horizon_iteration_performance_by_table(predictions)
+
+correct_lstm <- horizon_iteration_performance(predictions_lstm)
+correct_by_table_lstm <- horizon_iteration_performance_by_table(predictions_lstm)
+
+correct_naive <- horizon_iteration_performance(predictions_naive)
+correct_naive_by_table <- horizon_iteration_performance_by_table(predictions_naive)
+
+# Offload predictions to free up memory
+rm(predictions)
+rm(predictions_lstm)
+rm(predictions_naive)
+gc()
+
+export_csv(correct, "analysis/tables/deduped/global_transformer_performance.csv")
+export_csv(correct_lstm, "analysis/tables/deduped/global_lstm_performance.csv")
+export_csv(correct_naive, "analysis/tables/deduped/global_naive_baseline_performance.csv")
+export_csv_by_table(correct_by_table, "analysis/tables/deduped/global_transformer_performance_by_table.csv")
+export_csv_by_table(correct_by_table_lstm, "analysis/tables/deduped/global_lstm_performance_by_table.csv")
+export_csv_by_table(correct_naive_by_table, "analysis/tables/deduped/global_naive_baseline_performance_by_table.csv")
+
+
+# Box plot w/ correct and scatter plot w/ correct_naive
+ggplot() +
+  geom_boxplot(
+    data = correct,
+    aes(x = horizon, y = mean_percent_correct, color = "Global Transformer"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive,
+    aes(x = horizon, y = mean_percent_correct, color = "Global Naive Baseline"),
+    size = 2
+  ) +
+  labs(
+    #    title = "Global, Transformer and Naive Baseline Performance: Horizon vs. Percent Correct",
+    x = "Horizon",
+    y = "Percent Correct",
+    color = "Legend"
+  ) +  # Ensures only one legend title
+  scale_color_manual(values = c(
+    "Global Transformer" = "black",
+    "Global Naive Baseline" = "red"
+  )) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light()
+
+ggsave(
+  "analysis/plots/deduped/global_transformer_vs_naive_baseline.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+ggplot() +
+  geom_boxplot(
+    data = correct,
+    aes(x = horizon, y = mean_percent_correct, color = "Global Transformer"),
+    alpha = 0.5
+  ) +
+  geom_boxplot(
+    data = correct_lstm,
+    aes(x = horizon, y = mean_percent_correct, color = "Global LSTM"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive,
+    aes(x = horizon, y = mean_percent_correct, color = "Global Naive Baseline"),
+    size = 2
+  ) +
+  labs(
+    #    title = "Global, Transformer and Naive Baseline Performance: Horizon vs. Percent Correct",
+    x = "Horizon",
+    y = "Percent Correct",
+    color = "Legend"
+  ) +  # Ensures only one legend title
+  scale_color_manual(values = c(
+    "Global Transformer" = "black",
+    "Global LSTM" = "blue",
+    "Global Naive Baseline" = "red"
+  )) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light()
+
+ggsave(
+  "analysis/plots/deduped/global_transformer_lstm_vs_naive_baseline.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+# Box plot w/ correct showing Global, Transformer: GT_table vs Percent Correct by Horizon
+
+ggplot() +
+  geom_boxplot(
+    data = correct_by_table,
+    aes(x = gt_table, y = mean_percent_correct, fill=horizon),
+    alpha = 0.5
+  ) +
+  labs(
+    #    title = "Global, Transformer Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    fill = "Horizon"
+  ) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light()
+
+ggsave(
+  "analysis/plots/deduped/global_transformer_by_table.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+ggplot() +
+  geom_boxplot(
+    data = correct_by_table_lstm,
+    aes(x = gt_table, y = mean_percent_correct, fill=horizon),
+    alpha = 0.5
+  ) +
+  labs(
+    #    title = "Global, LSTM Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    fill = "Horizon"
+  ) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light()
+
+ggsave(
+  "analysis/plots/deduped/global_lstm_by_table.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+ggplot() +
+  geom_boxplot(
+    data = correct_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Global Transformer"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Global Naive Baseline"),
+    size = 2,
+  ) +
+  facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
+  labs(
+    #    title = "Global, Transformer vs Naive Baseline Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    color = "Model"
+  ) +
+  scale_color_manual(values = c("Global Transformer" = "black", "Global Naive Baseline" = "red")) + # Red for scatter plot
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+ggsave(
+  "analysis/plots/deduped/global_transformer_vs_naive_baseline_by_table.pdf",
+  width = 15,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+ggplot() +
+  geom_boxplot(
+    data = correct_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Global Transformer"),
+    alpha = 0.5
+  ) +
+  geom_boxplot(
+    data = correct_by_table_lstm,
+    aes(x = gt_table, y = mean_percent_correct, color = "Global LSTM"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Global Naive Baseline"),
+    size = 2,
+  ) +
+  facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
+  labs(
+    #    title = "Global, Transformer vs Naive Baseline Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    color = "Model"
+  ) +
+  scale_color_manual(values = c(
+    "Global Transformer" = "black",
+    "Global LSTM" = "blue",
+    "Global Naive Baseline" = "red"
+  )) + # Red for scatter plot
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+ggsave(
+  "analysis/plots/deduped/global_transformer_lstm_vs_naive_baseline_by_table.pdf",
+  width = 15,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+# Lets look at deduped results for table locks
+
+predictions_table <- load_parquet("analysis/data/exp-26-tranformer-dedupe-table-locks/predictions.parquet", is_table_lock=TRUE)
+check_iterations(predictions_table)
+
+predictions_table_lstm <- load_parquet("analysis/data/exp-28-lstm-dedupe-table-locks/predictions.parquet", is_table_lock=TRUE)
+check_iterations(predictions_table_lstm)
+
+predictions_naive_table <- load_parquet("analysis/data/exp-27-naive-dedupe-table-locks/predictions.parquet", is_table_lock=TRUE) %>%
+  filter(data == "data/fixed/table_locks.csv")
+
+correct_table <- horizon_iteration_performance(predictions_table)
+correct_table_by_table <- horizon_iteration_performance_by_table(predictions_table)
+
+correct_table_lstm <- horizon_iteration_performance(predictions_table_lstm)
+correct_table_by_table_lstm <- horizon_iteration_performance_by_table(predictions_table_lstm)
+
+correct_naive_table <- horizon_iteration_performance(predictions_naive_table)
+correct_naive_table_by_table <- horizon_iteration_performance_by_table(predictions_naive_table)
+
+
+p <- plot_accuracy_over_time(predictions_table)
+print(p)
+
+ggsave(
+  "analysis/plots/deduped/table-lock_global_transformer_accuracy_over_time.pdf",
+  width = 10,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+p <- plot_accuracy_over_time(predictions_naive_table)
+print(p)
+
+ggsave(
+  "analysis/plots/deduped/table-lock_global_naive_baseline_accuracy_over_time.pdf",
+  width = 10,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+p <- plot_accuracy_over_time_list(
+  list(predictions_table, predictions_table_lstm, predictions_naive_table),
+  c("Global Transformer", "Global LSTM", "Global Naive Baseline")
+)
+print(p)
+
+ggsave(
+  "analysis/plots/deduped/table-lock_global_transformer_lstm_naive_baseline_accuracy_over_time.pdf",
+  width = 10,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+rm(predictions_table)
+rm(predictions_table_lstm)
+rm(predictions_naive_table)
+gc()
+
+export_csv(correct_table, "analysis/tables/deduped/table-lock_transformer_performance.csv")
+export_csv(correct_naive_table, "analysis/tables/deduped/table-lock_naive_baseline_performance.csv")
+export_csv(correct_table_lstm, "analysis/tables/deduped/table-lock_lstm_performance.csv")
+export_csv_by_table(correct_table_by_table, "analysis/tables/deduped/table-lock_transformer_performance_by_table.csv")
+export_csv_by_table(correct_naive_table_by_table, "analysis/tables/deduped/table-lock_naive_baseline_performance_by_table.csv")
+export_csv_by_table(correct_table_by_table_lstm, "analysis/tables/deduped/table-lock_lstm_performance_by_table.csv")
+
+
+# Box plot w/ correct and scatter plot w/ correct_naive
+ggplot() +
+  geom_boxplot(
+    data = correct_table,
+    aes(x = horizon, y = mean_percent_correct, color = "Transformer"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive_table,
+    aes(x = horizon, y = mean_percent_correct, color = "Naive Baseline"),
+    size = 2
+  ) +
+  labs(
+    #    title = "Table Lock, Transformer and Naive Baseline Performance: Horizon vs. Percent Correct",
+    x = "Horizon",
+    y = "Percent Correct",
+    color = "Legend"
+  ) +  # Ensures only one legend title
+  scale_color_manual(values = c(
+    "Transformer" = "black",
+    "Naive Baseline" = "red"
+  )) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light()
+
+ggsave(
+  "analysis/plots/deduped/table-lock_transformer_vs_naive_baseline.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+ggplot() +
+  geom_boxplot(
+    data = correct_table,
+    aes(x = horizon, y = mean_percent_correct, color = "Transformer"),
+    alpha = 0.5
+  ) +
+  geom_boxplot(
+    data = correct_table_lstm,
+    aes(x = horizon, y = mean_percent_correct, color = "LSTM"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive_table,
+    aes(x = horizon, y = mean_percent_correct, color = "Naive Baseline"),
+    size = 2
+  ) +
+  labs(
+    #    title = "Table Lock, Transformer and Naive Baseline Performance: Horizon vs. Percent Correct",
+    x = "Horizon",
+    y = "Percent Correct",
+    color = "Legend"
+  ) +  # Ensures only one legend title
+  scale_color_manual(values = c(
+    "Transformer" = "black",
+    "Naive Baseline" = "red",
+    "LSTM" = "blue"
+  )) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light()
+
+ggsave(
+  "analysis/plots/deduped/table-lock_transformer_lstm_vs_naive_baseline.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+ggplot() +
+  geom_boxplot(
+    data = correct_table_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Transformer"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive_table_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Naive Baseline"),
+    size = 2,
+  ) +
+  facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
+  labs(
+    #    title = "Table Lock, Transformer vs Naive Baseline Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    color = "Model"
+  ) +
+  scale_color_manual(values = c("Transformer" = "black", "Naive Baseline" = "red")) + # Red for scatter plot
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+ggsave(
+  "analysis/plots/deduped/table-lock_transformer_vs_naive_baseline_by_table.pdf",
+  width = 15,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+ggplot() +
+  geom_boxplot(
+    data = correct_table_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Transformer"),
+    alpha = 0.5
+  ) +
+  geom_boxplot(
+    data = correct_table_by_table_lstm,
+    aes(x = gt_table, y = mean_percent_correct, color = "LSTM"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive_table_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Naive Baseline"),
+    size = 2,
+  ) +
+  facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
+  labs(
+    #    title = "Table Lock, Transformer vs Naive Baseline Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    color = "Model"
+  ) +
+  scale_color_manual(values = c("Transformer" = "black", "Naive Baseline" = "red", "LSTM" = "blue")) + # Red for scatter plot
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+ggsave(
+  "analysis/plots/deduped/table-lock_transformer_lstm_vs_naive_baseline_by_table.pdf",
+  width = 15,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+p <- plot_precision_recall(correct_table_by_table)
+print(p)
+
+ggsave(
+  "analysis/plots/deduped/table-lock_transformer_precision_recall.pdf",
+  width = 10,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+p <- plot_precision_recall(correct_table_by_table_lstm)
+print(p)
+
+ggsave(
+  "analysis/plots/deduped/table-lock_lstm_precision_recall.pdf",
+  width = 10,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+p <- plot_precision_recall(correct_naive_table_by_table)
+print(p)
+
+ggsave(
+  "analysis/plots/deduped/table-lock_naive_baseline_precision_recall.pdf",
+  width = 10,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+# Lets looks at local for deduped
+
+# Lets load the data for local transformer models
+predictions_local <- load_parquet("analysis/data/exp-32-transformer-sorted-row-locks/predictions.parquet")
+check_iterations(predictions_local)
+
+predictions_local_lstm <- load_parquet("analysis/data/exp-31-lstm-sorted-row-locks/predictions.parquet")
+check_iterations(predictions_local_lstm)
+
+predictions_naive_local <- load_parquet("analysis/data/exp-30-naive-sorted-row-locks/predictions.parquet")
+
+
+p <- plot_accuracy_over_time_list(
+  list(predictions_local, predictions_local_lstm, predictions_naive_local),
+  c("Local Transformer", "Local LSTM", "Local Naive Baseline")
+)
+print(p)
+
+ggsave(
+  "analysis/plots/deduped/local_transformer_lstm_naive_baseline_accuracy_over_time.pdf",
+  width = 10,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+correct_naive_local <- horizon_iteration_performance(predictions_naive_local)
+correct_naive_local_by_table <- horizon_iteration_performance_by_table(predictions_naive_local)
+
+
+correct_local <- horizon_iteration_performance(predictions_local)
+correct_local_by_table <- horizon_iteration_performance_by_table(predictions_local)
+
+correct_local_lstm <- horizon_iteration_performance(predictions_local_lstm)
+correct_local_by_table_lstm <- horizon_iteration_performance_by_table(predictions_local_lstm)
+
+
+correct_local_no_orderline_gt_h1 <- horizon_iteration_performance(
+  predictions_local %>%
+    filter(!(as.numeric(as.character(horizon))>1 & gt_table == "orderline"))
+)
+correct_local_no_orderline_gt_h1_by_table <- horizon_iteration_performance_by_table(
+  predictions_local %>%
+    filter(!(as.numeric(as.character(horizon))>1 & gt_table == "orderline"))
+)
+
+# Offload predictions to free up memory
+rm(predictions_local)
+rm(predictions_local_lstm)
+rm(predictions_naive_local)
+gc()
+
+export_csv(correct_naive_local, "analysis/tables/deduped/local_naive_baseline_performance.csv")
+export_csv_by_table(correct_naive_local_by_table, "analysis/tables/deduped/local_naive_baseline_performance_by_table.csv")
+export_csv(correct_local, "analysis/tables/deduped/local_transformer_performance.csv")
+export_csv_by_table(correct_local_by_table, "analysis/tables/deduped/local_transformer_performance_by_table.csv")
+export_csv(correct_local_lstm, "analysis/tables/deduped/local_lstm_performance.csv")
+export_csv_by_table(correct_local_by_table_lstm, "analysis/tables/deduped/local_lstm_performance_by_table.csv")
+export_csv(correct_local_no_orderline_gt_h1, "analysis/tables/deduped/local_transformer_no_orderline_gt_h1_performance.csv")
+export_csv_by_table(correct_local_no_orderline_gt_h1_by_table, "analysis/tables/deduped/local_transformer_no_orderline_gt_h1_performance_by_table.csv")
+
+ggplot() +
+  geom_boxplot(
+    data = correct_local_by_table,
+    aes(x = gt_table, y = mean_percent_correct, fill=horizon),
+    alpha = 0.5
+  ) +
+  labs(
+    #    title = "Local Transformer Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    fill = "Horizon"
+  ) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light()
+
+ggsave(
+  "analysis/plots/deduped/local_transformer_by_table.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+ggplot() +
+  geom_boxplot(
+    data = correct_local_by_table_lstm,
+    aes(x = gt_table, y = mean_percent_correct, fill=horizon),
+    alpha = 0.5
+  ) +
+  labs(
+    #    title = "Local Transformer Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    fill = "Horizon"
+  ) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light()
+
+ggsave(
+  "analysis/plots/deduped/local_lstm_by_table.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+# Lets combine the Global and Local Transformer plots so that each table shows the performance of both models
+
+# Combine the data
+correct_by_table$Model <- "Global Transformer"
+correct_local_by_table$Model <- "Local Transformer"
+
+combined_correct_by_table <- bind_rows(correct_by_table, correct_local_by_table)
+
+# Plot with both Global and Local Transformer performances
+ggplot(combined_correct_by_table, aes(x = gt_table, y = mean_percent_correct, fill = Model)) +
+  geom_boxplot(alpha = 0.5) +
+  facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
+  labs(
+    #    title = "Global vs Local Transformer Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    fill = "Model"
+  ) +
+  theme_light() +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+ggsave(
+  "analysis/plots/deduped/global_vs_local_transformer_by_table.pdf",
+  width = 15,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+correct_by_table_lstm$Model <- "Global LSTM"
+correct_local_by_table_lstm$Model <- "Local LSTM"
+
+combined_correct_by_table_lstm <- bind_rows(correct_by_table_lstm, correct_local_by_table_lstm)
+
+# Plot with both Global and Local Transformer performances
+ggplot(combined_correct_by_table_lstm, aes(x = gt_table, y = mean_percent_correct, fill = Model)) +
+  geom_boxplot(alpha = 0.5) +
+  facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
+  labs(
+    #    title = "Global vs Local Transformer Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    fill = "Model"
+  ) +
+  theme_light() +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+# Lets plot local transformer vs global Naive baseline (i.e., correct_naive)
+# The plots should be Horizon vs Percent Correct, where local transformer is a box plot and global naive is a scatter plot
+
+ggplot() +
+  geom_boxplot(
+    data = correct_local,
+    aes(x = horizon, y = mean_percent_correct, color = "Local Transformer"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive,
+    aes(x = horizon, y = mean_percent_correct, color = "Global Naive Baseline"),
+    size = 2
+  ) +
+  labs(
+    #    title = "Local Transformer vs Global Naive Baseline Performance: Horizon vs. Percent Correct",
+    x = "Horizon",
+    y = "Percent Correct",
+    color = "Legend"
+  ) +  # Ensures only one legend title
+  scale_color_manual(values = c(
+    "Local Transformer" = "black",
+    "Global Naive Baseline" = "red"
+  )) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light()
+
+ggsave(
+  "analysis/plots/deduped/local_transformer_vs_global_naive_baseline.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+ggplot() +
+  geom_boxplot(
+    data = correct_local,
+    aes(x = horizon, y = mean_percent_correct, color = "Local Transformer"),
+    alpha = 0.5
+  ) +
+  geom_boxplot(
+    data = correct_local_lstm,
+    aes(x = horizon, y = mean_percent_correct, color = "Local LSTM"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive,
+    aes(x = horizon, y = mean_percent_correct, color = "Global Naive Baseline"),
+    size = 2
+  ) +
+  labs(
+    #    title = "Local Transformer vs Global Naive Baseline Performance: Horizon vs. Percent Correct",
+    x = "Horizon",
+    y = "Percent Correct",
+    color = "Legend"
+  ) +  # Ensures only one legend title
+  scale_color_manual(values = c(
+    "Local Transformer" = "black",
+    "Global Naive Baseline" = "red",
+    "Local LSTM" = "blue"
+  )) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light()
+
+ggsave(
+  "analysis/plots/deduped/local_transformer_lstm_vs_global_naive_baseline.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+ggplot() +
+  geom_boxplot(
+    data = correct_local,
+    aes(x = horizon, y = mean_percent_correct, color = "Local Transformer"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive_local,
+    aes(x = horizon, y = mean_percent_correct, color = "Local Naive Baseline"),
+    size = 2
+  ) +
+  labs(
+    #    title = "Local Transformer vs Local Naive Baseline Performance: Horizon vs. Percent Correct",
+    x = "Horizon",
+    y = "Percent Correct",
+    color = "Legend"
+  ) +  # Ensures only one legend title
+  scale_color_manual(values = c(
+    "Local Transformer" = "black",
+    "Local Naive Baseline" = "red"
+  )) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light()
+
+ggsave(
+  "analysis/plots/deduped/local_transformer_vs_local_naive_baseline.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+ggplot() +
+  geom_boxplot(
+    data = correct_local,
+    aes(x = horizon, y = mean_percent_correct, color = "Local Transformer"),
+    alpha = 0.5
+  ) +
+  geom_boxplot(
+    data = correct_local_lstm,
+    aes(x = horizon, y = mean_percent_correct, color = "Local LSTM"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive_local,
+    aes(x = horizon, y = mean_percent_correct, color = "Local Naive Baseline"),
+    size = 2
+  ) +
+  labs(
+    #    title = "Local Transformer vs Local Naive Baseline Performance: Horizon vs. Percent Correct",
+    x = "Horizon",
+    y = "Percent Correct",
+    color = "Legend"
+  ) +  # Ensures only one legend title
+  scale_color_manual(values = c(
+    "Local Transformer" = "black",
+    "Local Naive Baseline" = "red",
+    "Local LSTM" = "blue"
+  )) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light()
+
+ggsave(
+  "analysis/plots/deduped/local_transformer_lstm_vs_local_naive_baseline.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+correct_naive_local_by_table$Model <- "Local Naive Baseline"
+
+# Modify the plot: Local Transformer as a box plot, Local Naive Baseline as a scatter plot
+ggplot() +
+  geom_boxplot(
+    data = correct_local_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Local Transformer"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive_local_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Local Naive Baseline"),
+    size = 2,
+  ) +
+  facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
+  labs(
+    #    title = "Local Transformer vs Local Naive Baseline Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    color = "Model"
+  ) +
+  scale_color_manual(values = c("Local Transformer" = "black", "Local Naive Baseline" = "red")) + # Red for scatter plot
+  theme_light() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+# Save the updated plot
+ggsave(
+  "analysis/plots/deduped/local_transformer_vs_local_naive_baseline_by_table.pdf",
+  width = 15,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+ggplot() +
+  geom_boxplot(
+    data = correct_local_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Local Transformer"),
+    alpha = 0.5
+  ) +
+  geom_boxplot(
+    data = correct_local_by_table_lstm,
+    aes(x = gt_table, y = mean_percent_correct, color = "Local LSTM"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive_local_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Local Naive Baseline"),
+    size = 2,
+  ) +
+  facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
+  labs(
+    #    title = "Local Transformer vs Local Naive Baseline Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    color = "Model"
+  ) +
+  scale_color_manual(values = c(
+    "Local Transformer" = "black",
+    "Local Naive Baseline" = "red",
+    "Local LSTM" = "blue"
+  )) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+ggsave(
+  "analysis/plots/deduped/local_transformer_lstm_vs_local_naive_baseline_by_table.pdf",
+  width = 15,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#######
+#######
+#######
+# Lets look at rounded global results:
+
+predictions <- load_parquet("analysis/data/exp-33-tranformer-random-row-locks/predictions.parquet")
+check_iterations(predictions)
+
+predictions_lstm <- load_parquet("analysis/data/exp-34-lstm-random-row-locks/predictions.parquet")
+check_iterations(predictions_lstm)
+
+predictions_naive <- load_parquet("analysis/data/exp-35-naive-rounded-row-locks/predictions.parquet") %>%
+  filter(data == "data/fixed/row_locks.csv")
+
+
+p <- plot_accuracy_over_time_list(
+  list(predictions, predictions_lstm, predictions_naive),
+  c("Global Transformer", "Global LSTM", "Global Naive Baseline")
+)
+print(p)
+
+ggsave(
+  "analysis/plots/rounded/global_transformer_lstm_naive_baseline_accuracy_over_time.pdf",
+  width = 10,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+p <- plot_accuracy_over_time(predictions)
+print(p)
+
+ggsave(
+  "analysis/plots/rounded/global_transformer_accuracy_over_time.pdf",
+  width = 10,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+p <- plot_accuracy_over_time(predictions_naive)
+print(p)
+
+ggsave(
+  "analysis/plots/rounded/global_naive_baseline_accuracy_over_time.pdf",
+  width = 10,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+
+correct <- horizon_iteration_performance(predictions)
+correct_by_table <- horizon_iteration_performance_by_table(predictions)
+
+correct_lstm <- horizon_iteration_performance(predictions_lstm)
+correct_by_table_lstm <- horizon_iteration_performance_by_table(predictions_lstm)
+
+correct_naive <- horizon_iteration_performance(predictions_naive)
+correct_naive_by_table <- horizon_iteration_performance_by_table(predictions_naive)
+
+# Offload predictions to free up memory
+rm(predictions)
+rm(predictions_lstm)
+rm(predictions_naive)
+gc()
+
+export_csv(correct, "analysis/tables/rounded/global_transformer_performance.csv")
+export_csv(correct_lstm, "analysis/tables/rounded/global_lstm_performance.csv")
+export_csv(correct_naive, "analysis/tables/rounded/global_naive_baseline_performance.csv")
+export_csv_by_table(correct_by_table, "analysis/tables/rounded/global_transformer_performance_by_table.csv")
+export_csv_by_table(correct_by_table_lstm, "analysis/tables/rounded/global_lstm_performance_by_table.csv")
+export_csv_by_table(correct_naive_by_table, "analysis/tables/rounded/global_naive_baseline_performance_by_table.csv")
+
+
+# Box plot w/ correct and scatter plot w/ correct_naive
+ggplot() +
+  geom_boxplot(
+    data = correct,
+    aes(x = horizon, y = mean_percent_correct, color = "Global Transformer"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive,
+    aes(x = horizon, y = mean_percent_correct, color = "Global Naive Baseline"),
+    size = 2
+  ) +
+  labs(
+    #    title = "Global, Transformer and Naive Baseline Performance: Horizon vs. Percent Correct",
+    x = "Horizon",
+    y = "Percent Correct",
+    color = "Legend"
+  ) +  # Ensures only one legend title
+  scale_color_manual(values = c(
+    "Global Transformer" = "black",
+    "Global Naive Baseline" = "red"
+  )) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light()
+
+ggsave(
+  "analysis/plots/rounded/global_transformer_vs_naive_baseline.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+ggplot() +
+  geom_boxplot(
+    data = correct,
+    aes(x = horizon, y = mean_percent_correct, color = "Global Transformer"),
+    alpha = 0.5
+  ) +
+  geom_boxplot(
+    data = correct_lstm,
+    aes(x = horizon, y = mean_percent_correct, color = "Global LSTM"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive,
+    aes(x = horizon, y = mean_percent_correct, color = "Global Naive Baseline"),
+    size = 2
+  ) +
+  labs(
+    #    title = "Global, Transformer and Naive Baseline Performance: Horizon vs. Percent Correct",
+    x = "Horizon",
+    y = "Percent Correct",
+    color = "Legend"
+  ) +  # Ensures only one legend title
+  scale_color_manual(values = c(
+    "Global Transformer" = "black",
+    "Global LSTM" = "blue",
+    "Global Naive Baseline" = "red"
+  )) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light()
+
+ggsave(
+  "analysis/plots/rounded/global_transformer_lstm_vs_naive_baseline.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+# Box plot w/ correct showing Global, Transformer: GT_table vs Percent Correct by Horizon
+
+ggplot() +
+  geom_boxplot(
+    data = correct_by_table,
+    aes(x = gt_table, y = mean_percent_correct, fill=horizon),
+    alpha = 0.5
+  ) +
+  labs(
+    #    title = "Global, Transformer Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    fill = "Horizon"
+  ) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light()
+
+ggsave(
+  "analysis/plots/rounded/global_transformer_by_table.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+ggplot() +
+  geom_boxplot(
+    data = correct_by_table_lstm,
+    aes(x = gt_table, y = mean_percent_correct, fill=horizon),
+    alpha = 0.5
+  ) +
+  labs(
+    #    title = "Global, LSTM Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    fill = "Horizon"
+  ) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light()
+
+ggsave(
+  "analysis/plots/rounded/global_lstm_by_table.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+ggplot() +
+  geom_boxplot(
+    data = correct_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Global Transformer"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Global Naive Baseline"),
+    size = 2,
+  ) +
+  facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
+  labs(
+    #    title = "Global, Transformer vs Naive Baseline Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    color = "Model"
+  ) +
+  scale_color_manual(values = c("Global Transformer" = "black", "Global Naive Baseline" = "red")) + # Red for scatter plot
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+ggsave(
+  "analysis/plots/rounded/global_transformer_vs_naive_baseline_by_table.pdf",
+  width = 15,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+ggplot() +
+  geom_boxplot(
+    data = correct_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Global Transformer"),
+    alpha = 0.5
+  ) +
+  geom_boxplot(
+    data = correct_by_table_lstm,
+    aes(x = gt_table, y = mean_percent_correct, color = "Global LSTM"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Global Naive Baseline"),
+    size = 2,
+  ) +
+  facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
+  labs(
+    #    title = "Global, Transformer vs Naive Baseline Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    color = "Model"
+  ) +
+  scale_color_manual(values = c(
+    "Global Transformer" = "black",
+    "Global LSTM" = "blue",
+    "Global Naive Baseline" = "red"
+  )) + # Red for scatter plot
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+ggsave(
+  "analysis/plots/rounded/global_transformer_lstm_vs_naive_baseline_by_table.pdf",
+  width = 15,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+# Lets look at rounded results for table locks
+
+predictions_table <- load_parquet("analysis/data/exp-33-tranformer-random-table-locks/predictions.parquet", is_table_lock=TRUE)
+check_iterations(predictions_table)
+
+predictions_table_lstm <- load_parquet("analysis/data/exp-34-lstm-random-table-locks/predictions.parquet", is_table_lock=TRUE)
+check_iterations(predictions_table_lstm)
+
+predictions_naive_table <- load_parquet("analysis/data/exp-35-naive-rounded-table-locks/predictions.parquet", is_table_lock=TRUE) %>%
+  filter(data == "data/fixed/table_locks.csv")
+
+correct_table <- horizon_iteration_performance(predictions_table)
+correct_table_by_table <- horizon_iteration_performance_by_table(predictions_table)
+
+correct_table_lstm <- horizon_iteration_performance(predictions_table_lstm)
+correct_table_by_table_lstm <- horizon_iteration_performance_by_table(predictions_table_lstm)
+
+correct_naive_table <- horizon_iteration_performance(predictions_naive_table)
+correct_naive_table_by_table <- horizon_iteration_performance_by_table(predictions_naive_table)
+
+
+p <- plot_accuracy_over_time(predictions_table)
+print(p)
+
+ggsave(
+  "analysis/plots/rounded/table-lock_global_transformer_accuracy_over_time.pdf",
+  width = 10,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+p <- plot_accuracy_over_time(predictions_naive_table)
+print(p)
+
+ggsave(
+  "analysis/plots/rounded/table-lock_global_naive_baseline_accuracy_over_time.pdf",
+  width = 10,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+p <- plot_accuracy_over_time_list(
+  list(predictions_table, predictions_table_lstm, predictions_naive_table),
+  c("Global Transformer", "Global LSTM", "Global Naive Baseline")
+)
+print(p)
+
+ggsave(
+  "analysis/plots/rounded/table-lock_global_transformer_lstm_naive_baseline_accuracy_over_time.pdf",
+  width = 10,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+rm(predictions_table)
+rm(predictions_table_lstm)
+rm(predictions_naive_table)
+gc()
+
+export_csv(correct_table, "analysis/tables/rounded/table-lock_transformer_performance.csv")
+export_csv(correct_naive_table, "analysis/tables/rounded/table-lock_naive_baseline_performance.csv")
+export_csv(correct_table_lstm, "analysis/tables/rounded/table-lock_lstm_performance.csv")
+export_csv_by_table(correct_table_by_table, "analysis/tables/rounded/table-lock_transformer_performance_by_table.csv")
+export_csv_by_table(correct_naive_table_by_table, "analysis/tables/rounded/table-lock_naive_baseline_performance_by_table.csv")
+export_csv_by_table(correct_table_by_table_lstm, "analysis/tables/rounded/table-lock_lstm_performance_by_table.csv")
+
+
+# Box plot w/ correct and scatter plot w/ correct_naive
+ggplot() +
+  geom_boxplot(
+    data = correct_table,
+    aes(x = horizon, y = mean_percent_correct, color = "Transformer"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive_table,
+    aes(x = horizon, y = mean_percent_correct, color = "Naive Baseline"),
+    size = 2
+  ) +
+  labs(
+    #    title = "Table Lock, Transformer and Naive Baseline Performance: Horizon vs. Percent Correct",
+    x = "Horizon",
+    y = "Percent Correct",
+    color = "Legend"
+  ) +  # Ensures only one legend title
+  scale_color_manual(values = c(
+    "Transformer" = "black",
+    "Naive Baseline" = "red"
+  )) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light()
+
+ggsave(
+  "analysis/plots/rounded/table-lock_transformer_vs_naive_baseline.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+ggplot() +
+  geom_boxplot(
+    data = correct_table,
+    aes(x = horizon, y = mean_percent_correct, color = "Transformer"),
+    alpha = 0.5
+  ) +
+  geom_boxplot(
+    data = correct_table_lstm,
+    aes(x = horizon, y = mean_percent_correct, color = "LSTM"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive_table,
+    aes(x = horizon, y = mean_percent_correct, color = "Naive Baseline"),
+    size = 2
+  ) +
+  labs(
+    #    title = "Table Lock, Transformer and Naive Baseline Performance: Horizon vs. Percent Correct",
+    x = "Horizon",
+    y = "Percent Correct",
+    color = "Legend"
+  ) +  # Ensures only one legend title
+  scale_color_manual(values = c(
+    "Transformer" = "black",
+    "Naive Baseline" = "red",
+    "LSTM" = "blue"
+  )) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light()
+
+ggsave(
+  "analysis/plots/rounded/table-lock_transformer_lstm_vs_naive_baseline.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+ggplot() +
+  geom_boxplot(
+    data = correct_table_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Transformer"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive_table_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Naive Baseline"),
+    size = 2,
+  ) +
+  facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
+  labs(
+    #    title = "Table Lock, Transformer vs Naive Baseline Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    color = "Model"
+  ) +
+  scale_color_manual(values = c("Transformer" = "black", "Naive Baseline" = "red")) + # Red for scatter plot
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+ggsave(
+  "analysis/plots/rounded/table-lock_transformer_vs_naive_baseline_by_table.pdf",
+  width = 15,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+ggplot() +
+  geom_boxplot(
+    data = correct_table_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Transformer"),
+    alpha = 0.5
+  ) +
+  geom_boxplot(
+    data = correct_table_by_table_lstm,
+    aes(x = gt_table, y = mean_percent_correct, color = "LSTM"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive_table_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Naive Baseline"),
+    size = 2,
+  ) +
+  facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
+  labs(
+    #    title = "Table Lock, Transformer vs Naive Baseline Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    color = "Model"
+  ) +
+  scale_color_manual(values = c("Transformer" = "black", "Naive Baseline" = "red", "LSTM" = "blue")) + # Red for scatter plot
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+ggsave(
+  "analysis/plots/rounded/table-lock_transformer_lstm_vs_naive_baseline_by_table.pdf",
+  width = 15,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+p <- plot_precision_recall(correct_table_by_table)
+print(p)
+
+ggsave(
+  "analysis/plots/rounded/table-lock_transformer_precision_recall.pdf",
+  width = 10,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+p <- plot_precision_recall(correct_table_by_table_lstm)
+print(p)
+
+ggsave(
+  "analysis/plots/rounded/table-lock_lstm_precision_recall.pdf",
+  width = 10,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+p <- plot_precision_recall(correct_naive_table_by_table)
+print(p)
+
+ggsave(
+  "analysis/plots/rounded/table-lock_naive_baseline_precision_recall.pdf",
+  width = 10,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+# Lets looks at local for rounded
+
+# Lets load the data for local transformer models
+predictions_local <- load_parquet("analysis/data/exp-38-transformer-local-rounded/predictions.parquet")
+check_iterations(predictions_local)
+
+predictions_local_lstm <- load_parquet("analysis/data/exp-37-lstm-local-rounded/predictions.parquet")
+check_iterations(predictions_local_lstm)
+
+predictions_naive_local <- load_parquet("analysis/data/exp-36-naive-local-rounded-row-locks/predictions.parquet")
+
+
+p <- plot_accuracy_over_time_list(
+  list(predictions_local, predictions_local_lstm, predictions_naive_local),
+  c("Local Transformer", "Local LSTM", "Local Naive Baseline")
+)
+print(p)
+
+ggsave(
+  "analysis/plots/rounded/local_transformer_lstm_naive_baseline_accuracy_over_time.pdf",
+  width = 10,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+correct_naive_local <- horizon_iteration_performance(predictions_naive_local)
+correct_naive_local_by_table <- horizon_iteration_performance_by_table(predictions_naive_local)
+
+
+correct_local <- horizon_iteration_performance(predictions_local)
+correct_local_by_table <- horizon_iteration_performance_by_table(predictions_local)
+
+correct_local_lstm <- horizon_iteration_performance(predictions_local_lstm)
+correct_local_by_table_lstm <- horizon_iteration_performance_by_table(predictions_local_lstm)
+
+
+correct_local_no_orderline_gt_h1 <- horizon_iteration_performance(
+  predictions_local %>%
+    filter(!(as.numeric(as.character(horizon))>1 & gt_table == "orderline"))
+)
+correct_local_no_orderline_gt_h1_by_table <- horizon_iteration_performance_by_table(
+  predictions_local %>%
+    filter(!(as.numeric(as.character(horizon))>1 & gt_table == "orderline"))
+)
+
+# Offload predictions to free up memory
+rm(predictions_local)
+rm(predictions_local_lstm)
+rm(predictions_naive_local)
+gc()
+
+export_csv(correct_naive_local, "analysis/tables/rounded/local_naive_baseline_performance.csv")
+export_csv_by_table(correct_naive_local_by_table, "analysis/tables/rounded/local_naive_baseline_performance_by_table.csv")
+export_csv(correct_local, "analysis/tables/rounded/local_transformer_performance.csv")
+export_csv_by_table(correct_local_by_table, "analysis/tables/rounded/local_transformer_performance_by_table.csv")
+export_csv(correct_local_lstm, "analysis/tables/rounded/local_lstm_performance.csv")
+export_csv_by_table(correct_local_by_table_lstm, "analysis/tables/rounded/local_lstm_performance_by_table.csv")
+export_csv(correct_local_no_orderline_gt_h1, "analysis/tables/rounded/local_transformer_no_orderline_gt_h1_performance.csv")
+export_csv_by_table(correct_local_no_orderline_gt_h1_by_table, "analysis/tables/rounded/local_transformer_no_orderline_gt_h1_performance_by_table.csv")
+
+ggplot() +
+  geom_boxplot(
+    data = correct_local_by_table,
+    aes(x = gt_table, y = mean_percent_correct, fill=horizon),
+    alpha = 0.5
+  ) +
+  labs(
+    #    title = "Local Transformer Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    fill = "Horizon"
+  ) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light()
+
+ggsave(
+  "analysis/plots/rounded/local_transformer_by_table.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+ggplot() +
+  geom_boxplot(
+    data = correct_local_by_table_lstm,
+    aes(x = gt_table, y = mean_percent_correct, fill=horizon),
+    alpha = 0.5
+  ) +
+  labs(
+    #    title = "Local Transformer Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    fill = "Horizon"
+  ) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light()
+
+ggsave(
+  "analysis/plots/rounded/local_lstm_by_table.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+# Lets combine the Global and Local Transformer plots so that each table shows the performance of both models
+
+# Combine the data
+correct_by_table$Model <- "Global Transformer"
+correct_local_by_table$Model <- "Local Transformer"
+
+combined_correct_by_table <- bind_rows(correct_by_table, correct_local_by_table)
+
+# Plot with both Global and Local Transformer performances
+ggplot(combined_correct_by_table, aes(x = gt_table, y = mean_percent_correct, fill = Model)) +
+  geom_boxplot(alpha = 0.5) +
+  facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
+  labs(
+    #    title = "Global vs Local Transformer Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    fill = "Model"
+  ) +
+  theme_light() +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+ggsave(
+  "analysis/plots/rounded/global_vs_local_transformer_by_table.pdf",
+  width = 15,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+correct_by_table_lstm$Model <- "Global LSTM"
+correct_local_by_table_lstm$Model <- "Local LSTM"
+
+combined_correct_by_table_lstm <- bind_rows(correct_by_table_lstm, correct_local_by_table_lstm)
+
+# Plot with both Global and Local Transformer performances
+ggplot(combined_correct_by_table_lstm, aes(x = gt_table, y = mean_percent_correct, fill = Model)) +
+  geom_boxplot(alpha = 0.5) +
+  facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
+  labs(
+    #    title = "Global vs Local Transformer Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    fill = "Model"
+  ) +
+  theme_light() +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+# Lets plot local transformer vs global Naive baseline (i.e., correct_naive)
+# The plots should be Horizon vs Percent Correct, where local transformer is a box plot and global naive is a scatter plot
+
+ggplot() +
+  geom_boxplot(
+    data = correct_local,
+    aes(x = horizon, y = mean_percent_correct, color = "Local Transformer"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive,
+    aes(x = horizon, y = mean_percent_correct, color = "Global Naive Baseline"),
+    size = 2
+  ) +
+  labs(
+    #    title = "Local Transformer vs Global Naive Baseline Performance: Horizon vs. Percent Correct",
+    x = "Horizon",
+    y = "Percent Correct",
+    color = "Legend"
+  ) +  # Ensures only one legend title
+  scale_color_manual(values = c(
+    "Local Transformer" = "black",
+    "Global Naive Baseline" = "red"
+  )) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light()
+
+ggsave(
+  "analysis/plots/rounded/local_transformer_vs_global_naive_baseline.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+ggplot() +
+  geom_boxplot(
+    data = correct_local,
+    aes(x = horizon, y = mean_percent_correct, color = "Local Transformer"),
+    alpha = 0.5
+  ) +
+  geom_boxplot(
+    data = correct_local_lstm,
+    aes(x = horizon, y = mean_percent_correct, color = "Local LSTM"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive,
+    aes(x = horizon, y = mean_percent_correct, color = "Global Naive Baseline"),
+    size = 2
+  ) +
+  labs(
+    #    title = "Local Transformer vs Global Naive Baseline Performance: Horizon vs. Percent Correct",
+    x = "Horizon",
+    y = "Percent Correct",
+    color = "Legend"
+  ) +  # Ensures only one legend title
+  scale_color_manual(values = c(
+    "Local Transformer" = "black",
+    "Global Naive Baseline" = "red",
+    "Local LSTM" = "blue"
+  )) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light()
+
+ggsave(
+  "analysis/plots/rounded/local_transformer_lstm_vs_global_naive_baseline.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
+ggplot() +
+  geom_boxplot(
+    data = correct_local,
+    aes(x = horizon, y = mean_percent_correct, color = "Local Transformer"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive_local,
+    aes(x = horizon, y = mean_percent_correct, color = "Local Naive Baseline"),
+    size = 2
+  ) +
+  labs(
+    #    title = "Local Transformer vs Local Naive Baseline Performance: Horizon vs. Percent Correct",
+    x = "Horizon",
+    y = "Percent Correct",
+    color = "Legend"
+  ) +  # Ensures only one legend title
+  scale_color_manual(values = c(
+    "Local Transformer" = "black",
+    "Local Naive Baseline" = "red"
+  )) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light()
+
+ggsave(
+  "analysis/plots/rounded/local_transformer_vs_local_naive_baseline.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+ggplot() +
+  geom_boxplot(
+    data = correct_local,
+    aes(x = horizon, y = mean_percent_correct, color = "Local Transformer"),
+    alpha = 0.5
+  ) +
+  geom_boxplot(
+    data = correct_local_lstm,
+    aes(x = horizon, y = mean_percent_correct, color = "Local LSTM"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive_local,
+    aes(x = horizon, y = mean_percent_correct, color = "Local Naive Baseline"),
+    size = 2
+  ) +
+  labs(
+    #    title = "Local Transformer vs Local Naive Baseline Performance: Horizon vs. Percent Correct",
+    x = "Horizon",
+    y = "Percent Correct",
+    color = "Legend"
+  ) +  # Ensures only one legend title
+  scale_color_manual(values = c(
+    "Local Transformer" = "black",
+    "Local Naive Baseline" = "red",
+    "Local LSTM" = "blue"
+  )) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light()
+
+ggsave(
+  "analysis/plots/rounded/local_transformer_lstm_vs_local_naive_baseline.pdf",
+  width = 8,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+correct_naive_local_by_table$Model <- "Local Naive Baseline"
+
+# Modify the plot: Local Transformer as a box plot, Local Naive Baseline as a scatter plot
+ggplot() +
+  geom_boxplot(
+    data = correct_local_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Local Transformer"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive_local_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Local Naive Baseline"),
+    size = 2,
+  ) +
+  facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
+  labs(
+    #    title = "Local Transformer vs Local Naive Baseline Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    color = "Model"
+  ) +
+  scale_color_manual(values = c("Local Transformer" = "black", "Local Naive Baseline" = "red")) + # Red for scatter plot
+  theme_light() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+# Save the updated plot
+ggsave(
+  "analysis/plots/rounded/local_transformer_vs_local_naive_baseline_by_table.pdf",
+  width = 15,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+ggplot() +
+  geom_boxplot(
+    data = correct_local_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Local Transformer"),
+    alpha = 0.5
+  ) +
+  geom_boxplot(
+    data = correct_local_by_table_lstm,
+    aes(x = gt_table, y = mean_percent_correct, color = "Local LSTM"),
+    alpha = 0.5
+  ) +
+  geom_point(
+    data = correct_naive_local_by_table,
+    aes(x = gt_table, y = mean_percent_correct, color = "Local Naive Baseline"),
+    size = 2,
+  ) +
+  facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
+  labs(
+    #    title = "Local Transformer vs Local Naive Baseline Performance: Table vs. Percent Correct by Horizon",
+    x = "Table",
+    y = "Percent Correct",
+    color = "Model"
+  ) +
+  scale_color_manual(values = c(
+    "Local Transformer" = "black",
+    "Local Naive Baseline" = "red",
+    "Local LSTM" = "blue"
+  )) +
+  scale_y_continuous(limits = c(0, 1)) +
+  theme_light() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+ggsave(
+  "analysis/plots/rounded/local_transformer_lstm_vs_local_naive_baseline_by_table.pdf",
+  width = 15,
+  height = 6,
+  units = "in",
+  dpi = 300
+)
+
+
 
 
