@@ -18,7 +18,7 @@ source ~/.venv/bin/activate
 set -e  # Exit immediately if a command exits with a non-zero status
 set -o pipefail  # Ensure pipeline errors are caught
 
-experiments=("exp-33-lstm-random-row-locks" "exp-33-lstm-random-table-locks")
+experiments=("exp-34-lstm-random-row-locks" "exp-34-lstm-random-table-locks")
 
 experiment=${experiments[$SLURM_ARRAY_TASK_ID]}
 echo "Extracting $experiment"

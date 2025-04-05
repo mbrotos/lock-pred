@@ -23,8 +23,8 @@ ITERATIONS=10
 # Define experiment configurations
 declare -a configs_base=(
     # Base configurations
-    "--experiment_name exp-33-lstm-random-row-locks/char_ --data data/fixed/row_locks.csv --sort_by start_time-dedupe --rounding_bin_size 10000"
-    "--experiment_name exp-33-lstm-random-table-locks/char_ --data data/fixed/table_locks.csv --sort_by start_time-dedupe --rounding_bin_size 10000"
+    "--experiment_name exp-34-lstm-random-row-locks/char_ --data data/fixed/row_locks.csv --sort_by start_time-dedupe --rounding_bin_size 10000"
+    "--experiment_name exp-34-lstm-random-table-locks/char_ --data data/fixed/table_locks.csv --sort_by start_time-dedupe --rounding_bin_size 10000"
 )
 
 # Define the training data percentages
