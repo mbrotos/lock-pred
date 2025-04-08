@@ -42,6 +42,8 @@ def parse_args(args=None):
     parser.add_argument("--model_weights", type=str, default=None, help="Model weights to load")
     parser.add_argument("--sort_by", type=str, default=None, help="Defines how to sort the locks. If None, no sorting is done.")
     parser.add_argument("--rounding_bin_size", type=int, default=None, help="Rounding bin size for the page id. This is used to group the page ids into bins. The default is None, which means no rounding is done.")
+    parser.add_argument("--binning_method", type=str, default=None, help="Binning method to use. An option is cut, which uses the cut method. The other option is qcut, which uses the quantile method.")
+    parser.add_argument("--num_bins", type=int, default=None, help="Number of bins to use. This is used only if binning_method is not None.")
 
     parser.add_argument("--shuffle", action="store_true", default=False, help="[DEPRECATED] Shuffle entire dataset. Not recommended since we want to preserve sequence order.")
     parser.add_argument("--add_start_end_tokens", action="store_true", default=False, help="Add start and end tokens")
@@ -105,7 +107,7 @@ def main(args=None):
             sort_by=args.sort_by,
         )
     else:
-        data = load_data(
+        data, bin_edges = load_data(
             data=df.copy(),
             char_based=char_based,
             add_row_id=args.add_row_id,
@@ -114,7 +116,14 @@ def main(args=None):
             remove_system_tables=args.remove_system_tables,
             sort_by=args.sort_by,
             rounding_bin_size=args.rounding_bin_size,
+            binning_method=args.binning_method,
+            num_bins=args.num_bins,
         )
+        if bin_edges is not None:
+            edges_for_json = [(interval.left, interval.right) for interval in bin_edges]
+            # Save bin edges to a file
+            with open(os.path.join(results_folder_path, "bin_edges.json"), "w") as f:
+                json.dump(edges_for_json, f, indent=4)
 
     num_unqiue_table_names = len(data["TABNAME"].unique())
 
@@ -216,6 +225,8 @@ def main(args=None):
                 "sort_by": args.sort_by,
                 "naive_baseline": args.naive_baseline,
                 "rounding_bin_size": args.rounding_bin_size,
+                "binning_method": args.binning_method,
+                "num_bins": args.num_bins,
             } 
 
             args_hash = hashlib.sha256(json.dumps(args_dict).encode('utf-8')).hexdigest()

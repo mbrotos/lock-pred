@@ -15,7 +15,17 @@ def convert_to_iso(timestamp):
     time_part = parts[3].replace(".", ":", 2)  # Replace only first two dots in the time part
     return f"{date_part}T{time_part}" # Make sure this is UTC!
 
-def prep_columns(data, remove_system_tables, sort_by=None, table_lock=False, rounding_bin_size=None):
+def prep_columns(
+    data,
+    remove_system_tables,
+    sort_by=None,
+    table_lock=False,
+    rounding_bin_size=None, 
+    binning_method=None,
+    num_bins=None
+):
+    bin_edges = None
+    # Strip spaces from column headers
     data.columns = data.columns.str.strip()
     # Remove all trailing whitespace from TABNAME and TABSCHEMA
     # NOTE: This seems to be a problem in the table lock data.
@@ -62,19 +72,36 @@ def prep_columns(data, remove_system_tables, sort_by=None, table_lock=False, rou
         raise ValueError(f"Unknown sort_by value: {sort_by}")
     
     if rounding_bin_size is not None:
+        assert binning_method is None and num_bins is None, "If rounding_bin_size is set, binning_method and num_bins should not be set."
         data["PAGEID_unrounded"] = data["PAGEID"] # Store the original PAGEID for later use
         # floor the pagesize to the nearest bin size
         data["PAGEID"] = np.floor(data["PAGEID"].astype(float) / rounding_bin_size).astype(int).astype(str)
         assert data["PAGEID"].astype(int).max() <= 9, "PAGEID max is greater than 9. Check the range of PAGEID values, the max should be 90000."
 
-    return data
+    if binning_method is not None:
+        assert rounding_bin_size is None and num_bins is not None, "If binning_method is set, num_bins should be set and rounding_bin_size should not be set."
+        data["PAGEID_unrounded"] = data["PAGEID"]
+
+        if binning_method == "cut":
+            bins = pd.cut(data["PAGEID"], bins=num_bins)
+        elif binning_method == "qcut":
+            bins = pd.qcut(data["PAGEID"], q=num_bins)
+        else:
+            raise ValueError(f"Unknown binning method: {binning_method}")
+
+        # Create bins based on the number of bins
+        data["PAGEID"] = bins.cat.codes.astype(str)
+        
+        bin_edges = bins.cat.categories
+
+    return data, bin_edges
 
 def load_table_lock_data(
     data,
     remove_system_tables=False,
     sort_by=None
 ):
-    data = prep_columns(data, remove_system_tables, sort_by, table_lock=True)
+    data, _ = prep_columns(data, remove_system_tables, sort_by, table_lock=True)
     
     data["input"] = data["TABNAME"]
     data["output"] = data["TABNAME"]
@@ -89,9 +116,22 @@ def load_data(
     remove_system_tables=False,
     sort_by=None,
     rounding_bin_size=None,
+    binning_method=None,
+    num_bins=None,
 ):
     # Strip spaces from column headers
-    data = prep_columns(data, remove_system_tables, sort_by, table_lock=False, rounding_bin_size=rounding_bin_size)
+    data, bin_edges = prep_columns(
+        data,
+        remove_system_tables=remove_system_tables,
+        sort_by=sort_by,
+        table_lock=False,
+        rounding_bin_size=rounding_bin_size,
+        binning_method=binning_method,
+        num_bins=num_bins
+    )
+    if binning_method is None or num_bins is None:
+        assert bin_edges is None, "bin_edges should be None if binning_method or num_bins is not set."
+
     if char_based:
         data["PAGEID"] = data["PAGEID"].astype(str).apply(lambda x: " ".join(x))
         data["ROWID"] = data["ROWID"].astype(str).apply(lambda x: " ".join(x))
@@ -118,7 +158,7 @@ def load_data(
         data["TABNAME"] + " " + data["PAGEID"]
     )
 
-    return data
+    return data, bin_edges
 
 def create_sequences(data, seq_length):
     log.warning("This function is deprecated. Use create_sequences_token() instead.")
