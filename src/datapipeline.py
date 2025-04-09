@@ -83,9 +83,9 @@ def prep_columns(
         data["PAGEID_unrounded"] = data["PAGEID"]
 
         if binning_method == "cut":
-            bins = pd.cut(data["PAGEID"], bins=num_bins)
+            bins = pd.cut(data["PAGEID"], bins=num_bins, duplicates="drop")
         elif binning_method == "qcut":
-            bins = pd.qcut(data["PAGEID"], q=num_bins)
+            bins = pd.qcut(data["PAGEID"], q=num_bins, duplicates="drop")
         else:
             raise ValueError(f"Unknown binning method: {binning_method}")
 
