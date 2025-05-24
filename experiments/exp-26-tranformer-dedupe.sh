@@ -8,7 +8,7 @@
 #SBATCH --array=0-7 # NOTE: Make sure this is equal to the number of configs
 #SBATCH --time=23:59:00
 #SBATCH --mem=64G
-#SBATCH --gres=gpu:a100_3g.20gb:1
+#SBATCH --gres=gpu:a100:1
 #SBATCH --cpus-per-task=1
 #SBATCH --mail-user=adam.sorrenti@torontomu.ca
 #SBATCH --mail-type=ALL

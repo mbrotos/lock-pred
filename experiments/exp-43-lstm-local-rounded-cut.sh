@@ -21,11 +21,12 @@ module load python/3.11
 source ~/.venv/bin/activate
 
 ITERATIONS=10
+NUM_BINS=100
 
 # Define experiment configurations
 declare -a configs_base=(
     # Base configurations
-    "--experiment_name exp-43-lstm-local-rounded-cut/char_ --sort_by start_time-dedupe --binning_method cut --num_bins 10"
+    "--experiment_name exp-43-lstm-local-rounded-cut_${NUM_BINS}/char_ --sort_by start_time-dedupe --binning_method cut --num_bins ${NUM_BINS}"
 )
 
 declare -a horizons=(1 2 3 4)

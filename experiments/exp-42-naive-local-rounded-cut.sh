@@ -20,11 +20,12 @@ module load python/3.11
 source ~/.venv/bin/activate
 
 ITERATIONS=1
+NUM_BINS=100
 
 # Define experiment configurations
 declare -a configs_base=(
     # Base configurations
-    "--experiment_name exp-42-naive-local-rounded-cut-row-locks/char_ --sort_by start_time-dedupe --naive_baseline  --binning_method cut --num_bins 10"
+    "--experiment_name exp-42-naive-local-rounded-cut-row-locks_${NUM_BINS}/char_ --sort_by start_time-dedupe --naive_baseline  --binning_method cut --num_bins ${NUM_BINS} --disable_cache"
 )
 
 declare -a horizons=(1 2 3 4)

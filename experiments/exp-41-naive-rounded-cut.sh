@@ -18,12 +18,13 @@ module load python/3.11
 source ~/.venv/bin/activate
 
 ITERATIONS=1
+NUM_BINS=100
 
 # Define experiment configurations
 declare -a configs_base=(
     # Base configurations
-    "--experiment_name exp-41-naive-rounded-cut-row-locks/char_ --data data/fixed/row_locks.csv --sort_by start_time-dedupe --naive_baseline --binning_method cut --num_bins 10"
-    "--experiment_name exp-41-naive-rounded-cut-table-locks/char_ --data data/fixed/table_locks.csv --sort_by start_time-dedupe --naive_baseline --binning_method cut --num_bins 10"
+    "--experiment_name exp-41-naive-rounded-cut-row-locks_${NUM_BINS}/char_ --data data/fixed/row_locks.csv --sort_by start_time-dedupe --naive_baseline --binning_method cut --num_bins ${NUM_BINS} --disable_cache"
+    "--experiment_name exp-41-naive-rounded-cut-table-locks_${NUM_BINS}/char_ --data data/fixed/table_locks.csv --sort_by start_time-dedupe --naive_baseline --binning_method cut --num_bins ${NUM_BINS} --disable_cache"
 )
 
 # Define the training data percentages
