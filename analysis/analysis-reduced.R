@@ -298,12 +298,12 @@ plot_accuracy_over_time_list <- function(dfs, df_names, num_bins = 40) {
     labs(
       x = "Relative Lock End Time (nanoseconds)",
       y = "Percent Correct",
-      color = "Model"
+      color = "Model" # Changed from "Dataset" to "Model" to match other plots if this was intended
     ) +
     scale_x_continuous(labels = scales::scientific) +
     scale_y_continuous(limits = c(0, 1)) +
     theme_light() +
-    theme(legend.position = "top") # Added legend position
+    theme(legend.position = "top") 
   
   return(p)
 }
@@ -322,8 +322,8 @@ save_plot <- function(plot_object, file_path, width = 8, height = 6, units = "in
   print(paste("Saved plot to:", file_path))
 }
 
-construct_output_path <- function(base_folder, # e.g., "analysis/plots" or "analysis/tables"
-                                  experiment_subdir, # e.g., "cut" or "cut-100"
+construct_output_path <- function(base_folder, 
+                                  experiment_subdir, 
                                   filename) {
   dir_path <- file.path(base_folder, experiment_subdir)
   if (!dir.exists(dir_path)) {
@@ -359,7 +359,7 @@ plot_horizon_performance_2_models <- function(data_model1, name_model1, data_mod
     scale_color_manual(values = setNames(c(color_model1, color_model2), c(name_model1, name_model2))) +
     scale_y_continuous(limits = c(0, 1)) +
     theme_light() +
-    theme(legend.position = "top") # Added legend position
+    theme(legend.position = "top") 
   
   save_plot(p, file_path, width = base_width, height = base_height)
 }
@@ -392,7 +392,7 @@ plot_horizon_performance_3_models <- function(data_model1, name_model1, data_mod
     scale_color_manual(values = setNames(c(color_model1, color_model2, color_model3), c(name_model1, name_model2, name_model3))) +
     scale_y_continuous(limits = c(0, 1)) +
     theme_light() +
-    theme(legend.position = "top") # Added legend position
+    theme(legend.position = "top") 
   
   save_plot(p, file_path, width = base_width, height = base_height)
 }
@@ -408,7 +408,7 @@ plot_single_model_performance_by_table <- function(data_model_by_table, file_pat
     ) +
     scale_y_continuous(limits = c(0, 1)) +
     theme_light() +
-    theme(legend.position = "top") # Added legend position
+    theme(legend.position = "top") 
   
   save_plot(p, file_path, width = base_width, height = base_height)
 }
@@ -437,7 +437,7 @@ plot_table_performance_faceted_2_models <- function(data_model1_by_table, name_m
     scale_color_manual(values = setNames(c(color_model1, color_model2), c(name_model1, name_model2))) +
     scale_y_continuous(limits = c(0, 1)) +
     theme_light() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "top") # Added legend position
+    theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "top") 
   
   save_plot(p, file_path, width = base_width, height = base_height)
 }
@@ -471,13 +471,13 @@ plot_table_performance_faceted_3_models <- function(data_model1_by_table, name_m
     scale_color_manual(values = setNames(c(color_model1, color_model2, color_model3), c(name_model1, name_model2, name_model3))) +
     scale_y_continuous(limits = c(0, 1)) +
     theme_light() +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "top") # Added legend position
+    theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "top") 
   
   save_plot(p, file_path, width = base_width, height = base_height)
 }
 
 generate_and_save_precision_recall_plot <- function(data_model_by_table, file_path, base_width = 10, base_height = 6) {
-  p <- plot_precision_recall(data_model_by_table) # plot_precision_recall already has legend.position = "top"
+  p <- plot_precision_recall(data_model_by_table) 
   save_plot(p, file_path, width = base_width, height = base_height)
 }
 
@@ -499,7 +499,7 @@ plot_comparison_by_table_faceted <- function(data_model1_by_table, name_model1, 
     ) +
     theme_light() +
     scale_y_continuous(limits = c(0, 1)) +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "top") # Added legend position
+    theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "top") 
   
   save_plot(p, file_path, width = base_width, height = base_height)
 }
@@ -511,196 +511,246 @@ plot_comparison_by_table_faceted <- function(data_model1_by_table, name_model1, 
 message("--- Starting 'cut' Experiment Analysis ---")
 experiment_subdir_cut <- "cut"
 
-predictions <- load_parquet("analysis/data/exp-39-tranformer-rounded-cut-row-locks/predictions.parquet")
-check_iterations(predictions)
+predictions_global_tf <- load_parquet("analysis/data/exp-39-tranformer-rounded-cut-row-locks/predictions.parquet")
+check_iterations(predictions_global_tf)
 
-predictions_lstm <- load_parquet("analysis/data/exp-40-lstm-rounded-cut-row-locks/predictions.parquet")
-check_iterations(predictions_lstm)
+predictions_global_lstm <- load_parquet("analysis/data/exp-40-lstm-rounded-cut-row-locks/predictions.parquet")
+check_iterations(predictions_global_lstm)
 
-predictions_naive <- load_parquet("analysis/data/exp-41-naive-rounded-cut-row-locks/predictions.parquet") %>%
+predictions_global_naive <- load_parquet("analysis/data/exp-41-naive-rounded-cut-row-locks/predictions.parquet") %>%
   filter(data == "data/fixed/row_locks.csv")
 
 # Accuracy over time plots
 p_global_acc_time <- plot_accuracy_over_time_list(
-  list(predictions, predictions_lstm, predictions_naive),
+  list(predictions_global_tf, predictions_global_lstm, predictions_global_naive),
   c("Global Transformer", "Global LSTM", "Global Naive Baseline")
 )
 save_plot(p_global_acc_time, 
           construct_output_path("analysis/plots", experiment_subdir_cut, "global_transformer_lstm_naive_baseline_accuracy_over_time.pdf"), 
           width = 10, height = 6)
 
-p_transformer_acc_time <- plot_accuracy_over_time(predictions)
+p_transformer_acc_time <- plot_accuracy_over_time(predictions_global_tf)
 save_plot(p_transformer_acc_time, 
           construct_output_path("analysis/plots", experiment_subdir_cut, "global_transformer_accuracy_over_time.pdf"), 
           width = 10, height = 6)
 
-p_naive_acc_time <- plot_accuracy_over_time(predictions_naive)
+p_naive_acc_time <- plot_accuracy_over_time(predictions_global_naive)
 save_plot(p_naive_acc_time, 
           construct_output_path("analysis/plots", experiment_subdir_cut, "global_naive_baseline_accuracy_over_time.pdf"), 
           width = 10, height = 6)
 
 # Performance metrics
-correct <- horizon_iteration_performance(predictions)
-correct_by_table <- horizon_iteration_performance_by_table(predictions)
-correct_lstm <- horizon_iteration_performance(predictions_lstm)
-correct_by_table_lstm <- horizon_iteration_performance_by_table(predictions_lstm)
-correct_naive <- horizon_iteration_performance(predictions_naive)
-correct_naive_by_table <- horizon_iteration_performance_by_table(predictions_naive)
+correct_global_tf <- horizon_iteration_performance(predictions_global_tf)
+results_global_tf_by_table <- horizon_iteration_performance_by_table(predictions_global_tf)
+correct_global_tf_by_table <- results_global_tf_by_table$performance_metrics
+conf_counts_global_tf <- results_global_tf_by_table$confusion_matrix_counts
 
-rm(predictions, predictions_lstm, predictions_naive); gc()
+correct_global_lstm <- horizon_iteration_performance(predictions_global_lstm)
+results_global_lstm_by_table <- horizon_iteration_performance_by_table(predictions_global_lstm)
+correct_global_lstm_by_table <- results_global_lstm_by_table$performance_metrics
+conf_counts_global_lstm <- results_global_lstm_by_table$confusion_matrix_counts
+
+correct_global_naive <- horizon_iteration_performance(predictions_global_naive)
+results_global_naive_by_table <- horizon_iteration_performance_by_table(predictions_global_naive)
+correct_global_naive_by_table <- results_global_naive_by_table$performance_metrics
+conf_counts_global_naive <- results_global_naive_by_table$confusion_matrix_counts
+
+rm(predictions_global_tf, predictions_global_lstm, predictions_global_naive); gc()
 
 # Export CSVs
-export_csv(correct, construct_output_path("analysis/tables", experiment_subdir_cut, "global_transformer_performance.csv"))
-export_csv(correct_lstm, construct_output_path("analysis/tables", experiment_subdir_cut, "global_lstm_performance.csv"))
-export_csv(correct_naive, construct_output_path("analysis/tables", experiment_subdir_cut, "global_naive_baseline_performance.csv"))
-export_csv_by_table(correct_by_table, construct_output_path("analysis/tables", experiment_subdir_cut, "global_transformer_performance_by_table.csv"))
-export_csv_by_table(correct_by_table_lstm, construct_output_path("analysis/tables", experiment_subdir_cut, "global_lstm_performance_by_table.csv"))
-export_csv_by_table(correct_naive_by_table, construct_output_path("analysis/tables", experiment_subdir_cut, "global_naive_baseline_performance_by_table.csv"))
+export_csv(correct_global_tf, construct_output_path("analysis/tables", experiment_subdir_cut, "global_transformer_performance.csv"))
+export_csv(correct_global_lstm, construct_output_path("analysis/tables", experiment_subdir_cut, "global_lstm_performance.csv"))
+export_csv(correct_global_naive, construct_output_path("analysis/tables", experiment_subdir_cut, "global_naive_baseline_performance.csv"))
+
+export_csv_by_table(correct_global_tf_by_table, construct_output_path("analysis/tables", experiment_subdir_cut, "global_transformer_performance_by_table.csv"))
+write_csv(conf_counts_global_tf, construct_output_path("analysis/tables", experiment_subdir_cut, "global_transformer_confusion_counts.csv"))
+
+export_csv_by_table(correct_global_lstm_by_table, construct_output_path("analysis/tables", experiment_subdir_cut, "global_lstm_performance_by_table.csv"))
+write_csv(conf_counts_global_lstm, construct_output_path("analysis/tables", experiment_subdir_cut, "global_lstm_confusion_counts.csv"))
+
+export_csv_by_table(correct_global_naive_by_table, construct_output_path("analysis/tables", experiment_subdir_cut, "global_naive_baseline_performance_by_table.csv"))
+write_csv(conf_counts_global_naive, construct_output_path("analysis/tables", experiment_subdir_cut, "global_naive_baseline_confusion_counts.csv"))
+
 
 # Plots: Horizon Performance
-plot_horizon_performance_2_models(correct, "Global Transformer", correct_naive, "Global Naive Baseline",
+plot_horizon_performance_2_models(correct_global_tf, "Global Transformer", correct_global_naive, "Global Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "global_transformer_vs_naive_baseline.pdf"))
-plot_horizon_performance_3_models(correct, "Global Transformer", correct_lstm, "Global LSTM", correct_naive, "Global Naive Baseline",
+plot_horizon_performance_3_models(correct_global_tf, "Global Transformer", correct_global_lstm, "Global LSTM", correct_global_naive, "Global Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "global_transformer_lstm_vs_naive_baseline.pdf"))
 
 # Plots: Single Model Performance by Table
-plot_single_model_performance_by_table(correct_by_table,
+plot_single_model_performance_by_table(correct_global_tf_by_table,
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "global_transformer_by_table.pdf"))
-plot_single_model_performance_by_table(correct_by_table_lstm,
+plot_single_model_performance_by_table(correct_global_lstm_by_table,
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "global_lstm_by_table.pdf"))
 
 # Plots: Table Performance Faceted
-plot_table_performance_faceted_2_models(correct_by_table, "Global Transformer", correct_naive_by_table, "Global Naive Baseline",
+plot_table_performance_faceted_2_models(correct_global_tf_by_table, "Global Transformer", correct_global_naive_by_table, "Global Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "global_transformer_vs_naive_baseline_by_table.pdf"))
-plot_table_performance_faceted_3_models(correct_by_table, "Global Transformer", correct_by_table_lstm, "Global LSTM", correct_naive_by_table, "Global Naive Baseline",
+plot_table_performance_faceted_3_models(correct_global_tf_by_table, "Global Transformer", correct_global_lstm_by_table, "Global LSTM", correct_global_naive_by_table, "Global Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "global_transformer_lstm_vs_naive_baseline_by_table.pdf"))
 
 # Lets look at cut results for table locks
-predictions_table <- load_parquet("analysis/data/exp-39-tranformer-rounded-cut-table-locks/predictions.parquet", is_table_lock=TRUE)
-check_iterations(predictions_table)
-predictions_table_lstm <- load_parquet("analysis/data/exp-40-lstm-rounded-cut-table-locks/predictions.parquet", is_table_lock=TRUE)
-check_iterations(predictions_table_lstm)
-predictions_naive_table <- load_parquet("analysis/data/exp-41-naive-rounded-cut-table-locks/predictions.parquet", is_table_lock=TRUE) %>%
+predictions_tl_tf <- load_parquet("analysis/data/exp-39-tranformer-rounded-cut-table-locks/predictions.parquet", is_table_lock=TRUE)
+check_iterations(predictions_tl_tf)
+predictions_tl_lstm <- load_parquet("analysis/data/exp-40-lstm-rounded-cut-table-locks/predictions.parquet", is_table_lock=TRUE)
+check_iterations(predictions_tl_lstm)
+predictions_tl_naive <- load_parquet("analysis/data/exp-41-naive-rounded-cut-table-locks/predictions.parquet", is_table_lock=TRUE) %>%
   filter(data == "data/fixed/table_locks.csv")
 
-correct_table <- horizon_iteration_performance(predictions_table)
-correct_table_by_table <- horizon_iteration_performance_by_table(predictions_table)
-correct_table_lstm <- horizon_iteration_performance(predictions_table_lstm)
-correct_table_by_table_lstm <- horizon_iteration_performance_by_table(predictions_table_lstm)
-correct_naive_table <- horizon_iteration_performance(predictions_naive_table)
-correct_naive_table_by_table <- horizon_iteration_performance_by_table(predictions_naive_table)
+correct_tl_tf_overall <- horizon_iteration_performance(predictions_tl_tf)
+results_tl_tf_by_table <- horizon_iteration_performance_by_table(predictions_tl_tf)
+correct_tl_tf_by_table <- results_tl_tf_by_table$performance_metrics
+conf_counts_tl_tf <- results_tl_tf_by_table$confusion_matrix_counts
+
+correct_tl_lstm_overall <- horizon_iteration_performance(predictions_tl_lstm)
+results_tl_lstm_by_table <- horizon_iteration_performance_by_table(predictions_tl_lstm)
+correct_tl_lstm_by_table <- results_tl_lstm_by_table$performance_metrics
+conf_counts_tl_lstm <- results_tl_lstm_by_table$confusion_matrix_counts
+
+correct_tl_naive_overall <- horizon_iteration_performance(predictions_tl_naive)
+results_tl_naive_by_table <- horizon_iteration_performance_by_table(predictions_tl_naive)
+correct_tl_naive_by_table <- results_tl_naive_by_table$performance_metrics
+conf_counts_tl_naive <- results_tl_naive_by_table$confusion_matrix_counts
 
 # Accuracy over time plots for table locks
-p_table_acc_time <- plot_accuracy_over_time(predictions_table)
+p_table_acc_time <- plot_accuracy_over_time(predictions_tl_tf)
 save_plot(p_table_acc_time, 
           construct_output_path("analysis/plots", experiment_subdir_cut, "table-lock_global_transformer_accuracy_over_time.pdf"), 
           width = 10, height = 6)
-p_naive_table_acc_time <- plot_accuracy_over_time(predictions_naive_table)
+p_naive_table_acc_time <- plot_accuracy_over_time(predictions_tl_naive)
 save_plot(p_naive_table_acc_time, 
           construct_output_path("analysis/plots", experiment_subdir_cut, "table-lock_global_naive_baseline_accuracy_over_time.pdf"), 
           width = 10, height = 6)
 p_table_all_acc_time <- plot_accuracy_over_time_list(
-  list(predictions_table, predictions_table_lstm, predictions_naive_table),
-  c("Global Transformer", "Global LSTM", "Global Naive Baseline") # Model names for legend
+  list(predictions_tl_tf, predictions_tl_lstm, predictions_tl_naive),
+  c("Global Transformer", "Global LSTM", "Global Naive Baseline") 
 )
 save_plot(p_table_all_acc_time, 
           construct_output_path("analysis/plots", experiment_subdir_cut, "table-lock_global_transformer_lstm_naive_baseline_accuracy_over_time.pdf"), 
           width = 10, height = 6)
 
-rm(predictions_table, predictions_table_lstm, predictions_naive_table); gc()
+rm(predictions_tl_tf, predictions_tl_lstm, predictions_tl_naive); gc()
 
 # Export CSVs for table locks
-export_csv(correct_table, construct_output_path("analysis/tables", experiment_subdir_cut, "table-lock_transformer_performance.csv"))
-export_csv(correct_table_lstm, construct_output_path("analysis/tables", experiment_subdir_cut, "table-lock_lstm_performance.csv"))
-export_csv(correct_naive_table, construct_output_path("analysis/tables", experiment_subdir_cut, "table-lock_naive_baseline_performance.csv"))
-export_csv_by_table(correct_table_by_table, construct_output_path("analysis/tables", experiment_subdir_cut, "table-lock_transformer_performance_by_table.csv"))
-export_csv_by_table(correct_table_by_table_lstm, construct_output_path("analysis/tables", experiment_subdir_cut, "table-lock_lstm_performance_by_table.csv"))
-export_csv_by_table(correct_naive_table_by_table, construct_output_path("analysis/tables", experiment_subdir_cut, "table-lock_naive_baseline_performance_by_table.csv"))
+export_csv(correct_tl_tf_overall, construct_output_path("analysis/tables", experiment_subdir_cut, "table-lock_transformer_performance.csv"))
+export_csv(correct_tl_lstm_overall, construct_output_path("analysis/tables", experiment_subdir_cut, "table-lock_lstm_performance.csv"))
+export_csv(correct_tl_naive_overall, construct_output_path("analysis/tables", experiment_subdir_cut, "table-lock_naive_baseline_performance.csv"))
+
+export_csv_by_table(correct_tl_tf_by_table, construct_output_path("analysis/tables", experiment_subdir_cut, "table-lock_transformer_performance_by_table.csv"))
+write_csv(conf_counts_tl_tf, construct_output_path("analysis/tables", experiment_subdir_cut, "table-lock_transformer_confusion_counts.csv"))
+
+export_csv_by_table(correct_tl_lstm_by_table, construct_output_path("analysis/tables", experiment_subdir_cut, "table-lock_lstm_performance_by_table.csv"))
+write_csv(conf_counts_tl_lstm, construct_output_path("analysis/tables", experiment_subdir_cut, "table-lock_lstm_confusion_counts.csv"))
+
+export_csv_by_table(correct_tl_naive_by_table, construct_output_path("analysis/tables", experiment_subdir_cut, "table-lock_naive_baseline_performance_by_table.csv"))
+write_csv(conf_counts_tl_naive, construct_output_path("analysis/tables", experiment_subdir_cut, "table-lock_naive_baseline_confusion_counts.csv"))
 
 # Plots for table locks
-plot_horizon_performance_2_models(correct_table, "Transformer", correct_naive_table, "Naive Baseline",
+plot_horizon_performance_2_models(correct_tl_tf_overall, "Transformer", correct_tl_naive_overall, "Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "table-lock_transformer_vs_naive_baseline.pdf"))
-plot_horizon_performance_3_models(correct_table, "Transformer", correct_table_lstm, "LSTM", correct_naive_table, "Naive Baseline",
+plot_horizon_performance_3_models(correct_tl_tf_overall, "Transformer", correct_tl_lstm_overall, "LSTM", correct_tl_naive_overall, "Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "table-lock_transformer_lstm_vs_naive_baseline.pdf"))
-plot_table_performance_faceted_2_models(correct_table_by_table, "Transformer", correct_naive_table_by_table, "Naive Baseline",
+
+plot_table_performance_faceted_2_models(correct_tl_tf_by_table, "Transformer", correct_tl_naive_by_table, "Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "table-lock_transformer_vs_naive_baseline_by_table.pdf"))
-plot_table_performance_faceted_3_models(correct_table_by_table, "Transformer", correct_table_by_table_lstm, "LSTM", correct_naive_table_by_table, "Naive Baseline",
+plot_table_performance_faceted_3_models(correct_tl_tf_by_table, "Transformer", correct_tl_lstm_by_table, "LSTM", correct_tl_naive_by_table, "Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "table-lock_transformer_lstm_vs_naive_baseline_by_table.pdf"))
 
 # Precision/Recall plots for table locks
-generate_and_save_precision_recall_plot(correct_table_by_table,
+generate_and_save_precision_recall_plot(correct_tl_tf_by_table,
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "table-lock_transformer_precision_recall.pdf"))
-generate_and_save_precision_recall_plot(correct_table_by_table_lstm,
+generate_and_save_precision_recall_plot(correct_tl_lstm_by_table,
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "table-lock_lstm_precision_recall.pdf"))
-generate_and_save_precision_recall_plot(correct_naive_table_by_table,
+generate_and_save_precision_recall_plot(correct_tl_naive_by_table,
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "table-lock_naive_baseline_precision_recall.pdf"))
 
 # Lets look at local for cut
-predictions_local <- load_parquet("analysis/data/exp-44-transformer-local-rounded-cut/predictions.parquet")
-check_iterations(predictions_local)
+predictions_local_tf <- load_parquet("analysis/data/exp-44-transformer-local-rounded-cut/predictions.parquet")
+check_iterations(predictions_local_tf)
 predictions_local_lstm <- load_parquet("analysis/data/exp-43-lstm-local-rounded-cut/predictions.parquet")
 check_iterations(predictions_local_lstm)
-predictions_naive_local <- load_parquet("analysis/data/exp-42-naive-local-rounded-cut-row-locks/predictions.parquet")
+predictions_local_naive_raw <- load_parquet("analysis/data/exp-42-naive-local-rounded-cut-row-locks/predictions.parquet")
 
 # Accuracy over time for local models
 p_local_acc_time <- plot_accuracy_over_time_list(
-  list(predictions_local, predictions_local_lstm, predictions_naive_local),
+  list(predictions_local_tf, predictions_local_lstm, predictions_local_naive_raw),
   c("Local Transformer", "Local LSTM", "Local Naive Baseline")
 )
 save_plot(p_local_acc_time, 
           construct_output_path("analysis/plots", experiment_subdir_cut, "local_transformer_lstm_naive_baseline_accuracy_over_time.pdf"), 
           width = 10, height = 6)
 
-correct_local <- horizon_iteration_performance(predictions_local)
-correct_local_by_table <- horizon_iteration_performance_by_table(predictions_local)
-correct_local_lstm <- horizon_iteration_performance(predictions_local_lstm)
-correct_local_by_table_lstm <- horizon_iteration_performance_by_table(predictions_local_lstm)
-correct_naive_local <- horizon_iteration_performance(predictions_naive_local) 
-correct_naive_local_by_table <- horizon_iteration_performance_by_table(predictions_naive_local)
+correct_local_tf_overall <- horizon_iteration_performance(predictions_local_tf)
+results_local_tf_by_table <- horizon_iteration_performance_by_table(predictions_local_tf)
+correct_local_tf_by_table <- results_local_tf_by_table$performance_metrics
+conf_counts_local_tf <- results_local_tf_by_table$confusion_matrix_counts
 
-correct_local_no_orderline_gt_h1 <- horizon_iteration_performance(
-  predictions_local %>% filter(!(as.numeric(as.character(horizon))>1 & gt_table == "orderline")))
-correct_local_no_orderline_gt_h1_by_table <- horizon_iteration_performance_by_table(
-  predictions_local %>% filter(!(as.numeric(as.character(horizon))>1 & gt_table == "orderline")))
+correct_local_lstm_overall <- horizon_iteration_performance(predictions_local_lstm)
+results_local_lstm_by_table <- horizon_iteration_performance_by_table(predictions_local_lstm)
+correct_local_lstm_by_table <- results_local_lstm_by_table$performance_metrics
+conf_counts_local_lstm <- results_local_lstm_by_table$confusion_matrix_counts
 
-rm(predictions_local, predictions_local_lstm, predictions_naive_local); gc()
+correct_local_naive_overall <- horizon_iteration_performance(predictions_local_naive_raw) 
+results_local_naive_by_table <- horizon_iteration_performance_by_table(predictions_local_naive_raw)
+correct_local_naive_by_table <- results_local_naive_by_table$performance_metrics
+conf_counts_local_naive <- results_local_naive_by_table$confusion_matrix_counts
+
+correct_local_tf_no_orderline_gt_h1_overall <- horizon_iteration_performance(
+  predictions_local_tf %>% filter(!(as.numeric(as.character(horizon))>1 & gt_table == "orderline")))
+predictions_local_tf_filtered_no_ol <- predictions_local_tf %>% 
+                                          filter(!(as.numeric(as.character(horizon))>1 & gt_table == "orderline"))
+results_local_tf_no_ol_by_table <- horizon_iteration_performance_by_table(predictions_local_tf_filtered_no_ol)
+correct_local_tf_no_orderline_gt_h1_by_table <- results_local_tf_no_ol_by_table$performance_metrics
+conf_counts_local_tf_no_orderline_gt_h1 <- results_local_tf_no_ol_by_table$confusion_matrix_counts
+
+rm(predictions_local_tf, predictions_local_lstm, predictions_local_naive_raw, predictions_local_tf_filtered_no_ol); gc()
 
 # Export CSVs for local models
-export_csv(correct_local, construct_output_path("analysis/tables", experiment_subdir_cut, "local_transformer_performance.csv"))
-export_csv(correct_local_lstm, construct_output_path("analysis/tables", experiment_subdir_cut, "local_lstm_performance.csv"))
-export_csv(correct_naive_local, construct_output_path("analysis/tables", experiment_subdir_cut, "local_naive_baseline_performance.csv"))
-export_csv_by_table(correct_local_by_table, construct_output_path("analysis/tables", experiment_subdir_cut, "local_transformer_performance_by_table.csv"))
-export_csv_by_table(correct_local_by_table_lstm, construct_output_path("analysis/tables", experiment_subdir_cut, "local_lstm_performance_by_table.csv"))
-export_csv_by_table(correct_naive_local_by_table, construct_output_path("analysis/tables", experiment_subdir_cut, "local_naive_baseline_performance_by_table.csv"))
-export_csv(correct_local_no_orderline_gt_h1, construct_output_path("analysis/tables", experiment_subdir_cut, "local_transformer_no_orderline_gt_h1_performance.csv"))
-export_csv_by_table(correct_local_no_orderline_gt_h1_by_table, construct_output_path("analysis/tables", experiment_subdir_cut, "local_transformer_no_orderline_gt_h1_performance_by_table.csv"))
+export_csv(correct_local_tf_overall, construct_output_path("analysis/tables", experiment_subdir_cut, "local_transformer_performance.csv"))
+export_csv(correct_local_lstm_overall, construct_output_path("analysis/tables", experiment_subdir_cut, "local_lstm_performance.csv"))
+export_csv(correct_local_naive_overall, construct_output_path("analysis/tables", experiment_subdir_cut, "local_naive_baseline_performance.csv"))
+
+export_csv_by_table(correct_local_tf_by_table, construct_output_path("analysis/tables", experiment_subdir_cut, "local_transformer_performance_by_table.csv"))
+write_csv(conf_counts_local_tf, construct_output_path("analysis/tables", experiment_subdir_cut, "local_transformer_confusion_counts.csv"))
+
+export_csv_by_table(correct_local_lstm_by_table, construct_output_path("analysis/tables", experiment_subdir_cut, "local_lstm_performance_by_table.csv"))
+write_csv(conf_counts_local_lstm, construct_output_path("analysis/tables", experiment_subdir_cut, "local_lstm_confusion_counts.csv"))
+
+export_csv_by_table(correct_local_naive_by_table, construct_output_path("analysis/tables", experiment_subdir_cut, "local_naive_baseline_performance_by_table.csv"))
+write_csv(conf_counts_local_naive, construct_output_path("analysis/tables", experiment_subdir_cut, "local_naive_baseline_confusion_counts.csv"))
+
+export_csv(correct_local_tf_no_orderline_gt_h1_overall, construct_output_path("analysis/tables", experiment_subdir_cut, "local_transformer_no_orderline_gt_h1_performance.csv"))
+export_csv_by_table(correct_local_tf_no_orderline_gt_h1_by_table, construct_output_path("analysis/tables", experiment_subdir_cut, "local_transformer_no_orderline_gt_h1_performance_by_table.csv"))
+write_csv(conf_counts_local_tf_no_orderline_gt_h1, construct_output_path("analysis/tables", experiment_subdir_cut, "local_transformer_no_orderline_gt_h1_confusion_counts.csv"))
 
 # Plots for local models
-plot_single_model_performance_by_table(correct_local_by_table,
+plot_single_model_performance_by_table(correct_local_tf_by_table,
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "local_transformer_by_table.pdf"))
-plot_single_model_performance_by_table(correct_local_by_table_lstm,
+plot_single_model_performance_by_table(correct_local_lstm_by_table,
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "local_lstm_by_table.pdf"))
 
-# Global vs Local comparison
-plot_comparison_by_table_faceted(correct_by_table, "Global Transformer", correct_local_by_table, "Local Transformer",
+# Global vs Local comparison (uses correct_global_tf_by_table and correct_global_lstm_by_table from the global section of "cut")
+plot_comparison_by_table_faceted(correct_global_tf_by_table, "Global Transformer", correct_local_tf_by_table, "Local Transformer",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "global_vs_local_transformer_by_table.pdf"))
-plot_comparison_by_table_faceted(correct_by_table_lstm, "Global LSTM", correct_local_by_table_lstm, "Local LSTM",
+plot_comparison_by_table_faceted(correct_global_lstm_by_table, "Global LSTM", correct_local_lstm_by_table, "Local LSTM",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "global_vs_local_lstm_by_table.pdf")) 
 
-# Local Transformer vs Global Naive Baseline (correct_naive is the global one from earlier in "cut" section)
-plot_horizon_performance_2_models(correct_local, "Local Transformer", correct_naive, "Global Naive Baseline",
+# Local Transformer vs Global Naive Baseline (uses correct_global_naive and correct_global_naive_by_table from global "cut" section)
+plot_horizon_performance_2_models(correct_local_tf_overall, "Local Transformer", correct_global_naive, "Global Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "local_transformer_vs_global_naive_baseline.pdf"))
-plot_horizon_performance_3_models(correct_local, "Local Transformer", correct_local_lstm, "Local LSTM", correct_naive, "Global Naive Baseline",
+plot_horizon_performance_3_models(correct_local_tf_overall, "Local Transformer", correct_local_lstm_overall, "Local LSTM", correct_global_naive, "Global Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "local_transformer_lstm_vs_global_naive_baseline.pdf"))
 
 # Local Transformer vs Local Naive Baseline
-plot_horizon_performance_2_models(correct_local, "Local Transformer", correct_naive_local, "Local Naive Baseline",
+plot_horizon_performance_2_models(correct_local_tf_overall, "Local Transformer", correct_local_naive_overall, "Local Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "local_transformer_vs_local_naive_baseline.pdf"))
-plot_horizon_performance_3_models(correct_local, "Local Transformer", correct_local_lstm, "Local LSTM", correct_naive_local, "Local Naive Baseline",
+plot_horizon_performance_3_models(correct_local_tf_overall, "Local Transformer", correct_local_lstm_overall, "Local LSTM", correct_local_naive_overall, "Local Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "local_transformer_lstm_vs_local_naive_baseline.pdf"))
-plot_table_performance_faceted_2_models(correct_local_by_table, "Local Transformer", correct_naive_local_by_table, "Local Naive Baseline",
+
+plot_table_performance_faceted_2_models(correct_local_tf_by_table, "Local Transformer", correct_local_naive_by_table, "Local Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "local_transformer_vs_local_naive_baseline_by_table.pdf"))
-plot_table_performance_faceted_3_models(correct_local_by_table, "Local Transformer", correct_local_by_table_lstm, "Local LSTM", correct_naive_local_by_table, "Local Naive Baseline",
+plot_table_performance_faceted_3_models(correct_local_tf_by_table, "Local Transformer", correct_local_lstm_by_table, "Local LSTM", correct_local_naive_by_table, "Local Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "local_transformer_lstm_vs_local_naive_baseline_by_table.pdf"))
 
 message("--- Finished 'cut' Experiment Analysis ---")
@@ -712,192 +762,241 @@ message("--- Finished 'cut' Experiment Analysis ---")
 message("--- Starting 'cut-100' Experiment Analysis ---")
 experiment_subdir_cut100 <- "cut-100"
 
-predictions <- load_parquet("analysis/data/exp-39-tranformer-rounded-cut-row-locks_100/predictions.parquet")
-check_iterations(predictions)
-predictions_lstm <- load_parquet("analysis/data/exp-40-lstm-rounded-cut-row-locks_100/predictions.parquet")
-check_iterations(predictions_lstm)
-predictions_naive <- load_parquet("analysis/data/exp-41-naive-rounded-cut-row-locks_100/predictions.parquet") %>%
+predictions_g_tf_100 <- load_parquet("analysis/data/exp-39-tranformer-rounded-cut-row-locks_100/predictions.parquet")
+check_iterations(predictions_g_tf_100)
+predictions_g_lstm_100 <- load_parquet("analysis/data/exp-40-lstm-rounded-cut-row-locks_100/predictions.parquet")
+check_iterations(predictions_g_lstm_100)
+predictions_g_naive_100 <- load_parquet("analysis/data/exp-41-naive-rounded-cut-row-locks_100/predictions.parquet") %>%
   filter(data == "data/fixed/row_locks.csv")
 
 # Accuracy over time plots
 p_global_acc_time_100 <- plot_accuracy_over_time_list(
-  list(predictions, predictions_lstm, predictions_naive),
+  list(predictions_g_tf_100, predictions_g_lstm_100, predictions_g_naive_100),
   c("Global Transformer", "Global LSTM", "Global Naive Baseline")
 )
 save_plot(p_global_acc_time_100, 
           construct_output_path("analysis/plots", experiment_subdir_cut100, "global_transformer_lstm_naive_baseline_accuracy_over_time.pdf"), 
           width = 10, height = 6)
-p_transformer_acc_time_100 <- plot_accuracy_over_time(predictions)
+p_transformer_acc_time_100 <- plot_accuracy_over_time(predictions_g_tf_100)
 save_plot(p_transformer_acc_time_100, 
           construct_output_path("analysis/plots", experiment_subdir_cut100, "global_transformer_accuracy_over_time.pdf"), 
           width = 10, height = 6)
-p_naive_acc_time_100 <- plot_accuracy_over_time(predictions_naive)
+p_naive_acc_time_100 <- plot_accuracy_over_time(predictions_g_naive_100)
 save_plot(p_naive_acc_time_100, 
           construct_output_path("analysis/plots", experiment_subdir_cut100, "global_naive_baseline_accuracy_over_time.pdf"), 
           width = 10, height = 6)
 
 # Performance metrics
-correct <- horizon_iteration_performance(predictions)
-correct_by_table <- horizon_iteration_performance_by_table(predictions)
-correct_lstm <- horizon_iteration_performance(predictions_lstm)
-correct_by_table_lstm <- horizon_iteration_performance_by_table(predictions_lstm)
-correct_naive <- horizon_iteration_performance(predictions_naive)
-correct_naive_by_table <- horizon_iteration_performance_by_table(predictions_naive)
+correct_g_tf_100_overall <- horizon_iteration_performance(predictions_g_tf_100) # Added _overall
+results_g_tf_100_by_table <- horizon_iteration_performance_by_table(predictions_g_tf_100)
+correct_g_tf_100_by_table <- results_g_tf_100_by_table$performance_metrics
+conf_counts_g_tf_100 <- results_g_tf_100_by_table$confusion_matrix_counts
 
-rm(predictions, predictions_lstm, predictions_naive); gc()
+correct_g_lstm_100_overall <- horizon_iteration_performance(predictions_g_lstm_100) # Added _overall
+results_g_lstm_100_by_table <- horizon_iteration_performance_by_table(predictions_g_lstm_100)
+correct_g_lstm_100_by_table <- results_g_lstm_100_by_table$performance_metrics
+conf_counts_g_lstm_100 <- results_g_lstm_100_by_table$confusion_matrix_counts
+
+correct_g_naive_100_overall <- horizon_iteration_performance(predictions_g_naive_100) # Added _overall
+results_g_naive_100_by_table <- horizon_iteration_performance_by_table(predictions_g_naive_100)
+correct_g_naive_100_by_table <- results_g_naive_100_by_table$performance_metrics
+conf_counts_g_naive_100 <- results_g_naive_100_by_table$confusion_matrix_counts
+
+rm(predictions_g_tf_100, predictions_g_lstm_100, predictions_g_naive_100); gc()
 
 # Export CSVs
-export_csv(correct, construct_output_path("analysis/tables", experiment_subdir_cut100, "global_transformer_performance.csv"))
-export_csv(correct_lstm, construct_output_path("analysis/tables", experiment_subdir_cut100, "global_lstm_performance.csv"))
-export_csv(correct_naive, construct_output_path("analysis/tables", experiment_subdir_cut100, "global_naive_baseline_performance.csv"))
-export_csv_by_table(correct_by_table, construct_output_path("analysis/tables", experiment_subdir_cut100, "global_transformer_performance_by_table.csv"))
-export_csv_by_table(correct_by_table_lstm, construct_output_path("analysis/tables", experiment_subdir_cut100, "global_lstm_performance_by_table.csv"))
-export_csv_by_table(correct_naive_by_table, construct_output_path("analysis/tables", experiment_subdir_cut100, "global_naive_baseline_performance_by_table.csv"))
+export_csv(correct_g_tf_100_overall, construct_output_path("analysis/tables", experiment_subdir_cut100, "global_transformer_performance.csv"))
+export_csv(correct_g_lstm_100_overall, construct_output_path("analysis/tables", experiment_subdir_cut100, "global_lstm_performance.csv"))
+export_csv(correct_g_naive_100_overall, construct_output_path("analysis/tables", experiment_subdir_cut100, "global_naive_baseline_performance.csv"))
+
+export_csv_by_table(correct_g_tf_100_by_table, construct_output_path("analysis/tables", experiment_subdir_cut100, "global_transformer_performance_by_table.csv"))
+write_csv(conf_counts_g_tf_100, construct_output_path("analysis/tables", experiment_subdir_cut100, "global_transformer_confusion_counts.csv"))
+
+export_csv_by_table(correct_g_lstm_100_by_table, construct_output_path("analysis/tables", experiment_subdir_cut100, "global_lstm_performance_by_table.csv"))
+write_csv(conf_counts_g_lstm_100, construct_output_path("analysis/tables", experiment_subdir_cut100, "global_lstm_confusion_counts.csv"))
+
+export_csv_by_table(correct_g_naive_100_by_table, construct_output_path("analysis/tables", experiment_subdir_cut100, "global_naive_baseline_performance_by_table.csv"))
+write_csv(conf_counts_g_naive_100, construct_output_path("analysis/tables", experiment_subdir_cut100, "global_naive_baseline_confusion_counts.csv"))
 
 # Plots: Horizon Performance
-plot_horizon_performance_2_models(correct, "Global Transformer", correct_naive, "Global Naive Baseline",
+plot_horizon_performance_2_models(correct_g_tf_100_overall, "Global Transformer", correct_g_naive_100_overall, "Global Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut100, "global_transformer_vs_naive_baseline.pdf"))
-plot_horizon_performance_3_models(correct, "Global Transformer", correct_lstm, "Global LSTM", correct_naive, "Global Naive Baseline",
+plot_horizon_performance_3_models(correct_g_tf_100_overall, "Global Transformer", correct_g_lstm_100_overall, "Global LSTM", correct_g_naive_100_overall, "Global Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut100, "global_transformer_lstm_vs_naive_baseline.pdf"))
 
 # Plots: Single Model Performance by Table
-plot_single_model_performance_by_table(correct_by_table,
+plot_single_model_performance_by_table(correct_g_tf_100_by_table,
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut100, "global_transformer_by_table.pdf"))
-plot_single_model_performance_by_table(correct_by_table_lstm,
+plot_single_model_performance_by_table(correct_g_lstm_100_by_table,
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut100, "global_lstm_by_table.pdf"))
 
 # Plots: Table Performance Faceted
-plot_table_performance_faceted_2_models(correct_by_table, "Global Transformer", correct_naive_by_table, "Global Naive Baseline",
+plot_table_performance_faceted_2_models(correct_g_tf_100_by_table, "Global Transformer", correct_g_naive_100_by_table, "Global Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut100, "global_transformer_vs_naive_baseline_by_table.pdf"))
-plot_table_performance_faceted_3_models(correct_by_table, "Global Transformer", correct_by_table_lstm, "Global LSTM", correct_naive_by_table, "Global Naive Baseline",
+plot_table_performance_faceted_3_models(correct_g_tf_100_by_table, "Global Transformer", correct_g_lstm_100_by_table, "Global LSTM", correct_g_naive_100_by_table, "Global Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut100, "global_transformer_lstm_vs_naive_baseline_by_table.pdf"))
 
 # Table locks for cut-100
-predictions_table <- load_parquet("analysis/data/exp-39-tranformer-rounded-cut-table-locks_100/predictions.parquet", is_table_lock=TRUE)
-check_iterations(predictions_table)
-predictions_table_lstm <- load_parquet("analysis/data/exp-40-lstm-rounded-cut-table-locks_100/predictions.parquet", is_table_lock=TRUE)
-check_iterations(predictions_table_lstm)
-predictions_naive_table <- load_parquet("analysis/data/exp-41-naive-rounded-cut-table-locks_100/predictions.parquet", is_table_lock=TRUE) %>%
+predictions_tl_tf_100 <- load_parquet("analysis/data/exp-39-tranformer-rounded-cut-table-locks_100/predictions.parquet", is_table_lock=TRUE)
+check_iterations(predictions_tl_tf_100)
+predictions_tl_lstm_100 <- load_parquet("analysis/data/exp-40-lstm-rounded-cut-table-locks_100/predictions.parquet", is_table_lock=TRUE)
+check_iterations(predictions_tl_lstm_100)
+predictions_tl_naive_100 <- load_parquet("analysis/data/exp-41-naive-rounded-cut-table-locks_100/predictions.parquet", is_table_lock=TRUE) %>%
   filter(data == "data/fixed/table_locks.csv")
 
-correct_table <- horizon_iteration_performance(predictions_table)
-correct_table_by_table <- horizon_iteration_performance_by_table(predictions_table)
-correct_table_lstm <- horizon_iteration_performance(predictions_table_lstm)
-correct_table_by_table_lstm <- horizon_iteration_performance_by_table(predictions_table_lstm)
-correct_naive_table <- horizon_iteration_performance(predictions_naive_table)
-correct_naive_table_by_table <- horizon_iteration_performance_by_table(predictions_naive_table)
+correct_tl_tf_100_overall <- horizon_iteration_performance(predictions_tl_tf_100)
+results_tl_tf_100_by_table <- horizon_iteration_performance_by_table(predictions_tl_tf_100)
+correct_tl_tf_100_by_table <- results_tl_tf_100_by_table$performance_metrics
+conf_counts_tl_tf_100 <- results_tl_tf_100_by_table$confusion_matrix_counts
+
+correct_tl_lstm_100_overall <- horizon_iteration_performance(predictions_tl_lstm_100)
+results_tl_lstm_100_by_table <- horizon_iteration_performance_by_table(predictions_tl_lstm_100)
+correct_tl_lstm_100_by_table <- results_tl_lstm_100_by_table$performance_metrics
+conf_counts_tl_lstm_100 <- results_tl_lstm_100_by_table$confusion_matrix_counts
+
+correct_tl_naive_100_overall <- horizon_iteration_performance(predictions_tl_naive_100)
+results_tl_naive_100_by_table <- horizon_iteration_performance_by_table(predictions_tl_naive_100)
+correct_tl_naive_100_by_table <- results_tl_naive_100_by_table$performance_metrics
+conf_counts_tl_naive_100 <- results_tl_naive_100_by_table$confusion_matrix_counts
 
 # Accuracy over time plots for table locks
-p_table_acc_time_100 <- plot_accuracy_over_time(predictions_table)
+p_table_acc_time_100 <- plot_accuracy_over_time(predictions_tl_tf_100)
 save_plot(p_table_acc_time_100, 
           construct_output_path("analysis/plots", experiment_subdir_cut100, "table-lock_global_transformer_accuracy_over_time.pdf"), 
           width = 10, height = 6)
-p_naive_table_acc_time_100 <- plot_accuracy_over_time(predictions_naive_table)
+p_naive_table_acc_time_100 <- plot_accuracy_over_time(predictions_tl_naive_100)
 save_plot(p_naive_table_acc_time_100, 
           construct_output_path("analysis/plots", experiment_subdir_cut100, "table-lock_global_naive_baseline_accuracy_over_time.pdf"), 
           width = 10, height = 6)
 p_table_all_acc_time_100 <- plot_accuracy_over_time_list(
-  list(predictions_table, predictions_table_lstm, predictions_naive_table),
+  list(predictions_tl_tf_100, predictions_tl_lstm_100, predictions_tl_naive_100),
   c("Global Transformer", "Global LSTM", "Global Naive Baseline")
 )
 save_plot(p_table_all_acc_time_100, 
           construct_output_path("analysis/plots", experiment_subdir_cut100, "table-lock_global_transformer_lstm_naive_baseline_accuracy_over_time.pdf"), 
           width = 10, height = 6)
 
-rm(predictions_table, predictions_table_lstm, predictions_naive_table); gc()
+rm(predictions_tl_tf_100, predictions_tl_lstm_100, predictions_tl_naive_100); gc()
 
 # Export CSVs for table locks
-export_csv(correct_table, construct_output_path("analysis/tables", experiment_subdir_cut100, "table-lock_transformer_performance.csv"))
-export_csv(correct_table_lstm, construct_output_path("analysis/tables", experiment_subdir_cut100, "table-lock_lstm_performance.csv"))
-export_csv(correct_naive_table, construct_output_path("analysis/tables", experiment_subdir_cut100, "table-lock_naive_baseline_performance.csv"))
-export_csv_by_table(correct_table_by_table, construct_output_path("analysis/tables", experiment_subdir_cut100, "table-lock_transformer_performance_by_table.csv"))
-export_csv_by_table(correct_table_by_table_lstm, construct_output_path("analysis/tables", experiment_subdir_cut100, "table-lock_lstm_performance_by_table.csv"))
-export_csv_by_table(correct_naive_table_by_table, construct_output_path("analysis/tables", experiment_subdir_cut100, "table-lock_naive_baseline_performance_by_table.csv"))
+export_csv(correct_tl_tf_100_overall, construct_output_path("analysis/tables", experiment_subdir_cut100, "table-lock_transformer_performance.csv"))
+export_csv(correct_tl_lstm_100_overall, construct_output_path("analysis/tables", experiment_subdir_cut100, "table-lock_lstm_performance.csv"))
+export_csv(correct_tl_naive_100_overall, construct_output_path("analysis/tables", experiment_subdir_cut100, "table-lock_naive_baseline_performance.csv"))
+
+export_csv_by_table(correct_tl_tf_100_by_table, construct_output_path("analysis/tables", experiment_subdir_cut100, "table-lock_transformer_performance_by_table.csv"))
+write_csv(conf_counts_tl_tf_100, construct_output_path("analysis/tables", experiment_subdir_cut100, "table-lock_transformer_confusion_counts.csv"))
+
+export_csv_by_table(correct_tl_lstm_100_by_table, construct_output_path("analysis/tables", experiment_subdir_cut100, "table-lock_lstm_performance_by_table.csv"))
+write_csv(conf_counts_tl_lstm_100, construct_output_path("analysis/tables", experiment_subdir_cut100, "table-lock_lstm_confusion_counts.csv"))
+
+export_csv_by_table(correct_tl_naive_100_by_table, construct_output_path("analysis/tables", experiment_subdir_cut100, "table-lock_naive_baseline_performance_by_table.csv"))
+write_csv(conf_counts_tl_naive_100, construct_output_path("analysis/tables", experiment_subdir_cut100, "table-lock_naive_baseline_confusion_counts.csv"))
 
 # Plots for table locks
-plot_horizon_performance_2_models(correct_table, "Transformer", correct_naive_table, "Naive Baseline",
+plot_horizon_performance_2_models(correct_tl_tf_100_overall, "Transformer", correct_tl_naive_100_overall, "Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut100, "table-lock_transformer_vs_naive_baseline.pdf"))
-plot_horizon_performance_3_models(correct_table, "Transformer", correct_table_lstm, "LSTM", correct_naive_table, "Naive Baseline",
+plot_horizon_performance_3_models(correct_tl_tf_100_overall, "Transformer", correct_tl_lstm_100_overall, "LSTM", correct_tl_naive_100_overall, "Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut100, "table-lock_transformer_lstm_vs_naive_baseline.pdf"))
-plot_table_performance_faceted_2_models(correct_table_by_table, "Transformer", correct_naive_table_by_table, "Naive Baseline",
+
+plot_table_performance_faceted_2_models(correct_tl_tf_100_by_table, "Transformer", correct_tl_naive_100_by_table, "Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut100, "table-lock_transformer_vs_naive_baseline_by_table.pdf"))
-plot_table_performance_faceted_3_models(correct_table_by_table, "Transformer", correct_table_by_table_lstm, "LSTM", correct_naive_table_by_table, "Naive Baseline",
+plot_table_performance_faceted_3_models(correct_tl_tf_100_by_table, "Transformer", correct_tl_lstm_100_by_table, "LSTM", correct_tl_naive_100_by_table, "Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut100, "table-lock_transformer_lstm_vs_naive_baseline_by_table.pdf"))
 
 # Precision/Recall plots for table locks
-generate_and_save_precision_recall_plot(correct_table_by_table,
+generate_and_save_precision_recall_plot(correct_tl_tf_100_by_table,
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut100, "table-lock_transformer_precision_recall.pdf"))
-generate_and_save_precision_recall_plot(correct_table_by_table_lstm,
+generate_and_save_precision_recall_plot(correct_tl_lstm_100_by_table,
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut100, "table-lock_lstm_precision_recall.pdf"))
-generate_and_save_precision_recall_plot(correct_naive_table_by_table,
+generate_and_save_precision_recall_plot(correct_tl_naive_100_by_table,
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut100, "table-lock_naive_baseline_precision_recall.pdf"))
 
 # Local models for cut-100
-predictions_local <- load_parquet("analysis/data/exp-44-transformer-local-rounded-cut_100/predictions.parquet")
-check_iterations(predictions_local)
-predictions_local_lstm <- load_parquet("analysis/data/exp-43-lstm-local-rounded-cut_100/predictions.parquet")
-check_iterations(predictions_local_lstm)
-predictions_naive_local <- load_parquet("analysis/data/exp-42-naive-local-rounded-cut-row-locks_100/predictions.parquet")
+predictions_local_tf_100 <- load_parquet("analysis/data/exp-44-transformer-local-rounded-cut_100/predictions.parquet")
+check_iterations(predictions_local_tf_100)
+predictions_local_lstm_100 <- load_parquet("analysis/data/exp-43-lstm-local-rounded-cut_100/predictions.parquet")
+check_iterations(predictions_local_lstm_100)
+predictions_local_naive_100_raw <- load_parquet("analysis/data/exp-42-naive-local-rounded-cut-row-locks_100/predictions.parquet")
 
 # Accuracy over time for local models
 p_local_acc_time_100 <- plot_accuracy_over_time_list(
-  list(predictions_local, predictions_local_lstm, predictions_naive_local),
+  list(predictions_local_tf_100, predictions_local_lstm_100, predictions_local_naive_100_raw),
   c("Local Transformer", "Local LSTM", "Local Naive Baseline")
 )
 save_plot(p_local_acc_time_100, 
           construct_output_path("analysis/plots", experiment_subdir_cut100, "local_transformer_lstm_naive_baseline_accuracy_over_time.pdf"), 
           width = 10, height = 6)
 
-correct_local <- horizon_iteration_performance(predictions_local)
-correct_local_by_table <- horizon_iteration_performance_by_table(predictions_local)
-correct_local_lstm <- horizon_iteration_performance(predictions_local_lstm)
-correct_local_by_table_lstm <- horizon_iteration_performance_by_table(predictions_local_lstm)
-correct_naive_local <- horizon_iteration_performance(predictions_naive_local)
-correct_naive_local_by_table <- horizon_iteration_performance_by_table(predictions_naive_local)
+correct_local_tf_100_overall <- horizon_iteration_performance(predictions_local_tf_100)
+results_local_tf_100_by_table <- horizon_iteration_performance_by_table(predictions_local_tf_100)
+correct_local_tf_100_by_table <- results_local_tf_100_by_table$performance_metrics
+conf_counts_local_tf_100 <- results_local_tf_100_by_table$confusion_matrix_counts
 
-correct_local_no_orderline_gt_h1 <- horizon_iteration_performance(
-  predictions_local %>% filter(!(as.numeric(as.character(horizon))>1 & gt_table == "orderline")))
-correct_local_no_orderline_gt_h1_by_table <- horizon_iteration_performance_by_table(
-  predictions_local %>% filter(!(as.numeric(as.character(horizon))>1 & gt_table == "orderline")))
+correct_local_lstm_100_overall <- horizon_iteration_performance(predictions_local_lstm_100)
+results_local_lstm_100_by_table <- horizon_iteration_performance_by_table(predictions_local_lstm_100)
+correct_local_lstm_100_by_table <- results_local_lstm_100_by_table$performance_metrics
+conf_counts_local_lstm_100 <- results_local_lstm_100_by_table$confusion_matrix_counts
 
-rm(predictions_local, predictions_local_lstm, predictions_naive_local); gc()
+correct_local_naive_100_overall <- horizon_iteration_performance(predictions_local_naive_100_raw)
+results_local_naive_100_by_table <- horizon_iteration_performance_by_table(predictions_local_naive_100_raw)
+correct_local_naive_100_by_table <- results_local_naive_100_by_table$performance_metrics
+conf_counts_local_naive_100 <- results_local_naive_100_by_table$confusion_matrix_counts
+
+correct_local_tf_100_no_ol_overall <- horizon_iteration_performance(
+  predictions_local_tf_100 %>% filter(!(as.numeric(as.character(horizon))>1 & gt_table == "orderline")))
+predictions_local_tf_100_filtered_no_ol <- predictions_local_tf_100 %>% 
+                                          filter(!(as.numeric(as.character(horizon))>1 & gt_table == "orderline"))
+results_local_tf_100_no_ol_by_table <- horizon_iteration_performance_by_table(predictions_local_tf_100_filtered_no_ol)
+correct_local_tf_100_no_ol_by_table <- results_local_tf_100_no_ol_by_table$performance_metrics
+conf_counts_local_tf_100_no_ol <- results_local_tf_100_no_ol_by_table$confusion_matrix_counts
+
+rm(predictions_local_tf_100, predictions_local_lstm_100, predictions_local_naive_100_raw, predictions_local_tf_100_filtered_no_ol); gc()
 
 # Export CSVs for local models
-export_csv(correct_local, construct_output_path("analysis/tables", experiment_subdir_cut100, "local_transformer_performance.csv"))
-export_csv(correct_local_lstm, construct_output_path("analysis/tables", experiment_subdir_cut100, "local_lstm_performance.csv"))
-export_csv(correct_naive_local, construct_output_path("analysis/tables", experiment_subdir_cut100, "local_naive_baseline_performance.csv"))
-export_csv_by_table(correct_local_by_table, construct_output_path("analysis/tables", experiment_subdir_cut100, "local_transformer_performance_by_table.csv"))
-export_csv_by_table(correct_local_by_table_lstm, construct_output_path("analysis/tables", experiment_subdir_cut100, "local_lstm_performance_by_table.csv"))
-export_csv_by_table(correct_naive_local_by_table, construct_output_path("analysis/tables", experiment_subdir_cut100, "local_naive_baseline_performance_by_table.csv"))
-export_csv(correct_local_no_orderline_gt_h1, construct_output_path("analysis/tables", experiment_subdir_cut100, "local_transformer_no_orderline_gt_h1_performance.csv"))
-export_csv_by_table(correct_local_no_orderline_gt_h1_by_table, construct_output_path("analysis/tables", experiment_subdir_cut100, "local_transformer_no_orderline_gt_h1_performance_by_table.csv"))
+export_csv(correct_local_tf_100_overall, construct_output_path("analysis/tables", experiment_subdir_cut100, "local_transformer_performance.csv"))
+export_csv(correct_local_lstm_100_overall, construct_output_path("analysis/tables", experiment_subdir_cut100, "local_lstm_performance.csv"))
+export_csv(correct_local_naive_100_overall, construct_output_path("analysis/tables", experiment_subdir_cut100, "local_naive_baseline_performance.csv"))
+
+export_csv_by_table(correct_local_tf_100_by_table, construct_output_path("analysis/tables", experiment_subdir_cut100, "local_transformer_performance_by_table.csv"))
+write_csv(conf_counts_local_tf_100, construct_output_path("analysis/tables", experiment_subdir_cut100, "local_transformer_confusion_counts.csv"))
+
+export_csv_by_table(correct_local_lstm_100_by_table, construct_output_path("analysis/tables", experiment_subdir_cut100, "local_lstm_performance_by_table.csv"))
+write_csv(conf_counts_local_lstm_100, construct_output_path("analysis/tables", experiment_subdir_cut100, "local_lstm_confusion_counts.csv"))
+
+export_csv_by_table(correct_local_naive_100_by_table, construct_output_path("analysis/tables", experiment_subdir_cut100, "local_naive_baseline_performance_by_table.csv"))
+write_csv(conf_counts_local_naive_100, construct_output_path("analysis/tables", experiment_subdir_cut100, "local_naive_baseline_confusion_counts.csv"))
+
+export_csv(correct_local_tf_100_no_ol_overall, construct_output_path("analysis/tables", experiment_subdir_cut100, "local_transformer_no_orderline_gt_h1_performance.csv"))
+export_csv_by_table(correct_local_tf_100_no_ol_by_table, construct_output_path("analysis/tables", experiment_subdir_cut100, "local_transformer_no_orderline_gt_h1_performance_by_table.csv"))
+write_csv(conf_counts_local_tf_100_no_ol, construct_output_path("analysis/tables", experiment_subdir_cut100, "local_transformer_no_orderline_gt_h1_confusion_counts.csv"))
 
 # Plots for local models
-plot_single_model_performance_by_table(correct_local_by_table,
+plot_single_model_performance_by_table(correct_local_tf_100_by_table,
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut100, "local_transformer_by_table.pdf"))
-plot_single_model_performance_by_table(correct_local_by_table_lstm,
+plot_single_model_performance_by_table(correct_local_lstm_100_by_table,
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut100, "local_lstm_by_table.pdf"))
 
-# Global vs Local comparison (correct_by_table and correct_by_table_lstm are from global results of cut-100 section)
-plot_comparison_by_table_faceted(correct_by_table, "Global Transformer", correct_local_by_table, "Local Transformer",
+# Global vs Local comparison (uses correct_g_tf_100_by_table and correct_g_lstm_100_by_table from global results of "cut-100" section)
+plot_comparison_by_table_faceted(correct_g_tf_100_by_table, "Global Transformer", correct_local_tf_100_by_table, "Local Transformer",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut100, "global_vs_local_transformer_by_table.pdf"))
-plot_comparison_by_table_faceted(correct_by_table_lstm, "Global LSTM", correct_local_by_table_lstm, "Local LSTM",
+plot_comparison_by_table_faceted(correct_g_lstm_100_by_table, "Global LSTM", correct_local_lstm_100_by_table, "Local LSTM",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut100, "global_vs_local_lstm_by_table.pdf"))
 
-# Local Transformer vs Global Naive Baseline (correct_naive is the global one from this cut-100 section)
-plot_horizon_performance_2_models(correct_local, "Local Transformer", correct_naive, "Global Naive Baseline",
+# Local Transformer vs Global Naive Baseline (uses correct_g_naive_100_overall from global "cut-100" section)
+plot_horizon_performance_2_models(correct_local_tf_100_overall, "Local Transformer", correct_g_naive_100_overall, "Global Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut100, "local_transformer_vs_global_naive_baseline.pdf"))
-plot_horizon_performance_3_models(correct_local, "Local Transformer", correct_local_lstm, "Local LSTM", correct_naive, "Global Naive Baseline",
+plot_horizon_performance_3_models(correct_local_tf_100_overall, "Local Transformer", correct_local_lstm_100_overall, "Local LSTM", correct_g_naive_100_overall, "Global Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut100, "local_transformer_lstm_vs_global_naive_baseline.pdf"))
 
 # Local Transformer vs Local Naive Baseline
-plot_horizon_performance_2_models(correct_local, "Local Transformer", correct_naive_local, "Local Naive Baseline",
+plot_horizon_performance_2_models(correct_local_tf_100_overall, "Local Transformer", correct_local_naive_100_overall, "Local Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut100, "local_transformer_vs_local_naive_baseline.pdf"))
-plot_horizon_performance_3_models(correct_local, "Local Transformer", correct_local_lstm, "Local LSTM", correct_naive_local, "Local Naive Baseline",
+plot_horizon_performance_3_models(correct_local_tf_100_overall, "Local Transformer", correct_local_lstm_100_overall, "Local LSTM", correct_local_naive_100_overall, "Local Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut100, "local_transformer_lstm_vs_local_naive_baseline.pdf"))
-plot_table_performance_faceted_2_models(correct_local_by_table, "Local Transformer", correct_naive_local_by_table, "Local Naive Baseline",
+
+plot_table_performance_faceted_2_models(correct_local_tf_100_by_table, "Local Transformer", correct_local_naive_100_by_table, "Local Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut100, "local_transformer_vs_local_naive_baseline_by_table.pdf"))
-plot_table_performance_faceted_3_models(correct_local_by_table, "Local Transformer", correct_local_by_table_lstm, "Local LSTM", correct_naive_local_by_table, "Local Naive Baseline",
+plot_table_performance_faceted_3_models(correct_local_tf_100_by_table, "Local Transformer", correct_local_lstm_100_by_table, "Local LSTM", correct_local_naive_100_by_table, "Local Naive Baseline",
     file_path = construct_output_path("analysis/plots", experiment_subdir_cut100, "local_transformer_lstm_vs_local_naive_baseline_by_table.pdf"))
 
 message("--- Finished 'cut-100' Experiment Analysis ---")
