@@ -1,4 +1,4 @@
-source("common_setup.R") # Load common functions, vars, and libraries
+source("analysis/common_setup.R") # Load common functions, vars, and libraries (Assumes running from project root)
 
 plot_accuracy_over_time_list <- function(dfs, df_names, num_bins = 40) {
   stopifnot(length(dfs) == length(df_names))
