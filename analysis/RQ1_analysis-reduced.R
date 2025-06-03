@@ -1,7 +1,83 @@
-require(tidyverse)
-require(arrow)  # to read parquet
-library(dplyr)
-library(ggplot2)
+source("analysis/common_setup.R") # Load common functions, vars, and libraries (Assumes running from project root)
+
+plot_accuracy_over_time_list <- function(dfs, df_names, num_bins = 40) {
+  stopifnot(length(dfs) == length(df_names))
+  all_data_list <- list()
+  
+  for (i in seq_along(dfs)) {
+    predictions_cur <- dfs[[i]]
+    dataset_name <- df_names[[i]]
+    correct <- predictions_cur %>%
+      group_by(horizon, iteration, unique_id, in_lock_start_time) %>%
+      summarise(is_correct = all(is_correct), .groups = 'drop')
+    correct$is_correct_num <- as.numeric(correct$is_correct)
+    correct$in_lock_start_time_rel <- as.numeric(correct$in_lock_start_time - min(correct$in_lock_start_time))
+    correct$dataset_name <- dataset_name
+    all_data_list[[i]] <- correct
+  }
+  
+
+  all_data <- dplyr::bind_rows(all_data_list)
+  all_data$dataset_name <- factor(all_data$dataset_name, levels = df_names)
+  
+  print(df_names)
+  
+  x_range <- range(all_data$in_lock_start_time_rel, na.rm = TRUE)
+  binwidth <- (x_range[2] - x_range[1]) / num_bins
+  
+  p <- ggplot(all_data, aes(x = in_lock_start_time_rel, y = is_correct_num, color = dataset_name)) +
+    stat_summary_bin(fun = "mean", geom = "line", binwidth = binwidth, linewidth = 1) +
+    facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
+    labs(
+      x = "Relative Lock End Time (nanoseconds)",
+      y = "Percent Correct",
+      color = "Model"
+    ) +
+    scale_x_continuous(labels = scales::scientific) +
+    scale_y_continuous(limits = c(0, 1)) +
+    theme_light() +
+    theme(
+     # strip.background = element_blank(),      # Removes the gray background
+      strip.text = element_text(size = 11, face = "bold")  # Optional: style the text
+    ) +
+    theme(
+      legend.position = "top",
+      legend.title = element_text(face = "bold"),
+      legend.text = element_text(size = 11),
+      axis.title = element_text(size = 13),
+      axis.text = element_text(size = 11),
+      plot.title = element_text(size = 14, face = "bold", hjust = 0.5)
+    ) +
+    guides(color = guide_legend(override.aes = list(linewidth  = 4.5)))
+  
+  return(p)
+}
+
+# --- New Helper Functions ---
+
+save_plot <- function(plot_object, file_path, width = 8, height = 6, units = "in", dpi = 300) {
+  ggsave(
+    filename = file_path,
+    plot = plot_object,
+    width = width,
+    height = height,
+    units = units,
+    dpi = dpi
+  )
+  print(paste("Saved plot to:", file_path))
+}
+
+construct_output_path <- function(base_folder, 
+                                  experiment_subdir, 
+                                  filename) {
+  dir_path <- file.path(base_folder, experiment_subdir)
+  if (!dir.exists(dir_path)) {
+    dir.create(dir_path, recursive = TRUE)
+    print(paste("Created directory:", dir_path))
+  }
+  return(file.path(dir_path, filename))
+}
+
 
 # --- New Refactored Plotting Functions ---
  
