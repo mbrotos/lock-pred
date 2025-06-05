@@ -2,11 +2,13 @@ require(tidyverse)
 require(arrow)  # to read parquet
 library(dplyr)
 library(ggplot2)
+
+setwd("C:/TMU/postdoc-TMU/lock-pred/")
 source("analysis/common_functions.R")
  
 RQ2_plot_table_performance_faceted_3_models <- function(data_model1_by_table, name_model1, data_model2_by_table, name_model2, data_model3_by_table, name_model3, 
-                                                  color_model1 = "black", color_model2 = "blue", color_model3 = "red", 
-                                                  file_path, plot_title = NULL, base_width = 15, base_height = 6) {
+                                                  color_model1 = "#1b9e77", color_model2 = "#d95f02", color_model3 = "#7570b3", 
+                                                  file_path, plot_title = NULL, base_width = 15, base_height = 6, y_label = "Accuracy" ) {
   
   data_model1_by_table$Model <-  name_model1 
   data_model2_by_table$Model <-  name_model2
@@ -27,7 +29,7 @@ RQ2_plot_table_performance_faceted_3_models <- function(data_model1_by_table, na
     labs(
       title = plot_title,
       x = "Table",
-      y = "Percent Correct",
+      y = y_label,
       color = "Model"
     ) +
     scale_color_manual(values = setNames(c(color_model1, color_model2, color_model3), c(name_model1, name_model2, name_model3))) +
@@ -88,7 +90,7 @@ experiment_subdir_cut <- "cut"
 
 #basepath = "C:/TMU/postdoc-TMU/deep-rediscovery/deeptable-analysis/results/"
 
-setwd("C:/TMU/postdoc-TMU/lock-pred/")
+ 
 
 
 predictions <- load_parquet("analysis/data/exp-39-tranformer-rounded-cut-row-locks/predictions.parquet")
@@ -145,7 +147,7 @@ rm(predictions_transformer, predictions_lstm, predictions_naive); gc()
 
  
 RQ2_plot_table_performance_faceted_3_models(correct_by_table, "Global Transformer", correct_by_table_lstm, "Global LSTM", correct_naive_by_table, "Global Naive Baseline",
-    file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "global_transformer_lstm_vs_naive_baseline_by_table_cuml.pdf"),base_width = 10, base_height = 6)
+    file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "RQ2_global_transformer_lstm_vs_naive_baseline_by_table_cuml.pdf"),base_width = 10, base_height = 6, y_label="Accuracy")
 
 
 
@@ -175,6 +177,6 @@ correct_naive_local <- horizon_iteration_performance(predictions_naive_local)
 correct_naive_local_by_table <- horizon_iteration_cumulative_performance_by_table(predictions_naive_local)
 
 RQ2_plot_table_performance_faceted_3_models(correct_local_by_table, "Local Transformer", correct_local_by_table_lstm, "Local LSTM", correct_naive_local_by_table, "Local Naive Baseline",
-                                        file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "local_transformer_lstm_vs_local_naive_baseline_by_table_cuml.pdf"),base_width = 10, base_height = 6)
+                                        file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "RQ2_local_transformer_lstm_vs_local_naive_baseline_by_table_cuml.pdf"),base_width = 10, base_height = 6, y_label="Accuracy")
 
  

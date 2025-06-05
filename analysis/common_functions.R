@@ -133,6 +133,24 @@ horizon_iteration_performance <- function(predictions) {
   return(correct)
 }
 
+horizon_iteration_cumulative_calculation <- function(predictions) {
+  predictions <- predictions %>%
+    mutate(horizon = as.integer(as.character(horizon)))  # Ensure numeric horizon
+  
+  # Compute cumulative correctness per unique_id
+  predictions <- predictions %>%
+    arrange(unique_id, horizon, iteration) %>%
+    group_by(unique_id) %>%
+    mutate(cumulative_correct = cumall(is_correct)) %>%
+    ungroup()
+
+  predictions <- predictions %>%
+    mutate(horizon = as.factor(horizon))
+  
+  return(predictions)
+}
+
+  
 horizon_iteration_cumulative_performance_by_table <- function(predictions) {
   # Ensure 'horizon' is numeric and determine final horizon per unique_id
   predictions <- predictions %>%
@@ -557,3 +575,177 @@ construct_output_path <- function(base_folder,
   }
   return(file.path(dir_path, filename))
 }
+
+
+
+
+# --- New Refactored Plotting Functions ---
+
+plot_horizon_performance_2_models <- function(data_model1, name_model1, data_model2, name_model2, 
+                                              color_model1 = "black", color_model2 = "red", 
+                                              file_path, plot_title = NULL, base_width = 8, base_height = 6) {
+  p <- ggplot() +
+    geom_boxplot(
+      data = data_model1,
+      aes(x = horizon, y = mean_percent_correct, color = name_model1),
+      alpha = 0.5
+    ) +
+    geom_point(
+      data = data_model2,
+      aes(x = horizon, y = mean_percent_correct, color = name_model2),
+      size = 2
+    ) +
+    labs(
+      title = plot_title,
+      x = "Horizon",
+      y = "Percent Correct",
+      color = "Legend"
+    ) +
+    scale_color_manual(values = setNames(c(color_model1, color_model2), c(name_model1, name_model2))) +
+    scale_y_continuous(limits = c(0, 1)) +
+    theme_light() +
+    theme(legend.position = "top") 
+  
+  save_plot(p, file_path, width = base_width, height = base_height)
+}
+
+plot_horizon_performance_3_models <- function(data_model1, name_model1, data_model2, name_model2, data_model3, name_model3, 
+                                              color_model1 = "black", color_model2 = "blue", color_model3 = "red", 
+                                              file_path, plot_title = NULL, base_width = 8, base_height = 6) {
+  p <- ggplot() +
+    geom_boxplot(
+      data = data_model1,
+      aes(x = horizon, y = mean_percent_correct, color = name_model1),
+      alpha = 0.5
+    ) +
+    geom_boxplot(
+      data = data_model2,
+      aes(x = horizon, y = mean_percent_correct, color = name_model2),
+      alpha = 0.5
+    ) +
+    geom_point(
+      data = data_model3,
+      aes(x = horizon, y = mean_percent_correct, color = name_model3),
+      size = 2
+    ) +
+    labs(
+      title = plot_title,
+      x = "Horizon",
+      y = "Percent Correct",
+      color = "Legend"
+    ) +
+    scale_color_manual(values = setNames(c(color_model1, color_model2, color_model3), c(name_model1, name_model2, name_model3))) +
+    scale_y_continuous(limits = c(0, 1)) +
+    theme_light() +
+    theme(legend.position = "top") 
+  
+  save_plot(p, file_path, width = base_width, height = base_height)
+}
+
+plot_single_model_performance_by_table <- function(data_model_by_table, file_path, plot_title = NULL, base_width = 8, base_height = 6) {
+  p <- ggplot(data_model_by_table, aes(x = gt_table, y = mean_percent_correct, fill = horizon)) +
+    geom_boxplot(alpha = 0.5) +
+    labs(
+      title = plot_title,
+      x = "Table",
+      y = "Percent Correct",
+      fill = "Horizon"
+    ) +
+    scale_y_continuous(limits = c(0, 1)) +
+    theme_light() +
+    theme(legend.position = "top") 
+  
+  save_plot(p, file_path, width = base_width, height = base_height)
+}
+
+plot_table_performance_faceted_2_models <- function(data_model1_by_table, name_model1, data_model2_by_table, name_model2, 
+                                                    color_model1 = "black", color_model2 = "red", 
+                                                    file_path, plot_title = NULL, base_width = 15, base_height = 6) {
+  p <- ggplot() +
+    geom_boxplot(
+      data = data_model1_by_table,
+      aes(x = gt_table, y = mean_percent_correct, color = name_model1),
+      alpha = 0.5
+    ) +
+    geom_point(
+      data = data_model2_by_table,
+      aes(x = gt_table, y = mean_percent_correct, color = name_model2),
+      size = 2
+    ) +
+    facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
+    labs(
+      title = plot_title,
+      x = "Table",
+      y = "Percent Correct",
+      color = "Model"
+    ) +
+    scale_color_manual(values = setNames(c(color_model1, color_model2), c(name_model1, name_model2))) +
+    scale_y_continuous(limits = c(0, 1)) +
+    theme_light() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "top") 
+  
+  save_plot(p, file_path, width = base_width, height = base_height)
+}
+
+plot_table_performance_faceted_3_models <- function(data_model1_by_table, name_model1, data_model2_by_table, name_model2, data_model3_by_table, name_model3, 
+                                                    color_model1 = "black", color_model2 = "blue", color_model3 = "red", 
+                                                    file_path, plot_title = NULL, base_width = 15, base_height = 6) {
+  p <- ggplot() +
+    geom_boxplot(
+      data = data_model1_by_table,
+      aes(x = gt_table, y = mean_percent_correct, color = name_model1),
+      alpha = 0.5
+    ) +
+    geom_boxplot(
+      data = data_model2_by_table,
+      aes(x = gt_table, y = mean_percent_correct, color = name_model2),
+      alpha = 0.5
+    ) +
+    geom_point(
+      data = data_model3_by_table,
+      aes(x = gt_table, y = mean_percent_correct, color = name_model3),
+      size = 2
+    ) +
+    facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
+    labs(
+      title = plot_title,
+      x = "Table",
+      y = "Percent Correct",
+      color = "Model"
+    ) +
+    scale_color_manual(values = setNames(c(color_model1, color_model2, color_model3), c(name_model1, name_model2, name_model3))) +
+    scale_y_continuous(limits = c(0, 1)) +
+    theme_light() +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "top") 
+  
+  save_plot(p, file_path, width = base_width, height = base_height)
+}
+
+generate_and_save_precision_recall_plot <- function(data_model_by_table, file_path, base_width = 10, base_height = 6) {
+  p <- plot_precision_recall(data_model_by_table) 
+  save_plot(p, file_path, width = base_width, height = base_height)
+}
+
+plot_comparison_by_table_faceted <- function(data_model1_by_table, name_model1, data_model2_by_table, name_model2, 
+                                             file_path, plot_title = NULL, base_width = 15, base_height = 6) {
+  data_model1_by_table$Model <- name_model1
+  data_model2_by_table$Model <- name_model2
+  
+  combined_data <- bind_rows(data_model1_by_table, data_model2_by_table)
+  
+  p <- ggplot(combined_data, aes(x = gt_table, y = mean_percent_correct, fill = Model)) +
+    geom_boxplot(alpha = 0.5) +
+    facet_wrap(~ horizon, labeller = as_labeller(horizon_labels)) +
+    labs(
+      title = plot_title,
+      x = "Table",
+      y = "Percent Correct",
+      fill = "Model"
+    ) +
+    theme_light() +
+    scale_y_continuous(limits = c(0, 1)) +
+    theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "top") 
+  
+  save_plot(p, file_path, width = base_width, height = base_height)
+}
+

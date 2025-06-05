@@ -2,10 +2,13 @@ require(tidyverse)
 require(arrow)  # to read parquet
 library(dplyr)
 library(ggplot2)
+
+
+setwd("C:/TMU/postdoc-TMU/lock-pred/")
 source("analysis/common_functions.R")
 
 rq1_plot_table_performance_faceted_3_models <- function(data_model1_by_table, name_model1, data_model2_by_table, name_model2, data_model3_by_table, name_model3, 
-                                                    color_model1 = "black", color_model2 = "blue", color_model3 = "red", 
+                                                    color_model1 = "#1b9e77", color_model2 = "#d95f02", color_model3 = "#7570b3", 
                                                     file_path, plot_title = NULL, base_width = 15, base_height = 6) {
   
   
@@ -45,7 +48,7 @@ rq1_plot_table_performance_faceted_3_models <- function(data_model1_by_table, na
       y = "Percent Correct",
       color = "Model"
     ) +
-    scale_color_manual(values = setNames(c("black", "blue", "red"), levels_models)) + 
+    scale_color_manual(values = setNames(c("#1b9e77", "#d95f02", "#7570b3"), levels_models)) + 
     scale_y_continuous(limits = c(0, 1)) +
     theme_light() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
@@ -64,7 +67,7 @@ rq1_plot_table_performance_faceted_3_models <- function(data_model1_by_table, na
 
 
 rq1_plot_horizon_performance_3_models <- function(data_model1, name_model1, data_model2, name_model2, data_model3, name_model3, 
-                                              color_model1 = "black", color_model2 = "blue", color_model3 = "red", 
+                                              color_model1 = "#1b9e77", color_model2 = "#d95f02", color_model3 = "#7570b3", 
                                               file_path, plot_title = NULL, base_width = 5, base_height = 5, y_col = "accuracy", y_label = "Accuracy"  ) {
   
   
@@ -145,7 +148,7 @@ experiment_subdir_cut <- "cut"
 
 #basepath = "C:/TMU/postdoc-TMU/deep-rediscovery/deeptable-analysis/results/"
 
-setwd("C:/TMU/postdoc-TMU/lock-pred/")
+
 
 
 # Lets look at cut results for table locks
@@ -156,17 +159,9 @@ check_iterations(predictions_table_lstm)
 predictions_naive_table <- load_parquet("analysis/data/exp-41-naive-rounded-cut-table-locks/predictions.parquet", is_table_lock=TRUE) %>%
   filter(data == "data/fixed/table_locks.csv")
 
+ 
 
-head(predictions_table)
-colnames(predictions_table)
-
-result_columns <- c("horizon", "iteration", "is_correct","unique_id", "gt_table", "pred_table")
-
-# Select and print the specified columns
-predictions_table %>%
-  select(all_of(result_columns)) %>%
-  print()
-
+ 
 
 # Tabel level lock prediction
 # Calculating Accuracy of the model overall across 10 or n iteration, and n horizions
@@ -269,22 +264,17 @@ kable(horizon1_df_no_horizon, format = "latex", booktabs = TRUE, digits = 3,
  
 
 
-rq1_plot_table_performance_faceted_3_models(correct_table_by_table, "Transformer", correct_table_by_table_lstm, "LSTM", correct_naive_table_by_table, "Naive-Baseline",
-                                        file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "table-lock_transformer_lstm_vs_naive_baseline_by_table2.pdf"))
-
-
-
-
-correct_table
-accuracy_iter_cum_table
-
-
-rq1_plot_horizon_performance_3_models(correct_table, "Transformer", correct_table_lstm, "LSTM", correct_naive_table, "Naive Baseline",
-                                      file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "table-lock_transformer_lstm_vs_naive_baseline_mean_percent_correct.pdf") , y_col = "mean_percent_correct", y_label = "mean_percent_correct")
  
-
+ 
 rq1_plot_horizon_performance_3_models(accuracy_iter_cum_table, "Transformer", accuracy_iter_cum_table_lstm, "LSTM", accuracy_iter_cum_table_naive, "Naive Baseline",
-                                  file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "table-lock_transformer_lstm_vs_naive_baseline_accuracy.pdf") , y_col = "accuracy", y_label = "Accuracy")
+                                  file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "RQ1_table-lock_transformer_lstm_vs_naive_baseline_accuracy_cuml.pdf") , y_col = "accuracy", y_label = "Accuracy")
+
+
+
+#Currently not in the paper
+#rq1_plot_table_performance_faceted_3_models(correct_table_by_table, "Transformer", correct_table_by_table_lstm, "LSTM", correct_naive_table_by_table, "Naive-Baseline",
+                                           # file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "table-lock_transformer_lstm_vs_naive_baseline_by_table_cuml.pdf"))
+
 
 
 # Precision/Recall plots for table locks
