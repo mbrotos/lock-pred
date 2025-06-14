@@ -74,7 +74,7 @@ incomplete_check <- predictions_with_correctness %>%
     max_position = max(horizon_position),
     .groups = 'drop'
   ) %>%
-  filter(max_position < target_horizon)
+  filter(max_position != target_horizon)
 
 if (nrow(incomplete_check) > 0) {
   cat("\n--- WARNING: Incomplete sequences found! ---\n")
