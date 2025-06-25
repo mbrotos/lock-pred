@@ -19,7 +19,7 @@ is_correct <- function(df, is_table_lock=FALSE) {
   return(correct)
 }
 
-load_parquet <- function(path, is_table_lock=FALSE, filter_tail_ns=3e11) {
+load_parquet <- function(path, is_table_lock=FALSE, filter_tail_ns=1e11) {
   predictions <- read_parquet(path, col_select = c("in_lock_sequences_id", "in_lock_start_time", "data", "horizon", "unique_id", "horizon_position", "gt_table", "gt_pageid", "pred_table", "pred_pageid", "iteration")) %>% 
     filter(iteration <= 10 & gt_table != "warehouse")
   predictions$is_correct <- is_correct(predictions, is_table_lock)
@@ -183,7 +183,7 @@ horizon_iteration_cumulative_performance_by_table <- function(predictions) {
     summarise(n = n(), .groups = 'drop')
   
   print(head(conf))
-  
+  # Incase of local models, and pageIDs matching, following code need to be updated.
   all_tables <- union(conf$gt_table, conf$pred_table)
   all_tables <- all_tables[!is.na(all_tables)]
   
