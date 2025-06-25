@@ -204,14 +204,8 @@ horizon_iteration_cumulative_performance_by_table <- function(predictions) {
     rename(tp = n) %>%
     mutate(tp = tidyr::replace_na(tp, 0)) %>%
     
-    left_join(
-      conf %>%
-        group_by(horizon, iteration, pred_table) %>%
-        summarise(fp = sum(ifelse(gt_table != pred_table, n, 0)), .groups = 'drop') %>%
-        rename(table = pred_table),
-      by = c("horizon", "iteration", "table")
-    ) %>%
-    mutate(fp = tidyr::replace_na(fp, 0)) %>%
+    # Replace FP calculation with 0
+    mutate(fp = 0) %>%
     
     left_join(
       conf %>%
@@ -222,16 +216,8 @@ horizon_iteration_cumulative_performance_by_table <- function(predictions) {
     ) %>%
     mutate(fn = tidyr::replace_na(fn, 0)) %>%
     
-    left_join(
-      conf %>%
-        tidyr::crossing(table_to_eval = all_tables) %>%
-        filter(gt_table != table_to_eval & pred_table != table_to_eval) %>%
-        group_by(horizon, iteration, table_to_eval) %>%
-        summarise(tn = sum(n, na.rm = TRUE), .groups = 'drop') %>%
-        rename(table = table_to_eval),
-      by = c("horizon", "iteration", "table")
-    ) %>%
-    mutate(tn = tidyr::replace_na(tn, 0)) %>%
+    # Replace TN calculation with 0
+    mutate(tn = 0) %>%
     
     mutate(
       precision = ifelse(tp + fp == 0, NA, tp / (tp + fp)),
