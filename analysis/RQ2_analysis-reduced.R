@@ -44,11 +44,12 @@ RQ2_plot_table_performance_faceted_3_models <- function(data_model1_by_table, na
     legend.position = "top",
     legend.title = element_text(face = "bold"),
     legend.text = element_text(size = 11),
+    legend.box.margin = margin(b = -10),    
     axis.title = element_text(size = 13),
     axis.text = element_text(size = 11),
     plot.title = element_text(size = 14, face = "bold", hjust = 0.5)
   ) +
-    guides(color = guide_legend(override.aes = list(linewidth  = 4.5)))
+    guides(color = guide_legend(override.aes = list(linewidth  = 2.5)))
   
   save_plot(p, file_path, width = base_width, height = base_height)
 }
@@ -143,7 +144,7 @@ correct_naive <- horizon_iteration_performance(predictions_naive)
 #correct_naive_by_table <- horizon_iteration_performance_by_table(predictions_naive)
 correct_naive_by_table <- horizon_iteration_cumulative_performance_by_table(predictions_naive)
 
-rm(predictions_transformer, predictions_lstm, predictions_naive); gc()
+#rm(predictions_transformer, predictions_lstm, predictions_naive); gc()
 
  
 RQ2_plot_table_performance_faceted_3_models(correct_by_table, "Global Transformer", correct_by_table_lstm, "Global LSTM", correct_naive_by_table, "Global Naive Baseline",
@@ -168,6 +169,10 @@ correct_local <- horizon_iteration_performance(predictions_local)
 #correct_local_by_table <- horizon_iteration_performance_by_table(predictions_local)
 correct_local_by_table <- horizon_iteration_cumulative_performance_by_table(predictions_local)
 
+ 
+
+
+
 correct_local_lstm <- horizon_iteration_performance(predictions_local_lstm)
 #correct_local_by_table_lstm <- horizon_iteration_performance_by_table(predictions_local_lstm)
 correct_local_by_table_lstm <- horizon_iteration_cumulative_performance_by_table(predictions_local_lstm)
@@ -175,6 +180,11 @@ correct_local_by_table_lstm <- horizon_iteration_cumulative_performance_by_table
 correct_naive_local <- horizon_iteration_performance(predictions_naive_local) 
 #correct_naive_local_by_table <- horizon_iteration_performance_by_table(predictions_naive_local)
 correct_naive_local_by_table <- horizon_iteration_cumulative_performance_by_table(predictions_naive_local)
+
+
+
+max(correct_local_by_table$mean_percent_correct)
+
 
 RQ2_plot_table_performance_faceted_3_models(correct_local_by_table, "Local Transformer", correct_local_by_table_lstm, "Local LSTM", correct_naive_local_by_table, "Local Naive Baseline",
                                         file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "RQ2_local_transformer_lstm_vs_local_naive_baseline_by_table_cuml.pdf"),base_width = 10, base_height = 6, y_label="Accuracy")

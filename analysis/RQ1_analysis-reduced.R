@@ -53,13 +53,13 @@ rq1_plot_table_performance_faceted_3_models <- function(data_model1_by_table, na
     theme_light() +
     theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
     theme(
-      legend.position = "top",
-      legend.title = element_text(face = "bold"),
-      legend.text = element_text(size = 11),
-      axis.title = element_text(size = 13),
-      axis.text = element_text(size = 11),
-      plot.title = element_text(size = 14, face = "bold", hjust = 0.5)
-    ) +
+    legend.position = "top",
+    legend.title = element_text(face = "bold"),
+    legend.text = element_text(size = 11),
+    axis.title = element_text(size = 13),
+    axis.text = element_text(size = 11),
+    plot.title = element_text(size = 14, face = "bold", hjust = 0.5)
+  ) +
     guides(color = guide_legend(override.aes = list(linewidth  = 4.5)))
   
   save_plot(p, file_path, width = base_width, height = base_height)
@@ -98,11 +98,14 @@ rq1_plot_horizon_performance_3_models <- function(data_model1, name_model1, data
       legend.position = "top",
       legend.title = element_text(face = "bold"),
       legend.text = element_text(size = 11),
+      legend.box.margin = margin(b = -10),    
       axis.title = element_text(size = 13),
       axis.text = element_text(size = 11),
       plot.title = element_text(size = 14, face = "bold", hjust = 0.5)
     ) +
-    guides(color = guide_legend(override.aes = list(linewidth  = 4.5)))
+    guides(color = guide_legend(override.aes = list(linewidth  = 2.5)))
+  
+   # guides( fill = guide_legend(override.aes = list(shape = 22, size = 6)), shape="none")
 
   
   save_plot(p, file_path, width = base_width, height = base_height)
@@ -263,9 +266,20 @@ kable(horizon1_df_no_horizon, format = "latex", booktabs = TRUE, digits = 3,
  #   file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "table-lock_transformer_lstm_vs_naive_baseline_by_table.pdf"))
  
 
-
  
+  horizon_1_data_accuracy <- accuracy_iter_cum_table %>%
+  filter(horizon == 1)  
+  mean(horizon_1_data_accuracy$accuracy)
+  
+  horizon_1_data_accuracy <- accuracy_iter_cum_table_lstm %>%
+    filter(horizon == 1)  
+  mean(horizon_1_data_accuracy$accuracy)
  
+  horizon_1_data_accuracy <- accuracy_iter_cum_table_naive %>%
+    filter(horizon == 1)  
+  mean(horizon_1_data_accuracy$accuracy)
+  
+  
 rq1_plot_horizon_performance_3_models(accuracy_iter_cum_table, "Transformer", accuracy_iter_cum_table_lstm, "LSTM", accuracy_iter_cum_table_naive, "Naive Baseline",
                                   file_path = construct_output_path("analysis/plots", experiment_subdir_cut, "RQ1_table-lock_transformer_lstm_vs_naive_baseline_accuracy_cuml.pdf") , y_col = "accuracy", y_label = "Accuracy")
 
