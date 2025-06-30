@@ -27,6 +27,13 @@
 - `experiments/`: Experiment scripts for different configurations
 - `results/`: Directory to store experiment results
 
+## TPC-C Workload Simulation
+ - Enable the DB2 trace using the command in traceCommands.txt.
+ - Start TPC-C HammerDB workloads by using hammerDBinit.bat,  hammerDBStep1.bat, and hammerDBStep2.bat. 
+ - Stop the DB2 trace using the command in traceCommands.txt.
+ - Start trace preprocessing by running db2trc flw -t.
+ - Extract the row and table locks using lookup_locknames.py. 
+
 ## Running Experiments
 
 Several experiment scripts are provided in the `experiments/` directory. To run an experiment:
