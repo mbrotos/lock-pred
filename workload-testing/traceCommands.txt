@@ -1,0 +1,31 @@
+db2trc on -l 512M  -f C:/TMU/postdoc-TMU/HammerDB/trace_dumps/db2locktraceSingle.dmp
+db2trc off
+
+
+db2trc on -Madd sqlplrq -Madd sqlplrl -Madd sqlplrem   -l 512M  -f C:/TMU/postdoc-TMU/HammerDB/trace_dumps/db2locktraceSingle.dmp
+
+db2trc fmt C:/TMU/postdoc-TMU/HammerDB/trace_dumps/db2locktraceSingle.dmp C:/TMU/postdoc-TMU/HammerDB/trace_dumps/db2locktraceSingle.fmt
+
+
+
+db2trc on -Madd sqlplrq -Madd sqlplrl -Madd sqlplrem   -l 512M  -t -f C:/TMU/postdoc-TMU/HammerDB/trace_dumps/ColumnsTrace.dmp
+db2trc fmt C:/TMU/postdoc-TMU/HammerDB/trace_dumps/ColumnsTrace.dmp C:/TMU/postdoc-TMU/HammerDB/trace_dumps/ColumnsTrace.fmt
+
+
+
+grep -i "lock" C:/TMU/postdoc-TMU/HammerDB/trace_dumps/db2locktraceSingle.fmt > C:/TMU/postdoc-TMU/HammerDB/trace_dumps/db2locktrace_filteredSingle.fmt
+
+db2trc on -Madd sqlplrq -Madd sqlplrl -Madd sqlplrem   -l 512M  -f C:/TMU/postdoc-TMU/HammerDB/trace_dumps/db2locktraceSingle.dmp
+db2trc off
+
+
+
+
+db2trc on -Madd sqlplrq -Madd sqlplrl -Madd sqlplrem -t -i 10000M  -f C:/TMU/postdoc-TMU/HammerDB/trace_dumps/ColumnsTrace.dmp
+
+db2trc off
+
+db2trc flw -t -data -wc C:/TMU/postdoc-TMU/HammerDB/trace_dumps/ColumnsTrace.dmp C:/TMU/postdoc-TMU/HammerDB/trace_dumps/ColumnsTrace.flw
+
+
+ 

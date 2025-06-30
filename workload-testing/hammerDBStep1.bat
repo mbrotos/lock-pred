@@ -1,0 +1,27 @@
+echo "Step 3: Create event monitors and set their state to 1 (active)"
+db2cmd /c /w /i "db2 connect to testdb3 user db2admin using root && db2 GRANT DBADM ON database TO user db2admin  &&  db2 connect reset && db2 terminate"
+REM db2cmd /c /w /i "db2 connect to testdb3 user db2admin using root && db2 DROP EVENT MONITOR lock_event && db2 DROP EVENT MONITOR stmt_event && db2 DROP EVENT MONITOR uow_event && db2 connect reset && db2 terminate" 
+echo "Create Events"
+
+REM call db2cmd /c /w /i "db2 connect to testdb3 user db2admin using root && db2 DROP TABLE LOCK_LOCK_EVENT && db2 DROP TABLE STMT_STMT_EVENT && db2 DROP TABLE UOW_UOW_EVENT && db2 connect reset && db2 terminate"
+call db2cmd /c /w /i "db2 connect to testdb3 user db2admin using root && db2 DROP TABLE LOCK_LOCK_EVENT  && db2 DROP TABLE UOW_UOW_EVENT && db2 connect reset && db2 terminate"
+REM call db2cmd /c /w /i "db2 connect to testdb3 user db2admin using root && db2 DROP EVENT MONITOR lock_event && db2 DROP EVENT MONITOR stmt_event && db2 DROP EVENT MONITOR uow_event && db2 DROP EVENT MONITOR deadlock_event && db2 DROP EVENT MONITOR connection_event && db2 DROP EVENT MONITOR activity_event && db2 connect reset && db2 terminate"
+call db2cmd /c /w /i "db2 connect to testdb3 user db2admin using root && db2 DROP EVENT MONITOR lock_event  && db2 DROP EVENT MONITOR uow_event && db2 DROP EVENT MONITOR deadlock_event && db2 DROP EVENT MONITOR connection_event && db2 DROP EVENT MONITOR activity_event && db2 connect reset && db2 terminate"
+
+
+REM lock_event. This event monitor collects data about locking activities in the database, such as lock waits, lock escalations, and deadlocks.
+REM  stmt_event. This event monitor captures information about SQL statements executed in the database, including their start time, stop time, and any errors encountered.
+REM  uow_event. This event monitor gathers data about units of work, which are logical transactions in the database, including commit and rollback operations.
+
+REM db2cmd /c /w /i "db2 connect to testdb3 user db2admin using root && db2 CREATE EVENT MONITOR lock_event FOR LOCKING WRITE TO TABLE && db2 CREATE EVENT MONITOR stmt_event FOR STATEMENTS WRITE TO TABLE && db2 CREATE EVENT MONITOR uow_event FOR UNIT OF WORK WRITE TO TABLE && db2 CREATE EVENT MONITOR deadlock_event FOR DEADLOCKS WRITE TO TABLE && db2 CREATE EVENT MONITOR connection_event FOR CONNECTIONS WRITE TO TABLE && db2 CREATE EVENT MONITOR activity_event FOR ACTIVITIES WRITE TO TABLE && db2 SET EVENT MONITOR lock_event STATE = 1 && db2 SET EVENT MONITOR stmt_event STATE = 1 && db2 SET EVENT MONITOR uow_event STATE = 1 && db2 SET EVENT MONITOR deadlock_event STATE = 1 && db2 SET EVENT MONITOR connection_event STATE = 1 && db2 SET EVENT MONITOR activity_event STATE = 1 && db2 connect reset && db2 terminate"
+REM db2cmd /c /w /i "db2 connect to testdb3 user db2admin using root && db2 CREATE EVENT MONITOR lock_event FOR LOCKING WRITE TO TABLE && db2 CREATE EVENT MONITOR uow_event FOR UNIT OF WORK WRITE TO TABLE && db2 CREATE EVENT MONITOR deadlock_event FOR DEADLOCKS WRITE TO TABLE && db2 CREATE EVENT MONITOR connection_event FOR CONNECTIONS WRITE TO TABLE && db2 CREATE EVENT MONITOR activity_event FOR ACTIVITIES WRITE TO TABLE && db2 SET EVENT MONITOR lock_event STATE = 1 && db2 SET EVENT MONITOR stmt_event STATE = 1 && db2 SET EVENT MONITOR uow_event STATE = 1 && db2 SET EVENT MONITOR deadlock_event STATE = 1 && db2 SET EVENT MONITOR connection_event STATE = 1 && db2 SET EVENT MONITOR activity_event STATE = 1 && db2 connect reset && db2 terminate"
+db2cmd /c /w /i "db2 connect to testdb3 user db2admin using root && db2 CREATE EVENT MONITOR lock_event FOR LOCKING WRITE TO TABLE && db2 CREATE EVENT MONITOR uow_event FOR UNIT OF WORK WRITE TO TABLE && db2 CREATE EVENT MONITOR deadlock_event FOR DEADLOCKS WRITE TO TABLE && db2 CREATE EVENT MONITOR connection_event FOR CONNECTIONS WRITE TO TABLE && db2 CREATE EVENT MONITOR activity_event FOR ACTIVITIES WRITE TO TABLE && db2 SET EVENT MONITOR lock_event STATE = 1   && db2 SET EVENT MONITOR uow_event STATE = 1 && db2 SET EVENT MONITOR deadlock_event STATE = 1 && db2 SET EVENT MONITOR connection_event STATE = 1 && db2 SET EVENT MONITOR activity_event STATE = 1 && db2 connect reset && db2 terminate"
+
+db2cmd /c /w /i "db2 connect to testdb3 user db2admin using root && db2 CREATE EVENT MONITOR lock_event FOR LOCKING WRITE TO TABLE && db2 SET EVENT MONITOR lock_event STATE = 1 && db2 connect reset && db2 terminate"
+
+db2cmd /c /w /i "db2 connect to testdb3 user db2admin using root && db2 CREATE EVENT MONITOR LOCKEVMON FOR LOCKING WRITE TO TABLE && db2 SET EVENT MONITOR lockevmon STATE = 1 && db2 connect reset && db2 terminate"
+db2cmd /c /w /i "db2 connect to testdb3 user db2admin using root && db2 CREATE EVENT MONITOR lock_wait_event FOR LOCKING WRITE TO TABLE && db2 SET EVENT MONITOR lock_wait_event STATE = 1 && db2 connect reset && db2 terminate"
+db2cmd /c /w /i "db2 connect to testdb3 user db2admin using root && db2 UPDATE DATABASE CONFIGURATION USING LOCKTIMEOUT 5 && db2 connect reset && db2 terminate"
+db2cmd /c /w /i "db2 connect to testdb3 user db2admin using root && db2 UPDATE DATABASE CONFIGURATION USING MON_LOCKWAIT HISTORY && db2 connect reset && db2 terminate"
+
+db2cmd /c /w /i "db2 update dbm cfg using DFT_MON_LOCK ON"
