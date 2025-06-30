@@ -16,7 +16,7 @@
 - The data archive can be downloaded here: https://drive.google.com/file/d/1LOiRjv-yrqNgQryPc8XFVP8lRgmYeNyK/view?usp=sharing
 
 ## Project Structure
-
+- `workload-testing/` Directory includes the HammerDB scripts to start DB TPC-C workloads
 - `src/`: Contains the main source code
   - `train.py`: Main script for training models
   - `datapipeline.py`: Data loading and preprocessing
