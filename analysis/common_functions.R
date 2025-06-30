@@ -21,7 +21,7 @@ is_correct <- function(df, is_table_lock=FALSE) {
 
 load_parquet <- function(path, is_table_lock=FALSE, filter_tail_ns=1e11) {
   predictions <- read_parquet(path, col_select = c("in_lock_sequences_id", "in_lock_start_time", "data", "horizon", "unique_id", "horizon_position", "gt_table", "gt_pageid", "pred_table", "pred_pageid", "iteration")) %>% 
-    filter(iteration <= 10 & gt_table != "warehouse")
+    filter(iteration <= 10)
   predictions$is_correct <- is_correct(predictions, is_table_lock)
   predictions$horizon <- as.factor(predictions$horizon)
   

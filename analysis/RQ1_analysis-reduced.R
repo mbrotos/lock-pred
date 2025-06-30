@@ -152,7 +152,7 @@ experiment_subdir_cut <- "cut"
 #basepath = "C:/TMU/postdoc-TMU/deep-rediscovery/deeptable-analysis/results/"
 
 
-
+### Make sure the "Warehouse" table is not filtered 
 
 # Lets look at cut results for table locks
 predictions_table <- load_parquet("analysis/data/exp-39-tranformer-rounded-cut-table-locks/predictions.parquet", is_table_lock=TRUE)
@@ -166,27 +166,44 @@ predictions_naive_table <- load_parquet("analysis/data/exp-41-naive-rounded-cut-
 
  
 
+
+
+
 # Tabel level lock prediction
-# Calculating Accuracy of the model overall across 10 or n iteration, and n horizions
-correct_table <- horizon_iteration_performance(predictions_table)
+# Calculating Accuracy of the model overall across 10 or n iteration, and n horizons
+#correct_table <- horizon_iteration_performance(predictions_table)
+
+#### Transformer Model #############################
 correct_table_by_table <- horizon_iteration_performance_by_table(predictions_table)
-accuracy_overall_table <- horizon_overall_accuracy(predictions_table)
+
+# Pre - Candidate Approach
+#accuracy_overall_table <- horizon_overall_accuracy(predictions_table)
+
 # Candidate Approach
 accuracy_cum_table <- horizon_overall_cumulative_accuracy(predictions_table)
 accuracy_iter_cum_table <- horizon_iteration_cumulative_accuracy(predictions_table)
 
- 
-correct_table_lstm <- horizon_iteration_performance(predictions_table_lstm)
+
+####  LSTM  Model #############################
+
+#correct_table_lstm <- horizon_iteration_performance(predictions_table_lstm)
 correct_table_by_table_lstm <- horizon_iteration_performance_by_table(predictions_table_lstm)
-accuracy_overall_table_lstm <- horizon_overall_accuracy(predictions_table_lstm)
+
+# Pre - Candidate Approach
+#accuracy_overall_table_lstm <- horizon_overall_accuracy(predictions_table_lstm)
+
 # Candidate Approach
 accuracy_cum_table_lstm <- horizon_overall_cumulative_accuracy(predictions_table_lstm)
 accuracy_iter_cum_table_lstm <- horizon_iteration_cumulative_accuracy(predictions_table_lstm)
 
+#### Naive Model #############################
 
-correct_naive_table <- horizon_iteration_performance(predictions_naive_table)
+#correct_naive_table <- horizon_iteration_performance(predictions_naive_table)
 correct_naive_table_by_table <- horizon_iteration_performance_by_table(predictions_naive_table)
-accuracy_overall_table_naive <- horizon_overall_accuracy(predictions_naive_table)
+
+# Pre - Candidate Approach
+#accuracy_overall_table_naive <- horizon_overall_accuracy(predictions_naive_table)
+
 # Candidate Approach
 accuracy_cum_table_naive <- horizon_overall_cumulative_accuracy(predictions_naive_table)
 accuracy_iter_cum_table_naive <- horizon_iteration_cumulative_accuracy(predictions_naive_table)
