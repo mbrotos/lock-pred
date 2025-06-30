@@ -12,7 +12,8 @@
     ```
     *Note: For the narval system, see `requirements_narval.txt`.*
 
-2. Download the data to `data/`.
+2. Download and extract the data to the `data/` directory.
+- The data archive can be downloaded here: https://drive.google.com/file/d/1LOiRjv-yrqNgQryPc8XFVP8lRgmYeNyK/view?usp=sharing
 
 ## Project Structure
 
