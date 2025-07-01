@@ -19,7 +19,14 @@ This repository contains supplementary material for capturing lock data from IBM
 - The data archive can be downloaded [here](https://drive.google.com/file/d/1LOiRjv-yrqNgQryPc8XFVP8lRgmYeNyK/view?usp=sharing).
 
 ## Project Structure
-- `workload-testing/` Directory includes the [HammerDB](https://www.hammerdb.com/) scripts to start TPC-C workloads
+- `.vscode/`: Holds debug configuration file specific to VS Code
+- `.github/workflows`: Contains GitHub Actions workflows for continuous integration and automation
+- `analysis/`: Directory for results analysis R scripts and notebooks
+- `data/`: Stores all downloaded and extracted data for the project
+- `experiments/`: Experiment runner scripts for different configurations (includes SLURM integration)
+- `logs/`: Stores experiment log files
+- `play_scripts/`: Contains utility data and modelling exploration notebooks
+- `results/`: Directory to store experiment results
 - `src/`: Contains the main source code
   - `train.py`: Main script for training models
   - `datapipeline.py`: Data loading and preprocessing
@@ -27,13 +34,7 @@ This repository contains supplementary material for capturing lock data from IBM
   - `evaluate.py`: Evaluation metrics and result reporting
   - `utils.py`: Utility functions
   - `tests/`: Unit tests
-- `experiments/`: Experiment scripts for different configurations
-- `results/`: Directory to store experiment results
-- `play_scripts/`: Contains utility data and modelling exploration notebooks
-- `analysis/`: Directory for results analysis R scripts and notebooks
-- `data/`: Stores all downloaded and extracted data for the project
-- `.github/workflows`: Contains GitHub Actions workflows for continuous integration and automation.
-- `.vscode/`: Holds debug configuration file specific to VS Code.
+- `workload-testing/` Directory includes the [HammerDB](https://www.hammerdb.com/) scripts to start TPC-C workloads
 
 ## TPC-C Workload Simulation
 All file names referenced in this subsection are relative to the `workload-testing/` directory.
