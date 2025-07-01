@@ -1,4 +1,7 @@
-# lock-pred
+# Lock Prediction for Zero-Downtime Database Encryption
+[![arXiv](https://img.shields.io/badge/arXiv-2506.23985-b31b1b.svg)](https://arxiv.org/abs/2506.23985)
+
+This repository contains supplementary material for capturing lock data from IBM Db2 and training models to predict a sequence of locks. For more information, refer to the [preprint](https://arxiv.org/abs/2506.23985).
 
 ## Setup
 
@@ -13,10 +16,10 @@
     *Note: For the narval system, see `requirements_narval.txt`.*
 
 2. Download and extract the data to the `data/` directory.
-- The data archive can be downloaded here: https://drive.google.com/file/d/1LOiRjv-yrqNgQryPc8XFVP8lRgmYeNyK/view?usp=sharing
+- The data archive can be downloaded [here](https://drive.google.com/file/d/1LOiRjv-yrqNgQryPc8XFVP8lRgmYeNyK/view?usp=sharing).
 
 ## Project Structure
-- `workload-testing/` Directory includes the HammerDB scripts to start DB TPC-C workloads
+- `workload-testing/` Directory includes the [HammerDB](https://www.hammerdb.com/) scripts to start TPC-C workloads
 - `src/`: Contains the main source code
   - `train.py`: Main script for training models
   - `datapipeline.py`: Data loading and preprocessing
@@ -28,11 +31,12 @@
 - `results/`: Directory to store experiment results
 
 ## TPC-C Workload Simulation
- - Enable the DB2 trace using the command in traceCommands.txt.
- - Start TPC-C HammerDB workloads by using hammerDBinit.bat,  hammerDBStep1.bat, and hammerDBStep2.bat. 
- - Stop the DB2 trace using the command in traceCommands.txt.
- - Start trace preprocessing by running db2trc flw -t.
- - Extract the row and table locks using lookup_locknames.py. 
+All file names referenced in this subsection are relative to the `workload-testing/` directory.
+ - Enable the DB2 trace using the command in `traceCommands.txt`.
+ - Start TPC-C [HammerDB](https://www.hammerdb.com/) workloads by using `hammerDBinit.bat`,  `hammerDBStep1.bat`, and `hammerDBStep2.bat`. 
+ - Stop the DB2 trace using the command in `traceCommands.txt`.
+ - Start trace preprocessing by running `db2trc flw -t`.
+ - Extract the row and table locks using `lookup_locknames.py`. 
 
 ## Running Experiments
 
@@ -65,4 +69,19 @@ Run unit tests using pytest command:
 
 ```
 pytest
+```
+
+
+## Citation
+
+If you use or study the code, please cite it as follows.
+
+```bibtex
+@article{rakha2025lockprediction,
+  title={Lock Prediction for Zero-Downtime Database Encryption},
+  author={Mohamed Sami Rakha and Adam Sorrenti and Greg Stager and Walid Rjaibi and Andriy Miranskyy},
+  journal={arXiv preprint arXiv:2506.23985},
+  year={2025},
+  doi={10.48550/arXiv.2506.23985}
+}
 ```
