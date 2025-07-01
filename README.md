@@ -29,6 +29,12 @@ This repository contains supplementary material for capturing lock data from IBM
   - `tests/`: Unit tests
 - `experiments/`: Experiment scripts for different configurations
 - `results/`: Directory to store experiment results
+- `play_scripts/`: Contains utility data and modelling exploration notebooks
+- `analysis/`: Directory for results analysis R scripts and notebooks
+- `data/`: Stores all downloaded and extracted data for the project
+- `.github/workflows`: Contains GitHub Actions workflows for continuous integration and automation.
+- `.vscode/`: Holds debug configuration file specific to VS Code.
+---
 
 ## TPC-C Workload Simulation
 All file names referenced in this subsection are relative to the `workload-testing/` directory.
