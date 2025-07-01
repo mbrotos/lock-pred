@@ -31,7 +31,7 @@ This repository contains supplementary material for capturing lock data from IBM
 - `results/`: Directory to store experiment results
 
 ## TPC-C Workload Simulation
-All file names referenced in this subsection are relative to the workload testing directory.
+All file names referenced in this subsection are relative to the `workload-testing/` directory.
  - Enable the DB2 trace using the command in `traceCommands.txt`.
  - Start TPC-C HammerDB workloads by using `hammerDBinit.bat`,  `hammerDBStep1.bat`, and `hammerDBStep2.bat`. 
  - Stop the DB2 trace using the command in `traceCommands.txt`.
