@@ -34,7 +34,6 @@ This repository contains supplementary material for capturing lock data from IBM
 - `data/`: Stores all downloaded and extracted data for the project
 - `.github/workflows`: Contains GitHub Actions workflows for continuous integration and automation.
 - `.vscode/`: Holds debug configuration file specific to VS Code.
----
 
 ## TPC-C Workload Simulation
 All file names referenced in this subsection are relative to the `workload-testing/` directory.
