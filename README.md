@@ -19,7 +19,7 @@ This repository contains supplementary material for capturing lock data from IBM
 - The data archive can be downloaded [here](https://drive.google.com/file/d/1LOiRjv-yrqNgQryPc8XFVP8lRgmYeNyK/view?usp=sharing).
 
 ## Project Structure
-- `workload-testing/` Directory includes the HammerDB scripts to start DB TPC-C workloads
+- `workload-testing/` Directory includes the [HammerDB](https://www.hammerdb.com/) scripts to start TPC-C workloads
 - `src/`: Contains the main source code
   - `train.py`: Main script for training models
   - `datapipeline.py`: Data loading and preprocessing
@@ -33,7 +33,7 @@ This repository contains supplementary material for capturing lock data from IBM
 ## TPC-C Workload Simulation
 All file names referenced in this subsection are relative to the `workload-testing/` directory.
  - Enable the DB2 trace using the command in `traceCommands.txt`.
- - Start TPC-C HammerDB workloads by using `hammerDBinit.bat`,  `hammerDBStep1.bat`, and `hammerDBStep2.bat`. 
+ - Start TPC-C [HammerDB](https://www.hammerdb.com/) workloads by using `hammerDBinit.bat`,  `hammerDBStep1.bat`, and `hammerDBStep2.bat`. 
  - Stop the DB2 trace using the command in `traceCommands.txt`.
  - Start trace preprocessing by running `db2trc flw -t`.
  - Extract the row and table locks using `lookup_locknames.py`. 
