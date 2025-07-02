@@ -1,30 +1,12 @@
-db2trc on -l 512M  -f C:/TMU/postdoc-TMU/HammerDB/trace_dumps/db2locktraceSingle.dmp
-db2trc off
-
-
-db2trc on -Madd sqlplrq -Madd sqlplrl -Madd sqlplrem   -l 512M  -f C:/TMU/postdoc-TMU/HammerDB/trace_dumps/db2locktraceSingle.dmp
-
-db2trc fmt C:/TMU/postdoc-TMU/HammerDB/trace_dumps/db2locktraceSingle.dmp C:/TMU/postdoc-TMU/HammerDB/trace_dumps/db2locktraceSingle.fmt
-
-
-
-db2trc on -Madd sqlplrq -Madd sqlplrl -Madd sqlplrem   -l 512M  -t -f C:/TMU/postdoc-TMU/HammerDB/trace_dumps/ColumnsTrace.dmp
-db2trc fmt C:/TMU/postdoc-TMU/HammerDB/trace_dumps/ColumnsTrace.dmp C:/TMU/postdoc-TMU/HammerDB/trace_dumps/ColumnsTrace.fmt
-
-
-
-grep -i "lock" C:/TMU/postdoc-TMU/HammerDB/trace_dumps/db2locktraceSingle.fmt > C:/TMU/postdoc-TMU/HammerDB/trace_dumps/db2locktrace_filteredSingle.fmt
-
-db2trc on -Madd sqlplrq -Madd sqlplrl -Madd sqlplrem   -l 512M  -f C:/TMU/postdoc-TMU/HammerDB/trace_dumps/db2locktraceSingle.dmp
-db2trc off
-
-
-
+## Start  the trace log using the following command just before starting the HammerDB workload. 
 
 db2trc on -Madd sqlplrq -Madd sqlplrl -Madd sqlplrem -t -i 10000M  -f C:/TMU/postdoc-TMU/HammerDB/trace_dumps/ColumnsTrace.dmp
 
+## Stop the trace logging after the workload test is over. 
 db2trc off
 
+
+## Convert the log file into a structured format to be parsable by the Python script lookup_locknames.py
 db2trc flw -t -data -wc C:/TMU/postdoc-TMU/HammerDB/trace_dumps/ColumnsTrace.dmp C:/TMU/postdoc-TMU/HammerDB/trace_dumps/ColumnsTrace.flw
 
 
